@@ -1,0 +1,17 @@
+ERROR lineno(6): w cannot be of type void.
+ERROR lineno(8): Unary - requires things of type int but was given type bool.
+ERROR lineno(9): + requires things of type int but lhs is of type bool.
+ERROR lineno(9): + requires things of type int but rhs is of type bool.
+ERROR lineno(11): Expecting boolean test condition.
+ERROR lineno(15): Symbol u is not defined.
+ERROR lineno(15): Symbol y is not defined.
+ERROR lineno(17): Symbol y is not defined.
+ERROR lineno(17): Symbol x is not defined.
+ERROR lineno(20): Cannot use function w as a simple variable.
+ERROR lineno(23): Symbol u is not defined.
+ERROR lineno(24): Symbol x is not defined.
+ERROR lineno(26): Symbol x is not defined.
+ERROR lineno(26): Symbol u is not defined.
+ERROR lineno(26): Cannot use function w as a simple variable.
+Number of errors: 15
+Number of warnings: 0

@@ -1,0 +1,15 @@
+// C-F06
+int y;
+
+int wolf(int garion)
+{
+	return 42;
+}
+
+void main(void)
+{
+	int x;
+	x = 666;
+	y = 42;
+	x = wolf(x);
+}

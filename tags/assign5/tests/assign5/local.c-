@@ -1,0 +1,14 @@
+// C-F06
+void main(void)
+{
+   int x;
+   bool b;
+
+   x = 666;   
+   b = true;
+
+   output(x);
+   outputb(b);
+
+   return;
+}

@@ -1,0 +1,51 @@
+int main(void)
+{
+	i+i;
+	i+b;
+	b+i;
+	b+b;
+
+	i&&i;
+	i&&b;
+	b&&i;
+	b&&b;
+
+	i=i;
+	i=b;
+	b=i;
+	b=b;
+
+	i==i;
+	i==b;
+	b==i;
+	b==b;
+
+	i!=i;
+	i!=b;
+	b!=i;
+	b!=b;
+
+	b+i+i;
+	i+b+i;
+	i+i+b;
+
+	i||b||b;
+	b||i||b;
+	b||b||i;
+
+	!b;
+	!i;
+
+	-b;
+	-i;
+
+	(i>i)||(i>i);
+	(b>i)||(i>i);
+	(i>b)||(i>i);
+	(i>i)||(b>i);
+	(b>i)||(i>b);
+	(b||b)&&(b||b);
+
+	if (i) i=i;
+	while (b) i=i;
+}

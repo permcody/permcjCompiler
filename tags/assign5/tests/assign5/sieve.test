@@ -1,0 +1,90 @@
+TM version 2.7 (enter h for help)...
+
+Memory Configuration: Data Addresses: 0-9999  Instruction Addresses: 0-9999
+Abort Limit: 20000
+Loading file: sieve.tm
+Enter command: 
+command: a 100000
+command: g
+2 
+3 
+5 
+7 
+11 
+13 
+17 
+19 
+23 
+29 
+31 
+37 
+41 
+43 
+47 
+53 
+59 
+61 
+67 
+71 
+73 
+79 
+83 
+89 
+97 
+101 
+103 
+107 
+109 
+113 
+127 
+131 
+137 
+139 
+149 
+151 
+157 
+163 
+167 
+173 
+179 
+181 
+191 
+193 
+197 
+199 
+
+Halted
+Last executed cmd:    5: HALT  0,  0, 0   | before:  r[0]: 9999  r[0]: 9999  r[0]: 9999  |  DONE! 
+PC was 5, PC is now 6
+command: 300
+Command 3 unknown.
+TM version 2.7
+
+Commands are:
+ a(bortLimit <<n>> Maximum number of instructions between halts (default is 20000).
+ b(reakpoint <<n>> Set a breakpoint for instr n.  No n means clear breakpoints.
+ c(lear            Reset simulator for new execution of program
+ d(Mem <b <n>>     Print n dMem locations starting at b (n can be negative to count up)
+ e(xecStats        Print execution statistics since last load or clear
+ g(o               Execute TM instructions until HALT
+ h(elp             Cause this list of commands to be printed
+ i(Mem <b <n>>     Print n iMem locations starting at b
+ l(oad filename    Load filename into memory (default is last file)
+ n(ext             Print the next command that will be executed
+ p(rint            Toggle printing of total instructions executed ('go' only)
+ q(uit             Terminate the simulation
+ r(egs             Print the contents of the registers
+ s(tep <n>         Execute n (default 1) TM instructions
+ t(race            Toggle instruction trace
+ u(nprompt)        Unprompted for script input
+ x(it              Terminate the simulation
+ = <r> <n>         Set register number r to value n (e.g. set the pc)
+ (empty line does a step)
+Also a # character placed after input will cause TM to halt
+  after processing the IN or INB commands (e.g. 34#  or f# )
+command: e
+EXEC STAT: Number of instructions executed: 17086
+EXEC STAT: Instruction memory used: 241
+EXEC STAT: Data memory used: 207
+command: x
+Bye.

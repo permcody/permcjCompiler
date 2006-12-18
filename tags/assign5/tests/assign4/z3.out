@@ -1,0 +1,10 @@
+ERROR lineno(8): % requires things of type int but lhs is of type bool.
+ERROR lineno(8): % requires things of type int but rhs is of type bool.
+ERROR lineno(8): Cannot use function w as a simple variable.
+ERROR lineno(9): * requires things of type int but rhs is of type bool.
+ERROR lineno(9): * requires things of type int but lhs is of type bool.
+ERROR lineno(10): + requires things of type int but lhs is of type bool.
+ERROR lineno(11): + requires things of type int but rhs is of type bool.
+ERROR lineno(12): + requires things of type int but lhs is of type bool.
+Number of errors: 8
+Number of warnings: 0

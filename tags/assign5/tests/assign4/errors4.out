@@ -1,0 +1,87 @@
+ERROR lineno(1): parse error, expecting `ID' but got: +
+**ERROR fun_declaration 1
+ERROR lineno(5): parse error, expecting `ID' but got: +
+**ERROR fun_declaration 2
+ERROR lineno(14): parse error, expecting `';'' or `'['' but got: (
+**ERROR var_declaration
+ERROR lineno(16): parse error, expecting `ID' but got: +
+**ERROR var_declaration
+ERROR lineno(17): Unexpected token: +
+**ERROR var_declaration
+WARNING lineno(18): Invalid input character: ^.  Character ignored.
+WARNING lineno(18): Invalid input character: #.  Character ignored.
+ERROR lineno(19): Unexpected token: *
+**ERROR expression_stmt
+ERROR lineno(20): Unexpected token: +
+**ERROR expression_stmt
+ERROR lineno(22): Unexpected token: +
+**ERROR compound
+ERROR lineno(23): Unexpected token: +
+**ERROR compound
+ERROR lineno(24): Unexpected token: +
+**ERROR unmatched IF 1
+ERROR lineno(25): Unexpected token: +
+**ERROR matched IF 1
+ERROR lineno(26): Unexpected token: +
+**ERROR unmatched IF 2
+ERROR lineno(27): Unexpected token: +
+**ERROR unmatched IF 3
+ERROR lineno(28): Unexpected token: +
+**ERROR unmatched WHILE 1
+ERROR lineno(29): Unexpected token: +
+**ERROR expression_stmt
+ERROR lineno(30): Unexpected token: +
+**ERROR matched IF 1
+ERROR lineno(31): parse error, expecting `';'' but got: else
+**ERROR matched IF 2
+ERROR lineno(32): Unexpected token: +
+**ERROR expression_stmt
+ERROR lineno(33): Unexpected token: +
+**ERROR matched WHILE 1
+ERROR lineno(34): Unexpected token: +
+**ERROR expression_stmt
+ERROR lineno(35): Unexpected token: +
+ERROR lineno(35): Unexpected token: +
+**ERROR matched IF 1
+**ERROR unmatched IF 1
+ERROR lineno(36): Unexpected token: +
+ERROR lineno(36): parse error, expecting `';'' but got: else
+**ERROR matched IF 2
+**ERROR unmatched IF 1
+ERROR lineno(37): Unexpected token: +
+ERROR lineno(37): Unexpected token: +
+**ERROR expression_stmt
+**ERROR unmatched IF 1
+ERROR lineno(38): Unexpected token: +
+ERROR lineno(38): Unexpected token: +
+**ERROR matched WHILE 1
+**ERROR unmatched IF 1
+ERROR lineno(39): Unexpected token: +
+ERROR lineno(39): Unexpected token: +
+**ERROR expression_stmt
+**ERROR unmatched IF 1
+ERROR lineno(40): Unexpected token: +
+**ERROR return
+ERROR lineno(41): Unexpected token: *
+**ERROR expression_stmt
+ERROR lineno(42): Unexpected token: +
+**ERROR paren exp
+ERROR lineno(43): Unexpected token: +
+**ERROR paren exp
+ERROR lineno(44): Unexpected token: +
+**ERROR arglist 1
+**ERROR arglist 2
+ERROR lineno(45): Unexpected token: %
+**ERROR arglist 1
+**ERROR arglist 2
+**ERROR arglist 4
+**ERROR arglist 2
+**ERROR arglist 4
+**ERROR arglist 2
+ERROR lineno(46): Unexpected token: ;
+**ERROR paren exp
+ERROR lineno(48): parse error, expecting `';'' but got: }
+**ERROR expression_stmt
+ERROR lineno(50): Unexpected token: ;
+Number of errors: 39
+Number of warnings: 2

@@ -1,0 +1,20 @@
+ERROR(6): '||' requires things of type bool but lhs is of type int.
+ERROR(6): '||' requires things of type bool but rhs is of type int.
+ERROR(12): Symbol 'b' is not defined.
+ERROR(18): Symbol 'b' is not defined.
+ERROR(19): Symbol 'c' is not defined.
+ERROR(23): Symbol 'b' is not defined.
+ERROR(24): Symbol 'c' is not defined.
+ERROR(34): Symbol 'z' is already defined at line 33.
+ERROR(35): Symbol 'x' is not defined.
+ERROR(39): Symbol 'v' is not defined.
+ERROR(40): Symbol 'u' is not defined.
+ERROR(40): Symbol 'cow' is not defined.
+ERROR(41): Symbol 'abraxsis' is not defined.
+ERROR(42): Symbol 'a' is not defined.
+ERROR(47): Symbol 'g' is already defined at line 2.
+ERROR(49): Symbol 'g' is already defined at line 2.
+ERROR(51): Symbol 'x' is not defined.
+ERROR(LINKER): Procedure main is not defined.
+Number of warnings: 0
+Number of errors: 18

@@ -1,0 +1,8 @@
+ERROR lineno(3): parse error, expecting `ID' but got: +
+**ERROR var_declaration
+ERROR lineno(4): parse error, expecting `NUM' but got: z
+**ERROR var_declaration
+ERROR lineno(5): parse error, expecting `ID' but got: +
+**ERROR var_declaration
+Number of errors: 3
+Number of warnings: 0

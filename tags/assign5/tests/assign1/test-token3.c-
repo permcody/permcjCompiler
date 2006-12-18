@@ -1,0 +1,9 @@
+// not valid pgm 
+
+intgcd(intu,intv){if(v==0)returnu;else
+returngcd(v,u-u/v*v);}
+void	main(void)
+{		int	x;	int	y;
+x	=	input();	y=input();
+output(gcd(x,y));
+}

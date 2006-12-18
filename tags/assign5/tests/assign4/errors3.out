@@ -1,0 +1,11 @@
+ERROR lineno(1): parse error, expecting `error' or `BOOLEAN' or `INT' or `VOID' but got: %
+**ERROR var_declaration
+ERROR lineno(4): Unexpected token: +
+**ERROR arglist 1
+**ERROR arglist 2
+**ERROR arglist 2
+**ERROR arglist 2
+ERROR lineno(6): Unexpected token: %
+**ERROR var_declaration
+Number of errors: 3
+Number of warnings: 0
