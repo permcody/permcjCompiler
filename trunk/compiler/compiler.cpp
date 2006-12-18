@@ -38,6 +38,7 @@ void Compiler::Compile() {
 		// run the semantic analyzer
 		syntaxTree->ScopeAndType(*out, numErrors);		
 	
+		syntaxTree->CheckReturns();
 	// ********************* SEMANTIC ANALYZER ****************************
 
 		// print the Memory layout if command line option '-m' is set

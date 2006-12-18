@@ -1,3 +1,11 @@
+/*********************************************************************
+	Programmer: Cody Permann
+	Date: 5/13/04
+
+	Description: This is the header file for the c- syntax tree. It contains 
+		the prototypes of the core functions of the compiler
+**********************************************************************/
+
 #ifndef _SYNTAXTREE_H_
 #define _SYNTAXTREE_H_
 
@@ -41,6 +49,7 @@ public:
 	void PrintMem() const { this->PrintMem(cout); }	
 	void PrintMem(ostream &out) const;
 	void CodeGeneration(CodeEmitter &e);
+	bool CheckReturns();
 	void virtual ScopeAndType(ostream &out, int &numErrors) = 0; // pure virtual function
 	void virtual GenCode(CodeEmitter &e, bool travSib, int virtualRegister, int toff);
 	bool getIsArray() const;
@@ -53,8 +62,7 @@ public:
 	static bool newScope;	// global for determining whether or not to create a new symbol table scope
 	static int goff;	// global offset
 	static int foff;	// frame offset
-	//static int toff;	// temporary offset
-	
+
 protected:
 	void virtual PrintTree(ostream &out, int spaces, int siblingNum) const;
 	void virtual PrintMemory(ostream &out) const;
@@ -79,10 +87,11 @@ public:
 	ScopeTypes theScope;
 	//bool isGlobal;
 	Types returnType;
+	bool allPathsReturn;
 
 	DeclarationNode(DeclKind dKind) 
 		: TreeNode(DeclK), subKind(dKind), type(Undefined), size(0), isArray(false), 
-		  returnType(Undefined), offset(0), theScope(Global) {}
+		  returnType(Undefined), offset(0), theScope(Global), allPathsReturn(false) {}
 	void virtual PrintTree(ostream &out, int spaces, int siblingNum) const;
 	void virtual PrintMemory(ostream &out) const;
 	static void PrintNode(ostream &out, const DeclarationNode *dPtr);

@@ -1,3 +1,12 @@
+/*********************************************************************
+	Programmer: Cody Permann
+	Date: 5/13/04
+
+	Description: This is the implementation file for the c- syntax tree.
+		It contains the the core functions of the compiler
+**********************************************************************/
+
+
 #include "syntaxtree.h"
 #include "emitcode.h"
 
@@ -23,6 +32,38 @@ void TreeNode::GenCode(CodeEmitter &e, bool travSib, int virtualRegister, int to
 		sibling->GenCode(e, true, virtualRegister, toff);
 }
 
+bool TreeNode::CheckReturns() {
+	bool returnVal;
+	DeclarationNode *dPtr;
+	StatementNode *sPtr;
+	
+	if (dPtr = (DeclarationNode *)this)
+		if (dPtr->subKind == FuncK) {
+			// now we need to traverse the function body
+			if (child[1] != NULL && child[1]->child[1] != NULL)
+				returnVal = child[1]->child[1]->CheckReturns();
+			dPtr->allPathsReturn = returnVal;			
+		}
+	else if (sPtr = (StatementNode *)this) {
+		if (sPtr->subKind == IfK) {
+			if (child[1] != NULL)
+				returnVal = child[1]->CheckReturns();
+			if (returnVal && child[2] != NULL) { // make sure that both left and right have returns 
+				returnVal = child[2]->CheckReturns();
+				if (returnVal)
+					return true;				
+			}
+		}
+		else if (sPtr->subKind == ReturnK) 			
+			return true;				
+	}
+		
+	if (sibling != NULL)
+		return sibling->CheckReturns();
+	else
+		return false;	
+}
+
 void TreeNode::CodeGeneration(CodeEmitter &e) {
 	
 	GenProlog(jumpMain, e);
@@ -34,11 +75,14 @@ void TreeNode::CodeGeneration(CodeEmitter &e) {
 
 void TreeNode::GenProlog(int &jumpMain, CodeEmitter &e) const {
 	
+	e.emitComment("C- compiler version 1.0");
+	e.emitComment("Author: Cody Permann");
+	e.emitComment("May 13, 2004");
 	e.emitComment("Begin Prolog code");
-	e.emitRM("LD", 0, 0, 0, "load global poiniter with end of memory");
-	e.emitRM("LDA", 1, goff, 0, "load fp");
-	e.emitRM("ST", 1, 0, 1, "store old fp");
-	e.emitRM("LDA", 3, 1, 7, "return address in ac");
+	e.emitRM("LD", gp, 0, 0, "load global poiniter with end of memory");
+	e.emitRM("LDA", fp, goff, gp, "load fp");
+	e.emitRM("ST", fp, 0, fp, "store old fp");
+	e.emitRM("LDA", ac, 1, pc, "return address in ac");
 	jumpMain = e.emitSkip(1);	// save this address into the static variable for later
 	e.emitRO("HALT", 0, 0, 0, "DONE!");
 	e.emitComment("End Prolog code");
@@ -48,39 +92,39 @@ void TreeNode::GenIOFunctions(CodeEmitter &e) const {
 	e.emitComment("Being Generating IO Functions");
 	
 	e.emitComment("Begin function input");
-	e.emitRM("ST", 3, -1, 1, "store return address");
-	e.emitRO("IN", 2, 2, 2, "input integer");
-	e.emitRM("LD", 3, -1, 1, "load return address");
-	e.emitRM("LD", 1, 0, 1, "adjust fp");
-	e.emitRM("LDA", 7, 0, 3, "jump to return address");
+	e.emitRM("ST", ac, -1, fp, "store return address");
+	e.emitRO("IN", rt, rt, rt, "input integer");
+	e.emitRM("LD", ac, -1, fp, "load return address");
+	e.emitRM("LD", fp, 0, fp, "adjust fp");
+	e.emitRM("LDA", pc, 0, ac, "jump to return address");
 	e.emitComment("End function input");
 
 	e.emitComment("Begin function output");
-	e.emitRM("ST", 3, -1, 1, "store return address");
-	e.emitRM("LD", 3, -2, 1, "load parameter");
-	e.emitRO("OUT", 3, 3, 3, "output integer");
-	e.emitRM("LDC", 2, 0, 2, "set return to 0");
-	e.emitRM("LD", 3, -1, 1, "load return address");
-	e.emitRM("LD", 1, 0, 1, "adjust fp");
-	e.emitRM("LDA", 7, 0, 3, "jump to return address");
+	e.emitRM("ST", ac, -1, fp, "store return address");
+	e.emitRM("LD", ac, -2, fp, "load parameter");
+	e.emitRO("OUT", ac, ac, ac, "output integer");
+	e.emitRM("LDC", rt, 0, rt, "set return to 0");
+	e.emitRM("LD", ac, -1, fp, "load return address");
+	e.emitRM("LD", fp, 0, fp, "adjust fp");
+	e.emitRM("LDA", pc, 0, ac, "jump to return address");
 	e.emitComment("End function output");
 
 	e.emitComment("Begin function inputb");
-	e.emitRM("ST", 3, -1, 1, "store return address");
-	e.emitRO("INB", 2, 2, 2, "input boolean");
-	e.emitRM("LD", 3, -1, 1, "load return address");
-	e.emitRM("LD", 1, 0, 1, "adjust fp");
-	e.emitRM("LDA", 7, 0, 3, "jump to return address");
+	e.emitRM("ST", ac, -1, fp, "store return address");
+	e.emitRO("INB", rt, rt, rt, "input boolean");
+	e.emitRM("LD", ac, -1, fp, "load return address");
+	e.emitRM("LD", fp, 0, fp, "adjust fp");
+	e.emitRM("LDA", pc, 0, ac, "jump to return address");
 	e.emitComment("End function inputb");
 
 	e.emitComment("Begin function outputb");
-	e.emitRM("ST", 3, -1, 1, "store return address");
-	e.emitRM("LD", 3, -2, 1, "load parameter");
-	e.emitRO("OUTB", 3, 3, 3, "output boolean");
-	e.emitRM("LDC", 2, 0, 2, "set return to 0");
-	e.emitRM("LD", 3, -1, 1, "load return address");
-	e.emitRM("LD", 1, 0, 1, "adjust fp");
-	e.emitRM("LDA", 7, 0, 3, "jump to return address");
+	e.emitRM("ST", ac, -1, fp, "store return address");
+	e.emitRM("LD", ac, -2, fp, "load parameter");
+	e.emitRO("OUTB", ac, ac, ac, "output boolean");
+	e.emitRM("LDC", rt, 0, rt, "set return to 0");
+	e.emitRM("LD", ac, -1, fp, "load return address");
+	e.emitRM("LD", fp, 0, fp, "adjust fp");
+	e.emitRM("LDA", pc, 0, ac, "jump to return address");
 	e.emitComment("End function outputb");
 
 	e.emitComment("End Generating IO Functions");
@@ -289,10 +333,10 @@ void ExpressionNode::GenCode(CodeEmitter &e, bool travSib, int virtualRegister, 
 			if (child[0] != NULL)
 				child[0]->GenCode(e, true, virtualRegister, toff);
 
-			/*if (op == "&&" || op == "||")
+			// mark location for short circuit jump
+			if (op == "&&" || op == "||")
                 boolSkipLoc = e.emitSkip(1);
-			*/
-
+			
 			if (child[1] != NULL) {
 				isUnary = false;
 				
@@ -332,10 +376,11 @@ void ExpressionNode::GenCode(CodeEmitter &e, bool travSib, int virtualRegister, 
 				e.emitRO("DIV", actualRegister, actualRegister, nextRegister, "op /");
 			else if (op == "%") {
 				e.emitRO("DIV", rt, actualRegister, nextRegister, "begin op %");
-				e.emitRO("MUL", actualRegister, rt, actualRegister, "");
-				e.emitRO("SUB", actualRegister, nextRegister, actualRegister, "end op %");
+				e.emitRO("MUL", nextRegister, rt, nextRegister, "");
+				e.emitRO("SUB", actualRegister, actualRegister, nextRegister, "end op %");
 			}
 			else if (op == "&&") {
+				/**** Code for the non short circuit case ****
 				e.emitRO("ADD", actualRegister, actualRegister, nextRegister, "prepare for && op");
 				e.emitRM("LDC", nextRegister, 2, 0, "load constant for &&");
 				e.emitRO("SUB", actualRegister, nextRegister, actualRegister, "compute value");
@@ -344,40 +389,46 @@ void ExpressionNode::GenCode(CodeEmitter &e, bool travSib, int virtualRegister, 
 				e.emitRM("LDC", actualRegister, 0, 0, "load false into ac");
 				e.emitRM("LDA", pc, 1, pc, "jump past true case");
 				e.emitRM("LDC", actualRegister, 1, 0, "load true into ac");
+				**** Code for the non short circuit case *****/
 				
-				/*e.emitRM("JGT", ac, 2, pc, "op && (right side)");
+				e.emitRM("JGT", nextRegister, 2, pc, "op && (right side)");
                 
 				// special case: If left side of && is false then whole expression is false
 				currentLoc = e.emitSkip(0);
 				e.emitBackup(boolSkipLoc);
-				e.emitRMAbs("JEQ", ac, currentLoc, "Skip right child of && if left is false");
+				e.emitRMAbs("JEQ", actualRegister, currentLoc, "Skip right child of && if left is false");
 				e.emitRestore();
 
-				e.emitRM("LDC", ac, 0, ac3, "load false into ac");
+				e.emitRM("LDC", actualRegister, 0, 0, "load false into ac");
 				e.emitRM("LDA", pc, 1, pc, "jump past true case");
-				e.emitRM("LDC", ac, 1, ac3, "load true into ac");
-				*/
+				e.emitRM("LDC", actualRegister, 1, 0, "load true into ac");				
 			}
 			else if (op == "||") {
+				/**** Code for the non short circuit case ****
 				e.emitRO("ADD", actualRegister, actualRegister, nextRegister, "prepare for || op");
 				e.emitRM("JGT", actualRegister, 2, pc, "op ||");
 
 				e.emitRM("LDC", actualRegister, 0, 0, "load false into ac");
 				e.emitRM("LDA", pc, 1, pc, "jump past true case");
 				e.emitRM("LDC", actualRegister, 1, 0, "load true into ac");
+				**** Code for the non short circuit case *****/
 				
-				/*e.emitRM("JGT", ac, 2, pc, "op || (right side)");
-				e.emitRM("LDC", ac, 0, ac3, "load false into ac");
-				e.emitRM("LDA", pc, 1, pc, "jump past true case");
-
+				//e.emitRM("JEQ", nextRegister, 2, pc, "op || (right side)");
+				
+				/* Since the left side is short circuited the right side alone will determine 
+				whether the expression is true or false. Just make sure the RHS is int the right
+				register */
+				e.emitRM("LDA", actualRegister, 0, nextRegister, "Move RHS to current accumulator");
+				
 				// special case: If left side of || is true then whole expression is true
 				currentLoc = e.emitSkip(0);
 				e.emitBackup(boolSkipLoc);
-				e.emitRMAbs("JGT", ac, boolSkipLoc, "Skip right child of || if left is true");
+				e.emitRMAbs("JGT", actualRegister, currentLoc, "Skip right child of || if left is true");
 				e.emitRestore();
 
-				e.emitRM("LDC", ac, 1, ac3, "load true into ac");
-				*/
+				//e.emitRM("LDC", actualRegister, 1, 0, "load true into ac");
+				//e.emitRM("LDA", pc, 1, pc, "jump past false case");
+				//e.emitRM("LDC", actualRegister, 0, 0, "load false into ac");			
 			}
 			else if (op == "!") {
 				e.emitRM("JEQ", actualRegister, 2, pc, "op !");
@@ -386,10 +437,8 @@ void ExpressionNode::GenCode(CodeEmitter &e, bool travSib, int virtualRegister, 
 				e.emitRM("LDC", actualRegister, 1, 0, "load true into ac");
 			}
 			else if (op == "-" and isUnary) {
-				e.emitRM("MUL", actualRegister, actualRegister, -1, "op unary -");
-
-				//e.emitRM("LDC", ac1, 0, ac3, "Load zero in ac1 for unary -");
-				//e.emitRO("SUB", ac, ac1, ac, "op unary -");
+				e.emitRM("LDC", rt, 0, 0, "Load zero in rt for unary -");
+				e.emitRO("SUB", actualRegister, rt, actualRegister, "op unary -");
 			}
 			else { // comparison operators
 				e.emitRO("SUB", actualRegister, actualRegister, nextRegister, "prepare for comparison op");
@@ -459,8 +508,11 @@ void ExpressionNode::GenCode(CodeEmitter &e, bool travSib, int virtualRegister, 
 		case CallK:
 			// dump any used registers to temps before calling a function
 			currentReg = actualRegister;
+			if (currentReg > FIRST_REG_OFFSET)
+				e.emitComment("Need to dump Registers before call");
+			
 			while (currentReg > FIRST_REG_OFFSET)
-				e.emitRM("ST", currentReg--, toff--, fp, "Save Register to Temporaries");
+				e.emitRM("ST", --currentReg, toff--, fp, "Save register to temporaries");
 
 			dPtr = (DeclarationNode *)symtab->lookup(name.c_str());
 			currentLoc = toff--;
@@ -483,15 +535,19 @@ void ExpressionNode::GenCode(CodeEmitter &e, bool travSib, int virtualRegister, 
 
 			// prepare for jump
 			e.emitRM("LDA", fp, currentLoc, fp, "Load address of new frame");
-			e.emitRM("LDA", FIRST_REG_OFFSET, 1, pc, "Put return address in current accumulator");
+			e.emitRM("LDA", FIRST_REG_OFFSET, 1, pc, "Put return address in ac");
 			e.emitRMAbs("LDA", pc, dPtr->offset, "Call " + dPtr->name);
 			
 			// save return value
-			e.emitRM("LDA", FIRST_REG_OFFSET, 0, rt, "Save the result in ac");
+			e.emitRM("LDA", actualRegister, 0, rt, "Save the result in current accumulator");
 
 			// restore temps back to registers
+			if (currentReg < actualRegister)
+				e.emitComment("Need to restore registers after call");
+
+			toff = currentLoc;
 			while (currentReg < actualRegister)
-				e.emitRM("LD", ++currentReg, ++toff, fp, "Load Register from Temporaries");
+				e.emitRM("LD", currentReg++, ++toff, fp, "Load Register from Temporaries");
 
 			// restore toff
 			//toff = localToff;
@@ -1042,7 +1098,6 @@ void StatementNode::ScopeAndType(ostream &out, int &numErrors) {
 
 void DeclarationNode::GenCode(CodeEmitter &e, bool travSib, int virtualRegister, int toff) {
 	DeclarationNode *dPtr;
-	string tempComment;
 
 	// Assign virtual register to 'real' register
 	int actualRegister = virtualRegister%MAX_EXP_REGISTERS+FIRST_REG_OFFSET;
@@ -1052,8 +1107,7 @@ void DeclarationNode::GenCode(CodeEmitter &e, bool travSib, int virtualRegister,
 		// Lookup in symbol table - we'll need to set the "offset" variable
 		dPtr = (DeclarationNode *)this;
 		dPtr->offset = e.emitSkip(0); // save the current location for calls later
-		e.emitRM("ST", FIRST_REG_OFFSET, -1, fp, "store return address"); // return address is always -1 away from current frame
-	
+			
 		// If this function is main, we need to backpatch in the jump from the prolog
 		if (name == "main") {
 			e.emitBackup(jumpMain);
@@ -1061,8 +1115,8 @@ void DeclarationNode::GenCode(CodeEmitter &e, bool travSib, int virtualRegister,
 			e.emitRestore();
 		}
 
-		tempComment = "Function " + name + " returns " + PrintType(type);
-		e.emitComment(tempComment.c_str());
+		e.emitComment("Function " + name + " returns " + PrintType(type));
+		e.emitRM("ST", FIRST_REG_OFFSET, -1, fp, "store return address"); // return address is always -1 away from current frame
 
 		// Load up the foff variable with the function size
 		foff = size;
@@ -1072,13 +1126,17 @@ void DeclarationNode::GenCode(CodeEmitter &e, bool travSib, int virtualRegister,
 			child[1]->GenCode(e, true, virtualRegister, foff);
 		}
 
-		// Standard Closing
-		e.emitComment("Add standard closing in case there is no return statement");
-		e.emitRM("LDC", rt, 0, 0, "Set return value to 0");
-		e.emitRM("LD", actualRegister, -1, fp, "Load return address");
-		e.emitRM("LD", fp, 0, fp, "Adjust fp");
-		e.emitRM("LDA", pc, 0, actualRegister, "Return");		
-		e.emitComment(("End Function " + name).c_str());
+		// Add Return Statement if the function doesn't return from all branches
+		if (!allPathsReturn) {
+			e.emitComment("This function requires a catch all return");
+			e.emitRM("LDC", rt, 0, 0, "Set return value to 0");
+			e.emitRM("LD", actualRegister, -1, fp, "Load return address");
+			e.emitRM("LD", fp, 0, fp, "Adjust fp");
+			e.emitRM("LDA", pc, 0, actualRegister, "Return");					
+		}
+		else
+			e.emitComment("This function returns from all paths, no catch all return required");
+		e.emitComment("End Function " + name);
 	}
 
 	if (sibling != NULL)
