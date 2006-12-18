@@ -1,0 +1,12 @@
+ERROR lineno(3): Symbol lund is already defined at line 1.
+ERROR lineno(7): Symbol a is already defined at line 7.
+ERROR lineno(9): Symbol a is already defined at line 7.
+ERROR lineno(10): a is a simple variable and cannot be called.
+ERROR lineno(11): Cannot use function fred as a simple variable.
+ERROR lineno(14): Symbol fred is already defined at line 7.
+ERROR lineno(18): Symbol linda is already defined at line 16.
+ERROR lineno(21): galadriel cannot be of type void.
+ERROR lineno(22): eowyn cannot be of type void.
+ERROR lineno(24): Cannot use function arwen as a simple variable.
+Number of errors: 10
+Number of warnings: 0

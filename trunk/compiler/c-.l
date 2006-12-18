@@ -32,7 +32,7 @@ while				{ SaveToken(true); return WHILE; }
 return				{ SaveToken(true); return RETURN; }
 true				{ SaveToken(true); return TRUE; }
 false				{ SaveToken(true); return FALSE; }
-bool				{ SaveToken(true); return BOOL;	}
+bool				{ SaveToken(true); return BOOLEAN; }
 void				{ SaveToken(true); return VOID;	}					  
 int					{ SaveToken(true); return INT; }
 					  

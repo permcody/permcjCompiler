@@ -44,6 +44,12 @@ string TreeNode::PrintType(Types t) const {
 		case Bool:
 			s = "bool";	
 			break;
+		case Undefined:
+			s = "undefined";
+			break;
+		default:
+			s = "error";
+			break;
 	}
 	return s;
 }
@@ -181,6 +187,7 @@ void ExpressionNode::ScopeAndType(ostream &out, int &numErrors) {
 	switch (subKind) {
 		case AssignK:
 			op = "=";	// populate the op for assignments with "=" to make Op logic work properly
+			// intentionally drop through to OpK case...
 		case OpK:			
 			if (child[0] != NULL) {				
 				child[0]->ScopeAndType(out, numErrors);
@@ -195,6 +202,16 @@ void ExpressionNode::ScopeAndType(ostream &out, int &numErrors) {
 			}
 		
 			lookupTypes(op, lhs_decl, rhs_decl, returnType);	// populate the last three variable from the function
+
+			//DEBUG 
+			/*if (lineNumber == 26) {
+				cerr << "op: " << op << "\nlhs_decl: " << PrintType(lhs_decl) << " lhs_type: " 
+					<< PrintType(lhs_type) << "\nrhs_decl: " << PrintType(rhs_decl)
+					<< " rhs_type: " << PrintType(rhs_type) << "\nlhs_isArray: " 
+					<< boolalpha << lhs_isArray << "\nrhs_isArray: " << rhs_isArray 
+					<< noboolalpha <<  endl;					
+			}*/
+			//DEBUG 
 
 			// unary ops
 			if (isUnary && lhs_type != Error) {
@@ -213,32 +230,44 @@ void ExpressionNode::ScopeAndType(ostream &out, int &numErrors) {
 				}
 			}
 			// binary ops
-			else if (!isUnary && lhs_type != Error && rhs_type != Error) {
+			else if (!isUnary) {
 				// check for arrays
-				if (lhs_isArray || rhs_isArray) {
+				if (lhs_type != Error && rhs_type != Error && (lhs_isArray || rhs_isArray)) {					
 					++numErrors;
 					foundError = true;
 					// binary operator array check error
 					PrintError(out, 16, lineNumber, op, "", "", 0, 0);					
 				}
 				// check for binary ops that can process different types as long as they are the same
-				else if (lhs_decl == Undefined && rhs_decl == Undefined) {
-					if (lhs_type != rhs_type) {
-						++numErrors;
-						foundError = true;
-						// same type required check error
-						PrintError(out, 1, lineNumber, op, PrintType(lhs_type), PrintType(rhs_type), 0, 0);						
-					}
+				else if (lhs_type != Error && rhs_type != Error && lhs_decl == Undefined && rhs_decl == Undefined && lhs_type != rhs_type) {
+					++numErrors;
+					foundError = true;
+					// same type required check error
+					PrintError(out, 1, lineNumber, op, PrintType(lhs_type), PrintType(rhs_type), 0, 0);										
 				}					
 				// do type check for strict binary operators
-				else {
-					if (lhs_decl != lhs_type) {
+				/*else {
+					if (lhs_type != Error && lhs_decl != Undefined && lhs_decl != lhs_type) {
 						++numErrors;
 						foundError = true;
 						// binary lhs type check error
-						PrintError(out, 2, lineNumber, op, PrintType(lhs_decl), PrintType(lhs_type), 0, 0);						
-					}				
-					if (rhs_decl != rhs_type) {
+						PrintError(out, 2, lineNumber, op, PrintType(lhs_decl), PrintType(lhs_type), 0, 0);
+					}
+					if (rhs_type != Error && rhs_decl != Undefined && rhs_decl != rhs_type) {
+						++numErrors;
+						foundError = true;
+						// binary rhs type check error
+						PrintError(out, 3, lineNumber, op, PrintType(rhs_decl), PrintType(rhs_type), 0, 0);						
+					}
+				}*/
+				else if (lhs_type != Error && rhs_type != Error) {
+					if (lhs_decl != Undefined && lhs_decl != lhs_type) {
+						++numErrors;
+						foundError = true;
+						// binary lhs type check error
+						PrintError(out, 2, lineNumber, op, PrintType(lhs_decl), PrintType(lhs_type), 0, 0);
+					}
+					if (rhs_decl != Undefined && rhs_decl != rhs_type) {
 						++numErrors;
 						foundError = true;
 						// binary rhs type check error
@@ -247,7 +276,7 @@ void ExpressionNode::ScopeAndType(ostream &out, int &numErrors) {
 				}
 			}
 			// set the type for this node
-			if (foundError)
+			if (foundError || lhs_type == Error || rhs_type == Error)  // propagate the error type to avoid cascading errors
 				this->type = Error;
 			else {
 				if (returnType == Undefined)
@@ -261,13 +290,15 @@ void ExpressionNode::ScopeAndType(ostream &out, int &numErrors) {
 			// make sure symbol exists
 			dPtr = (DeclarationNode *)symtab->lookup(name.c_str());
 			if (dPtr != NULL) {
-				// populate this ID node with the type from the symbol table
-				this->type = dPtr->type;
+				// populate this ID node with the type from the symbol table				
 				if (dPtr->subKind == FuncK) {
 					++numErrors;
 					// Cannot use functions like simple variables
 					PrintError(out, 21, lineNumber, name, "", "", 0, 0);
+					this->type = Error; // don't bother trying to check type if expression
 				}
+				else
+					this->type = dPtr->type;
 			} 
 			else if (dPtr == NULL) {
 				++numErrors;
@@ -538,17 +569,15 @@ void DeclarationNode::ScopeAndType(ostream &out, int &numErrors) {
 		// symbol already defined error
 		PrintError(out, 14, lineNumber, dPtr->name, "", "", dPtr->lineNumber, 0);		
 	}
+	else if (subKind != FuncK && type == Void) {
+		++numErrors;
+		// Params and Variables cannot be type void
+		PrintError(out, 19, lineNumber, name, "", "", 0, 0);
+	}
 	else
 		symtab->insert(name.c_str(), this);	// insert the declartation if no errors
 	
-	if (subKind != FuncK) {	// Variable and Parameter declarations
-		if (type == Void) {
-			++numErrors;
-			// Params and Variables cannot be type void
-			PrintError(out, 19, lineNumber, name, "", "", 0, 0); 
-		}
-	}
-	else {	// Function Declarations
+	if (subKind == FuncK) {	// Function Declarations
 		funcReturnType = type;	// store the function return type in a global		
 		symtab->enter(name.c_str());
 		newScope = false;	// don't start a new scope for the function body (Compound stmt)

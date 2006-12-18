@@ -1,0 +1,9 @@
+ERROR lineno(6): w cannot be of type void.
+ERROR lineno(11): = requires things of the same type but lhs is int and rhs is bool.
+ERROR lineno(12): Cannot use function w as a simple variable.
+ERROR lineno(13): + requires things of type int but lhs is of type bool.
+ERROR lineno(13): Symbol v is not defined.
+ERROR lineno(14): Symbol v is not defined.
+ERROR lineno(22): = requires things of the same type but lhs is bool and rhs is int.
+Number of errors: 7
+Number of warnings: 0

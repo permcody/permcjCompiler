@@ -21,13 +21,20 @@ TreeNode *newOpExpNode(char *op, TreeNode *child0, TreeNode *child1, long lineno
 void yyerror(const char *msg)
 {
 	if (strcmp(msg, "Flex Error") == 0) {
+		// This error is called explicitly from the flex part (yylex)
 		++numWarnings;
-		cerr << "WARNING lineno(" << currentLineNo << "): Invalid input character: " << currentToken << ".  Character ignored. " << endl;
+		cout << "WARNING lineno(" << currentLineNo << "): Invalid input character: " << currentToken << ".  Character ignored." << endl;
+	}
+	else if (strstr(msg, "expecting")) {
+		// Expecting Error
+		++numErrors;
+		cout << "ERROR lineno(" << currentLineNo << "): " << msg << " but got: " << currentToken << endl;
 	}
 	else {
+		// Parse Error
 		++numErrors;
-		cerr << "ERROR lineno(" << currentLineNo << "): " << msg << " but got: " << currentToken << endl;
-	}
+		cout << "ERROR lineno(" << currentLineNo << "): Unexpected token: " << currentToken << endl;
+	}	
 }
 
 string & copyString(char *source) 
@@ -45,7 +52,7 @@ string & copyString(char *source)
 	FlexStruct *fPtr;
 }
 
-%token <lineno> IF RETURN WHILE TRUE FALSE INT VOID BOOL '{' '='
+%token <lineno> IF RETURN WHILE TRUE FALSE BOOLEAN INT VOID '{' '='
 %token <fPtr> ID NUM
 
 %left <lineno> '<' '>' LEQ GEQ EQ NEQ
@@ -69,8 +76,9 @@ string & copyString(char *source)
 				statement_list
 				statement
 				expression_stmt
-				selection_stmt
-				iteration_stmt
+				matched
+				unmatched
+				others
 				return_stmt
 				expression
 				var
@@ -128,9 +136,9 @@ var_declaration		: type_specifier ID ';'
 						}
 					;
 					
-type_specifier		: INT	{ $$ = TreeNode::Int; }	
+type_specifier		: BOOLEAN	{ $$ = TreeNode::Bool; }
+					| INT	{ $$ = TreeNode::Int; }	
 					| VOID	{ $$ = TreeNode::Void; }
-					| BOOL	{ $$ = TreeNode::Bool; }
 					;
 					
 fun_declaration		: type_specifier ID '(' params ')' compound_stmt 
@@ -229,10 +237,12 @@ statement_list		: statement_list statement
 					|	{ $$ = NULL; }
 					;
 
-statement			: expression_stmt { $$ = $1; }
-					| compound_stmt { $$ = $1; }
-					| selection_stmt { $$ = $1; }
-					| iteration_stmt { $$ = $1; }
+statement			: matched { $$ = $1; }
+					| unmatched { $$ = $1; }
+					;
+
+others				: expression_stmt { $$ = $1; }
+					| compound_stmt { $$ = $1; }					
 					| return_stmt { $$ = $1; }
 					;
 					
@@ -245,14 +255,7 @@ expression_stmt		: expression ';' { $$ = $1; }
 						}
 					;
 					
-selection_stmt		: IF '(' expression ')' statement %prec LOWER_THAN_ELSE
-						{	StatementNode *sNode = new StatementNode(TreeNode::IfK);
-							sNode->lineNumber = $1;			// save the linenumber from 'IF'
-							sNode->child[0] = $3;
-							sNode->child[1] = $5;
-							$$ = (TreeNode *)sNode;
-						}
-					| IF '(' expression ')' statement ELSE statement
+matched				: IF '(' expression ')' matched ELSE matched
 						{	StatementNode *sNode = new StatementNode(TreeNode::IfK);
 							sNode->lineNumber = $1;			// save the linenumber from 'IF'
 							sNode->child[0] = $3;
@@ -260,52 +263,75 @@ selection_stmt		: IF '(' expression ')' statement %prec LOWER_THAN_ELSE
 							sNode->child[2] = $7;
 							$$ = (TreeNode *)sNode;
 						}
-					| IF '(' error ')' statement %prec LOWER_THAN_ELSE		// ERROR handling
+					| IF '(' error ')' matched ELSE matched	// ERROR handling
 						{	$$=NULL;
-							cout << "**ERROR unmatched IF 1\n"; 
+							cout << "**ERROR matched IF 1\n";							
 							yyerrok;
 						}
-					| IF '(' error ')' statement ELSE statement				// ERROR handling
+					| IF '(' expression ')' error ELSE matched	// ERROR handling
 						{	$$=NULL;
-							// Look for unmatched vs matched
-							StatementNode *sNode = (StatementNode *)$7;
-							if (sNode->child[2] == NULL) {
-								cout << "**ERROR unmatched IF 2\n";
-								sNode->PrintTree(cout, 0, 0);
-							}
-							else
-								cout << "**ERROR matched IF 1\n";
+							cout << "**ERROR matched IF 2\n";							
 							yyerrok;
 						}
-					| IF '(' expression ')' error ELSE statement			// ERROR handling
-						{	$$=NULL;
-							// Look for unmatched vs matched
-							StatementNode *sNode = (StatementNode *)$7;
-							if (sNode->child[2] == NULL)
-								cout << "**ERROR unmatched IF 3\n";
-							else
-								cout << "**ERROR matched IF 2\n";
-							yyerrok;
-						}
-					;  
-					
-iteration_stmt		: WHILE '(' expression ')' statement
+					| WHILE '(' expression ')' matched
 						{	StatementNode *sNode = new StatementNode(TreeNode::WhileK);
 							sNode->lineNumber = $1;			// save the linenumber from 'WHILE'
 							sNode->child[0] = $3;
 							sNode->child[1] = $5;
 							$$ = (TreeNode *)sNode;
 						}
-					| WHILE '(' error ')' statement							// ERROR handling
+					| WHILE '(' error ')' matched			// ERROR handling
                         {	$$=NULL;
 							StatementNode *sNode = (StatementNode *)$5;
-							if (sNode->child[2] == NULL)
-									cout << "**ERROR unmatched WHILE 1\n";
-							else
-									cout << "**ERROR matched WHILE 1\n";
+							cout << "**ERROR matched WHILE 1\n";
+							yyerrok;
+						}	
+					| others					
+					;
+					
+unmatched			: IF '(' expression ')' statement
+						{	StatementNode *sNode = new StatementNode(TreeNode::IfK);
+							sNode->lineNumber = $1;			// save the linenumber from 'IF'
+							sNode->child[0] = $3;
+							sNode->child[1] = $5;						
+							$$ = (TreeNode *)sNode;
+						}
+					| IF '(' expression ')' matched ELSE unmatched
+						{	StatementNode *sNode = new StatementNode(TreeNode::IfK);
+							sNode->lineNumber = $1;			// save the linenumber from 'IF'
+							sNode->child[0] = $3;
+							sNode->child[1] = $5;
+							sNode->child[2] = $7;
+							$$ = (TreeNode *)sNode;
+						}
+					| IF '(' error ')' statement					// ERROR handling
+						{	$$=NULL;
+							cout << "**ERROR unmatched IF 1\n"; 
 							yyerrok;
 						}
-					;
+					| IF '(' error ')' matched ELSE unmatched		// ERROR handling
+						{	$$=NULL;
+							cout << "**ERROR unmatched IF 2\n";						
+							yyerrok;
+						}
+					| IF '(' expression ')' error ELSE unmatched	// ERROR handling
+						{	$$=NULL;
+							cout << "**ERROR unmatched IF 3\n";							
+							yyerrok;
+						}
+					| WHILE '(' expression ')' unmatched
+						{	StatementNode *sNode = new StatementNode(TreeNode::WhileK);
+							sNode->lineNumber = $1;			// save the linenumber from 'WHILE'
+							sNode->child[0] = $3;
+							sNode->child[1] = $5;
+							$$ = (TreeNode *)sNode;
+						}
+					| WHILE '(' error ')' unmatched					// ERROR handling
+                        {	$$=NULL;
+							cout << "**ERROR unmatched WHILE 1\n";
+							yyerrok;
+						}
+					;  
 					
 return_stmt			: RETURN ';' 
 						{	StatementNode *sNode = new StatementNode(TreeNode::ReturnK);
@@ -469,6 +495,7 @@ void PrintNode(void *dPtr) { DeclarationNode::PrintNode(cout, (DeclarationNode *
 int main(int argc, char *argv[]) {
 		
 	char *progname;
+	char *ofile;
 	extern FILE *yyin;
 	bool fileOpen = false;
 	bool printSyntaxTree = false;
@@ -478,9 +505,10 @@ int main(int argc, char *argv[]) {
 	progname = argv[0];
 	
 	yydebug = 0;
-	while ((c = getopt(argc, argv, "dps"))!= EOF)
+	while ((c = getopt(argc, argv, "dpso:"))!= EOF)
 		switch (c) {
 		case 'd':
+			// turn on Bison Debugging
 			yydebug = 1;
 			break;
 		case 'p':
@@ -488,6 +516,9 @@ int main(int argc, char *argv[]) {
 			break;
 		case 's':
 			symbolTableTracing = true;
+		case 'o':
+			ofile = optarg;
+			cout << "ofile = " << ofile;
 			break;		
 		}
 	

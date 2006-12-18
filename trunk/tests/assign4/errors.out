@@ -1,0 +1,6 @@
+ERROR lineno(2): parse error, expecting `')'' but got: ;
+**ERROR paren exp
+ERROR lineno(4): parse error, expecting `';'' but got: )
+**ERROR expression_stmt
+Number of errors: 2
+Number of warnings: 0

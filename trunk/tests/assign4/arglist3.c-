@@ -1,0 +1,11 @@
+int kate(int a, int b, int c, int d, int e, int f)
+{
+	return 666;
+}
+
+int matty(void)
+{
+    kate(2, 3, 5, 7, 11, 13);
+
+    return 42;
+}

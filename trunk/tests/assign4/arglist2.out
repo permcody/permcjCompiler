@@ -1,0 +1,35 @@
+ERROR lineno(11): Wrong number of parameters for function kate defined on line 1.
+ERROR lineno(12): Wrong number of parameters for function kate defined on line 1.
+ERROR lineno(13): Wrong number of parameters for function kate defined on line 1.
+ERROR lineno(15): Wrong number of parameters for function kate defined on line 1.
+ERROR lineno(16): Wrong number of parameters for function kate defined on line 1.
+ERROR lineno(18): Expecting int in parameter 1 of call kate defined on line 1.
+ERROR lineno(18): Expecting bool in parameter 2 of call kate defined on line 1.
+ERROR lineno(18): Not expecting array in parameter 2 of call kate defined on line 1.
+ERROR lineno(18): Expecting int in parameter 3 of call kate defined on line 1.
+ERROR lineno(18): Expecting bool in parameter 4 of call kate defined on line 1.
+ERROR lineno(18): Expecting array in parameter 4 of call kate defined on line 1.
+ERROR lineno(19): Not expecting array in parameter 1 of call kate defined on line 1.
+ERROR lineno(19): Not expecting array in parameter 2 of call kate defined on line 1.
+ERROR lineno(19): Expecting array in parameter 3 of call kate defined on line 1.
+ERROR lineno(19): Expecting array in parameter 4 of call kate defined on line 1.
+ERROR lineno(20): Expecting int in parameter 1 of call kate defined on line 1.
+ERROR lineno(20): Not expecting array in parameter 1 of call kate defined on line 1.
+ERROR lineno(20): Expecting bool in parameter 2 of call kate defined on line 1.
+ERROR lineno(20): Expecting int in parameter 3 of call kate defined on line 1.
+ERROR lineno(20): Expecting array in parameter 3 of call kate defined on line 1.
+ERROR lineno(20): Expecting bool in parameter 4 of call kate defined on line 1.
+ERROR lineno(23): + requires things of type int but rhs is of type bool.
+ERROR lineno(30): Expecting a return type of int but got none.
+ERROR lineno(33): Symbol abbey is already defined at line 28.
+ERROR lineno(35): Expecting a return type of int but got none.
+ERROR lineno(40): Expecting return type of int but got type bool.
+ERROR lineno(45): Expecting return type of bool but got type int.
+ERROR lineno(50): Expecting a return type of bool but got none.
+ERROR lineno(57): Cannot return an array.
+ERROR lineno(62): Expecting return type of void but got type int.
+ERROR lineno(67): Expecting return type of void but got type bool.
+ERROR lineno(73): Expecting return type of void but got type bool.
+ERROR lineno(73): Cannot return an array.
+Number of errors: 33
+Number of warnings: 0
