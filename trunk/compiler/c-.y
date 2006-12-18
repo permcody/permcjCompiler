@@ -1,5 +1,5 @@
 %{ 
-#include "globals.h"
+#include "syntaxtree.h"
 #include "symtab.h"
 #include "compiler.h"
 

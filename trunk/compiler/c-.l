@@ -3,7 +3,7 @@
 #include <cstring>
 using namespace std;
 
-#include "globals.h"
+#include "syntaxtree.h"
 #include "c-.tab.h"
 
 unsigned int currentLineNo = 1;

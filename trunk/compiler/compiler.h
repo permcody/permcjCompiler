@@ -1,7 +1,7 @@
 #ifndef _COMPILER_H_
 #define _COMPILER_H_
 
-#include "globals.h"
+#include "syntaxtree.h"
 #include "symtab.h"
 
 extern int yyparse();
