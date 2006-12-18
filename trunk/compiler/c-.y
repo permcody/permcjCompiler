@@ -356,36 +356,42 @@ TreeNode *newOpExpNode(char *op, TreeNode *child0, TreeNode *child1, long lineno
 
 int main(int argc, char *argv[]) {
 		
-	char *progname, *infile;
+	char *progname;
 	extern FILE *yyin;
 	bool fileOpen=false;
+	bool printSyntaxTree=false;
+	bool symbolTableTracing=false;
 	char c;
 	
 	progname = argv[0];
 	
 	yydebug = 0;
-	while ((c = getopt(argc, argv, "d"))!= EOF)
-	   switch (c) {
-	   case	'd':
-	      yydebug = 1;
-	      break;
-	   }
+	while ((c = getopt(argc, argv, "dps"))!= EOF)
+		switch (c) {
+		case 'd':
+			yydebug = 1;
+			break;
+		case 'p':
+			printSyntaxTree = true;
+			break;
+		case 's':
+			symbolTableTracing = true;
+			break;		
+		}
 	
-	if (argc > 2 && !yydebug || argc > 3) {
+	// check for a correct command line usage
+	if (argc-1 > optind) {
 		cerr << "usage: " << progname << " [-d] [infile]\n";
 		exit(1);
 	}
-	if (argc == 2 && !yydebug || argc == 3 && yydebug) {
-		if (argc == 2 && !yydebug)
-			infile = argv[1];
-		else
-			infile = argv[2];
-			
+	
+	// check for a filename on the command line
+	if (argc-1 == optind) {
 		/* open infile for reading */
-		yyin = fopen(infile, "r");
+		yyin = fopen(argv[optind], "r");
 		if (yyin == NULL) /* open failed */
 		{
-			cerr << progname << ": cannot open " << infile << endl;
+			cerr << progname << ": cannot open " << argv[optind] << endl;
 			exit(1);
 		} 
 		else 
@@ -393,10 +399,14 @@ int main(int argc, char *argv[]) {
 			fileOpen = true;
 		}			
 	}
-		
+
+	// let bison take it from here	
 	yyparse();
 	
-	savedTree->PrintTree(cout);
-		
-	//if (fileOpen) close(infile);
+	// print the tree if option is on
+	if (printSyntaxTree) savedTree->PrintTree(cout);
+	// print the symbol table tracing information if optino is on
+	if (symbolTableTracing) cout << "Symbol Table Tracing Info\n";
+	// close the open input file if necessary
+	if (fileOpen) fclose(yyin);
 }
