@@ -1,0 +1,452 @@
+<html>
+<head>
+<title> Assignment 3 </title>
+</head>
+<body background="/~heckendo/Textures/cs445.jpg">
+<p>
+<center>
+<font size=+2>CS445 Introduction to Compilers</font>
+</center> 
+<table width=100% cellpadding=0> 
+<tr><td align=left>
+<font size=+2> Assignment 3 <br>
+(Symbol Table and Type Checking)</font>
+</td>
+<td align=right>
+<font size=+2>300 points</font>
+</td>
+<tr>
+<td align=left>
+<font size=+2>DUE: Mon Nov 27 at 5 PM PST </font> 
+</td>
+<td align=right>
+<font size=+2>DUE (VIDEO): <b>exactly</b> 2 weeks later</font>
+</td>
+</tr>
+</table>
+<p>
+
+In this assignment we will do semantic analysis and semantic error 
+generation.  We will also add some more command line options.
+
+<center>
+<table width=60%><tr>
+<td><img src=../Icons/warnbig.gif></td><td>
+Note: we are running a bit behind.  This was supposed to
+be due before break but I am letting you go to past break.
+<b>However</b>, I will be posting assignment 4 before
+this one is due.  Plan accordingly!
+</td><td><img src=../Icons/warnbig.gif></td></tr>
+</table>
+</center>
+
+<h3>Two New Compiler Options</h3>
+
+This time we add <b>two new options</b>.  The first option is
+<b>-p</b> which prints the syntax tree.  That is it prints the syntax
+tree we did for assignment 2 but with the line numbers attached to
+every node.  See the section Tracking Line Numbers below.  <p> The
+second option is <b>-s</b> and turns on symbol table tracing.  See the
+secion the symbol table below.  <p> Original option <b>-d</b>
+continues to turn on the yydebug option as specified in assignment 2.
+It should still accept a single input file either from a filename
+given on the command line or redirected as standard input.  We will
+continue adding options throughout the semester.  The options need not
+come before the file name.  (HINT: I have added <a
+href=getoptTest.cpp><b>a getopt example</b></a> that is a silly example of
+how to do a variety of things with getopt.  This will make your life
+easier and let you focus on the compiler stuff.  I still have the <a
+href=getopt.txt><b>getopt man page</b></a> available.  )
+
+<h3>Tracking Line Numbers</h3>
+
+There are two kinds of errors we will generate in this assignment.
+The lexical/syntax errors that are reported with yyerror and the
+semantic errors that are reported as described in this assignment.
+(We will worry about integrating these errors in
+the next assignment.)
+
+<h4>Lexical/Syntax Errors</h4>
+
+These errors are reported by yyerror which recieves information
+about the current token being scanned and the current linenumber
+by global variable.  This you have done for assignment 2.  It
+will be tested in this assignment.
+
+<h4>Semantic Errors</h4>
+
+We want to generate errors that are tagged with useful
+line numbers.  So we will need to tag each node in the
+abstract syntax tree with a useful line number.
+To do this effectively we need to grab the line
+number as soon as possible (in flex) and associate it
+with the token.  This can be done nicely(portably)
+by passing back a struct for each token in the yylval
+which has all the information about the token such
+as its line number, lexeme, constant value, even token class.
+(A struct allows you to return more than a single value.)
+It can also be done with global variables but remember that
+yylval provides a stack that can remember for you
+the contents of a struct.  A single value may be overwritten.
+Then when you construct a node annotate the node with 
+the pertinent line number.
+<p>
+I modified my printTree routine to call a printNode
+routine whenever I wanted to see the conents of a node.
+Then I modified the print node routine to print the line
+number on each node.
+Kind of like in this segment out of a listing:
+<pre>
+        .
+        .
+        .
+    Child: 0
+        Var z of type int [line: 3]
+    Child: 1
+        If [line: 5]
+        Child: 0 
+            Op: > [line: 5] 
+            Child: 0
+                Id: x [line: 5]
+            Child: 1
+        .
+        .
+        .
+</pre>
+The test routines can turn on your print with the -p option
+and print out the line numbers for the comparison routine
+and grading.  This will help us get our line numbers in sync.
+It also helps you to get the nodes annotated as we would want them.
+<p>
+The question is which node's linenumber do you use
+to issue the error?
+For example, if there is a problem with a big long hairy while statement
+we will what
+tag the error where the while token is.  
+One could have used the line number from the test but
+that could become tricky if the test goes over multiple lines.
+A clear decision on the major tokens is given below.
+<p>
+Here are node types and where the line is said to be:
+<pre>
+//declarations
+VarK    at the ID
+FuncK   at the ID
+ParamK  at the ID
+//statements
+IfK       at the IF
+WhileK    at the WHILE
+CompoundK at the {
+ReturnK   at the RETURN 
+BreakK    at the BREAK
+//operators
+OpK        at the operator
+ConstantK  at the constant 
+IdK        at the ID 
+AssignK    at the =
+CallK      cat the ID
+</pre>
+So, in a declaration of a variable
+the declaration node of type VarK is said to 
+be on the line that the ID token was found. 
+"If" statements are where the IF token was found etc.
+This battle plan suggests an implementation for the error checking.
+
+<h3>Scope and Type Checking</h3>
+ 
+Now we will traverse the tree looking for typing and
+program structure errors.  So your main() might look something like 
+mine:
+<pre>
+    {// compile the code 
+	int numErrors;
+
+	yyparse();
+
+	if (printSyntaxTree) printTree(syntaxTree);
+
+	numErrors = scopeAndType(syntaxTree);
+	printf("Number of errors: %d\n", numErrors);
+ 
+    } 
+</pre>
+
+Your main may look quite different.  The routine scopeAndType will
+process the tree by calling a treeTraverse routine that starts at the
+root node for the tree and recursively calls itself for children and
+siblings until it gets to the leaves.  Declarations will make entries
+in the symbol table (see below).
+
+Here is an <b>outline</b> of what the declarations section of the
+treeTraverse wmight look like (yours may be different):
+
+<pre>
+             .
+             .
+             .
+    // handle declarations
+    if (current->nodekind == DeclK) {
+        switch (current->kind.decl) {
+        case VarK:
+            insertErr(current);
+            break;
+        case ParamK:
+            insertErr(current);
+            break;
+        case FuncK:
+            currentFuncType = current->expType; // Save function type -> need it to check return type
+            insertErr(current);
+            symtab->enter(current->attr.name);
+            newScope = false;
+            treeTraverse(current->child[0]);
+            treeTraverse(current->child[1]);
+            symtab->leave(); 
+            break; 
+        default:
+            printf("SYSTEM ERROR: Unknown declaration node kind!\n");
+            break;
+        }
+    }
+             .
+             .
+             . 
+    //handle statements
+    else if (current->nodekind == StmtK) {
+        switch (current->kind.stmt) {
+        case CompoundK:
+            if (newScope) symtab->enter("compoundStmt");
+            else newScope = true;
+            treeTraverse(current->child[0]);
+            treeTraverse(current->child[1]);
+            symtab->leave();
+            break;
+             .
+             .
+             . 
+         case IfK:
+            child0 = treeTraverse(current->child[0]);
+	    if (child0) {
+                if ((child0->expType!=ErrorType) && (child0->expType != Boolean)) {
+                printf("ERROR lineno(%d): Expecting boolean test condition.\n",
+                   child0->lineno);
+                numErrors++;
+                }
+		.
+		.
+		.
+	    }
+            treeTraverse(current->child[1]);
+            treeTraverse(current->child[2]);
+            break;
+             .
+             .
+             . 
+
+</pre>
+
+Your job in writing the treeTraverse routine is to catch a variety of
+errors and duplicate my output for any input given.  You should keep
+count of the number of errors in a global and report that at the end
+of a run.  Here are the errors right out of my version
+(Here is the <a href=errors.txt><b>
+list of error messages sorted by type of error message</b></a>
+):
+
+<pre>
+
+printf("ERROR(%d): '%s' is a simple variable and cannot be called.\n",
+printf("ERROR(%d): '%s' requires things of the same type but lhs is %s and rhs is %s.\n",
+printf("ERROR(%d): '%s' requires things of type %s but lhs is of type %s.\n",
+printf("ERROR(%d): '%s' requires things of type %s but rhs is of type %s.\n",
+printf("ERROR(%d): Array '%s' should be indexed by a type int but got type %s.\n",
+printf("ERROR(%d): Array index is the unindexed array '%s'.\n",
+printf("ERROR(%d): Cannot have a break statement outside of while loop.\n",
+printf("ERROR(%d): Cannot index nonarray '%s'.\n",
+printf("ERROR(%d): Cannot return an array.\n",
+printf("ERROR(%d): Cannot use array as test condition in %s statement.\n",
+printf("ERROR(%d): Cannot use function '%s' as a simple variable.\n",
+printf("ERROR(%d): Expecting a return type of %s but got none.\n",
+printf("ERROR(%d): Expecting array in parameter %i of call '%s' defined on line %d.\n",
+printf("ERROR(%d): Expecting boolean test condition in %s statement.\n",
+printf("ERROR(%d): Expecting no return value, but got one.\n",
+printf("ERROR(%d): Expecting return type of %s but got type %s.\n",
+printf("ERROR(%d): Expecting type %s in parameter %i of call '%s' defined on line %d.\n",
+printf("ERROR(%d): Not expecting array in parameter %i of call '%s' defined on line %d.\n",
+printf("ERROR(%d): Symbol '%s' is already defined at line %d.\n",
+printf("ERROR(%d): Symbol '%s' is not defined.\n",
+printf("ERROR(%d): The operation '%s' does not work with arrays.\n",
+printf("ERROR(%d): Too few parameters passed for function '%s' defined on line %d.\n",
+printf("ERROR(%d): Too many parameters passed for function '%s' defined on line %d.\n",
+printf("ERROR(%d): Unary '%s' requires things of type %s but was given type %s.\n",
+printf("ERROR(%d): Variable '%s' cannot be declared of type void.\n",
+
+
+</pre>
+<b>NOTE: to shorten the error messages I have converted what used to 
+be ERROR lineno(%d) everywhere to ERROR(%d) this includes your yyerror 
+routine.  Sorry for the change.</b>
+
+Here are some details by node type but this list is not exhaustive.
+You are in control of the design as long as it duplicates my output.
+
+<ul>
+<li> For <b>declaration nodes</b> do something like the outline above where insertErr checks 
+for duplicate definitions in the symbol table.  Of interest in the outline is the
+newScope flag that is set here to prevent the compound statement following the parenthesized
+parameter list from opening a new scope.  Notice the scope entry and leave commands. 
+<li> For <b>compound statements</b> newScope needs to be handled.
+
+<li> <b>While</b> and <b>If</b> should check they have boolean tests.
+
+<li> <b>Assignments</b> and <b>operators</b> should check that they have the proper
+type.  Types of expressions will have to be passed up.  Here I
+recommend introducing a new type of variable to the list of types
+Void, Integer, Boolean that is <b>ErrorType</b>.  This will be used to
+<b>prevent Cascading Errors</b>.  If a type error occurs the type of the
+resulting expression can be set to <b>ErrorType</b> and checked for in the
+parent nodes as the type is propagated upward.  No error should be
+generated because of an operand that is of type <b>ErrorType</b>.
+
+<li> For <b>return</b> check for return type matches.  Again use
+<b>ErrorType</b> to prevent the return from issuing an error for
+trying to return the result of an expression that has already
+generated an error.  Note that it is easy to check that the return is
+of the same type.  It is hard to check that a return is made out of a
+routine so we will not issue a error for that.  Note that routines
+that return void use the return without an argument.  A routine
+whose code falls out the bottom will perform a return by default.
+(More on this in the next assignment.)
+
+<li> For <b>break</b> check that the break is inside a while loop.
+
+<li> 
+Consider using an array or clever function rather than a switch or
+cascading if to know what types <b>operators</b> require for the
+arguments.  And use the same strategy for remembering what
+type is returned.
+Some examples are:
+<ul>
+<li> > takes Integers and returns a Boolean.  
+<li> + takes Integers and returns an Integer.
+<li> || takes Booleans and returns a Boolean.
+<li> - takes an Integer and returns an Integer.
+<li> The operators <b>==</b> and <b>!=</b>, 
+take arguements that are of the same type (both Boolean
+or both Integer) and return a Boolean.
+<li> <b>=</b> take arguements that are of the same type 
+and returns that type.  This is because assignment is an expression
+and can be used in cascaded assignment like:  a = b = c = 314159265
+</ul>
+See the error
+messages above to find an appropriate error message.  Note that
+in the error messages above
+<b>lhs</b> means left hand side and 
+<b>rhs</b> means right hand side.
+
+<li> For <b>Ids</b> you have to see if the variable has been defined or not
+and set the type of the Id node to the type of the declaration.  
+If the Id is undefined then set it to <b>ErrorType</b>.
+
+<li> Note that for this assignment each undefined or multiply defined
+reference must generate an error message.  We'll fix this later.
+
+<li> For Ids you can have <b>arrays</b> that are indexed.  Once they are
+indexed their type becomes nonarray.  Check for indexing
+of nonarrays and using unindexed arrays where they can't be used.
+
+<li> The <b>function call</b> 
+is the trickiest of all.  You must use the symbol table lookup to
+find the definition node and from there compare the types in the 
+parameter list with the types of the arguments given.  This means
+you must traverse the supplied argument before you compare it against
+the formal parameters for type match.
+Also if you
+run out of the parameter list items before you run out of
+argument list items you need to issue an error.  Same for running
+out of arguments.  See the error messages for an appropriate error.
+</ul>
+
+<h3>Symbol Table</h3>
+
+Here is a useful C++ symbol table object you can use: 
+<p>
+<a href=symtab.cpp><b>symtab.cpp</b></a><br>
+<a href=symtab.h><b>symtab.h</b></a><br>
+<p>
+Here is a brute-force translation 
+to C of the the above files (for a single symbol table).
+<p>
+<a href=symtabc.c><b>symtab.c</b></a><br>
+<a href=symtabc.h><b>symtab.h</b></a><br>
+<p> 
+Here are tests for the OO version (as discussed in class)
+and a tar file of all symtab files:
+<p>
+<a href=symtabTest.cpp><b>symtab tests</b></a><br>
+<a href=symtabTest.out><b>symtab expected output</b></a><br>
+<a href=symtab.tar><b>tar of all symtab stuff</b></a><br>
+<p>
+It provides
+a symbol table object with insert and lookup methods for symbols
+and a pointer (you can use the pointer to point to a TreeNode.
+It also has enter and leave methods of managing the scope stack.
+Read the symtab.h for
+more information on how to use it.
+You might want to just play with it to see how it works before you
+put it into your compiler (see test routines).
+<p> 
+One feature of the symbol table is the debug method and the two DEBUG
+flags.  At construction time the SymTab object is in nondebugging
+mode.  But by setting the flags with the debug method you can get the
+object to spew out info.  Use the <b>-s</b> flag to set the debug
+flags to DEBUG_TABLE.  This will announce entry into every scope and
+prints the symbol table on exit from a scope along with the scope
+names. 
+
+<p>
+Finally the constructor takes a print routine of the type
+void blah(void *).  So if you define somethign to
+print a node given a TreeNode * then you can
+supply that name to the constructor to print out your
+stack.  That way I don't have to know what you TreeNode looks
+like internally.  For instance in my code:
+<pre>
+    symtab = new SymTab(nodePrint);
+</pre> 
+creates the symbol table and nodePrint is defined as in
+this prototype:
+<pre>
+    void nodePrint(void *p);
+</pre> 
+<p>
+Here is the <a href=symtabTest.cpp><b>
+symbol table test routine</b></a> and 
+<a href=symtabTest.out><b>expected output</b></a>.
+
+<h3>Example Run</h3> 
+
+Here are <a href=testsA3.tar><b>some example test runs</b></a> 
+
+<h3>Submission</h3>
+
+Homework will be submitted as an <b>uncompressed</b> tar file to the
+<a href=submitTar.html>homework submission</a> page.  You can
+submit as many times as you like.  <b>The LAST file you submit BEFORE the
+deadline will be the one graded.</b>   For all submissions you will receive
+email showing how your file performed on the pre-grade tests.  The 
+grading program will use more extensive tests and those results will 
+be mailed to when they are run.
+<p>
+
+<img src=../Icons/hand_r.gif>
+If you have tests you really think are important or just cool please
+send them to me and I will consider adding them to the test suite.
+
+<hr><table width=100% border=0><tr>
+<td align=left><a href=http://marvin.ibest.uidaho.edu/~heckendo/>Robert Heckendorn</a></td>
+<td align=center><a href=..>Up One Level</a> 
+<td align=right>Last updated:&nbsp;<datestamp>Mar 12, 2004  23:34</datestamp></td>
+</tr></table>
+
+</body>
+</html>
