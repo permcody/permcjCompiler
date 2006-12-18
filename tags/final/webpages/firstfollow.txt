@@ -1,0 +1,483 @@
+COMPUTING First(A)
+------------------
+
+// compute the first sets from poductions P_1...P_m
+//  where no production contains an alternation
+procedure computeFirst({P_1, P_2, ...P_m})
+
+    // initial value for the First of anything
+    foreach A \elemof TERMS do First(A) = {A} 
+    foreach A \elemof NONTERMS do First(A) = {} 
+
+    // loop until nothing new happens updating the First sets
+    while stillchanging any First(A) do
+        foreach production P_i = A::=X_1, X_2, ... X_n do
+             First(A) <- First(A) \union FirstOfList(X_1, X_2, ... X_n)
+        end foreach
+    end while
+end
+
+ 
+// compute the first set for a list of terms and nonterms
+procedure FirstOfList(X_1, X_2, ... X_n)
+    FirstSet = {}
+    k=0
+    do
+          k++
+          FirstSet <- FirstSet \union First(X_k)-{\epsilon}
+    while k<n & \epsilon isin First(X_k)
+
+    // \epsilon only if X_1, X_2, ... X_n -> \epsilon
+    if \epsilon isin First(X_k) then FirstSet <- FirstSet \union {\epsilon}
+
+    return FirstSet
+end
+
+Note:
+1. if grammar has no \epsilon then First(X_1, X_2, ... X_n) = First(X_1)
+
+2. since \epsilon is removed when adding to First inside the do/while
+\epsilon can only appear when the entire argument list can be
+replaced by \epsilon (called nullable). 
+ 
+
+COMPUTING Follow(A)
+-------------------
+
+// compute the follow sets from poductions P_1...P_m
+//  where no production contains an alternation
+procedure computeFollow({P_1, P_2, ...P_m})
+ 
+    // initialize all the follow sets
+    foreach A \elemof NONTERMS do Follow(A) = {}
+    Follow(<start>)={$}
+
+    // loop until nothing new happens updating the Follow sets
+    while stillchanging any Follow(A) do {
+        foreach production P_i = A::=X_1, X_2, ... X_n do {
+            foreach X_i do
+                if X_i \elem NONTERMS then {
+                     Follow(X_i) <- Follow(X_i) \union
+                         First(X_i+1 X_i+2 ...)-{\epsilon} 
+                     if \epsilon \elemof FirstOfList(X_i+1X_i+2...) then
+                         Follow(X_i) <- Follow(X_i) \union Follow(A)
+                     end if 
+                end if 
+            end foreach
+        end foreach
+     end while
+end
+ 
+Note: 
+1. that since \epsilon is subtracted from First(X_i+1 X_i+2 ...) before
+adding to Follow(X_i), \epsilon cannot occur in a follow set.  This is
+unlike the first set.
+ 
+2. Only follow sets contain the end of input symbol '$'. 
+
+PREDICT 
+-------
+
+The Predict of a production tells what lookahead tokens predict the
+use of that production A::=X_1, X_2, ... X_n
+
+// compute the predict set of a production
+procedure Predit(A::=X_1, X_2, ... X_n)
+    if \epsilon \elemof First(X_1, X_2, ... X_n)
+        return First(X_1, X_2, ... X_n)-{\epsilon}\union Follow(A) 
+    else 
+        return First(X_1, X_2, ... X_n)
+    endif
+end
+
+
+If there is no \epsilon in the grammar:
+
+procedure Predict(A::=X_1, X_2, ... X_n)
+     return First(X_1)
+end 
+
+
+CONSTRUCTING THE LL PARSE TABLE
+-------------------------------
+
+M(A, t) where A is \elemof NONTERMS and t \elem Predict(A::=X_1 X_2...X_n)
+
+
+
+
+CAREFUL STEPS TO AUTOMATICALLY FINDING THE LL PARSE TABLE
+---------------------------------------------------------
+
+1. remove the alternation and list the terms and nonterms
+2. compute first sets for nonterminals
+3. compute the follow sets (only needed if \epsilon is in grammar)
+4. compute the predict sets.
+5. create LL Parse Table
+
+now you are ready to parse.
+ 
+ 
+----------------------------------------------------------------------
+EXAMPLE 1: NO \epsilon EXAMPLE
+
+
+Given the following grammar with 5 productions which include alternation
+
+<exp> ::= <exp> <addop> <term> | <term>
+<addop> ::= + | - 
+<term> ::= <term> <mulop> <factor> | <factor>
+<mulop> ::= *
+<factor> ::= ( <exp> ) | num
+
+STEP 1: remove most of the alternation (accept for some terminals) and
+list the terms and nonterms.  This is done for clarity
+
+list of productions without alternation:
+
+1)    <exp> ::= <exp> <addop> <term>
+2)    <exp> ::= <term> 
+3)  <addop> ::= + | -                    <-- cheating here
+4)   <term> ::= <term> <mulop> <factor>
+5)   <term> ::= <factor> 
+6)  <mulop> ::= * 
+7) <factor> ::= ( <exp> )
+8) <factor> ::= num
+
+
+ 
+ 
+TERMS = {+, -, *, (, ), num}
+NONTERMS = {<exp>, <addop>, <term>, <mulop>, <factor>}
+
+ 
+STEP 2: compute the first set 
+
+          pass 1                      pass 2        pass 3 
+<exp>     First(exp), First(term)     First(term)   (,num
+<addop>   +, -                        +,-           +,-
+<term>    First(term), First(factor)  First(factor) (,num
+<mulop>   *                           *             *
+<factor>  (,num                       (,num         (,num
+
+
+STEP 3: compute the follow set.  Not really needed because there are
+no \epsilons but we do it here for practice.  We will do this two 
+ways.  Note: only productions 1,2,4,5,7 affect the follow sets since 
+3, 6, 8 are terminals
+
+1)    <exp> ::= <exp> <addop> <term>
+2)    <exp> ::= <term>
+4)   <term> ::= <term> <mulop> <factor>
+5)   <term> ::= <factor>
+7) <factor> ::= ( <exp> )
+
+Because this grammar has no \epsilon more complex flow through
+the algorithm is avoided and the process is simply a collection of 
+set dependencies.  I will list out the dependencies and fill
+in the data in the three steps below.  fst stands for First and fol
+for Follow to save room.
+
+relationships:
+           firstSet   prod 1     prod 2   prod 4      prod 5    prod 7
+<exp>      (,num      fst(addop)                                fst(")")
+<addop>    +,-        fst(term)
+<term>     (,num      fol(exp)   fol(exp) fst(mulop)
+<mulop>    *                              fst(factor)
+<factor>   (,num                          fol(term)   fol(term)
+
+
+           Initialize fol(exp) = $
+
+First replace the First sets AND each row represents the follow set. e.g.
+Follow(<exp>) = {$,+,-,)} initially below:
+
+           firstSet   prod 1     prod 2   prod 4      prod 5    prod 7 TOTAL
+<exp>      (,num      +,-                                       )      $,+,-,)
+<addop>    +,-        (,num                                            (,num 
+<term>     (,num      fol(exp)   fol(exp) * 
+<mulop>    *                              (,num                        (,num
+<factor>   (,num                          fol(term)   fol(term)
+
+Then iterate over the follow sets:
+
+           firstSet   prod 1     prod 2   prod 4      prod 5   prod 7 TOTAL
+<exp>      (,num      +,-                                      )      $,+,-,)
+<addop>    +,-        (,num                                           (,num 
+<term>     (,num      $,+,-,)    $,+,-,)  *                           $,+,-,*,)
+<mulop>    *                              (,num                       (,num
+<factor>   (,num                          $,+,-,*,)   $,+,-,*,)       $,+,-,*,)
+
+
+Let's see that again only this time we compute the Follow set by
+running through the algorithm.  If a first or follow set is mentioned
+here it stands for the empty set (not the empty string) and is just
+there to be informative about what information we are using.
+
+1)    <exp> ::= <exp> <addop> <term> 
+2)    <exp> ::= <term>
+4)   <term> ::= <term> <mulop> <factor>
+5)   <term> ::= <factor> 
+7) <factor> ::= ( <exp> ) 
+
+           firstSet   prod 1     prod 2   prod 4      prod 5    prod 7
+<exp>      (,num      fst(addop)                                fst(")")
+<addop>    +,-        fst(term)
+<term>     (,num      fol(exp)   fol(exp) fst(mulop) 
+<mulop>    *                              fst(factor) 
+<factor>   (,num                          fol(term)   fol(term)
+
+
+pass 0: 
+           Initialize fol(exp) = $ 
+
+Pass 1: 
+Under each prod is what is ADDED for the production given at the top
+of the column.  The TOTAL column is what is in each follow set at the
+end of the pass.  Order of evaluation in each nonterminal is determined by
+its occurrance in the production.
+           firstSet   prod 1     prod 2   prod 4      prod 5    prod 7 TOTAL
+<exp>      (,num      $,+,-                                     )      $,+,-,)
+<addop>    +,-        (,num                                            (,num
+<term>     (,num      $,+,-      $,+,-    *                            $,+,-,*
+<mulop>    *                              (,num                        (,num 
+<factor>   (,num                          $,+,-,*     $,+,-,*          $,+,-,* 
+
+Pass 2:
+           firstSet   prod 1     prod 2   prod 4      prod 5    prod 7 TOTAL
+<exp>      (,num      $,+,-                                     )      $,+,-,)
+<addop>    +,-        (,num                                            (,num
+<term>     (,num      $,+,-,)    $,+,-,)  *                            $,+,-,*,)
+<mulop>    *                              (,num                        (,num
+<factor>   (,num                          $,+,-,*,)   $,+,-,*,)        $,+,-,*,)
+
+Pass 3: no change 
+
+
+STEP 4. Compute the predict sets:
+
+1)    <exp> ::= <exp> <addop> <term>       (,num
+2)    <exp> ::= <term>                     (,num
+3)  <addop> ::= + | -                      +,-
+4)   <term> ::= <term> <mulop> <factor>    (,num
+5)   <term> ::= <factor>                   (,num
+6)  <mulop> ::= *                          *
+7) <factor> ::= ( <exp> )                  (
+8) <factor> ::= num                        num
+
+
+STEP 5: compute the LL parse table
+
+M(A, t) where A is \elemof NONTERMS and t \elem Predict(A::=X_1 X_2...X_n)
+
+
+M          $      +      -      *       (       )     num
+<exp>                                   1,2           1,2 
+<addop>           3      3 
+<term>                                  4,5           4,5
+<mulop>                         6
+<factor>                                7             8
+
+
+Note:
+1. since no \epsilons are present Follow sets are not needed but
+it was good practice.  The next example is more complicated. 
+
+
+----------------------------------------------------------------------
+EXAMPLE 2: an example with \epsilon in the grammar
+
+Take the same grammar as in example 1:
+
+<exp> ::= <exp> <addop> <term> | <term>
+<addop> ::= + | -
+<term> ::= <term> <mulop> <factor> | <factor>
+<mulop> ::= * 
+<factor> ::= ( <exp> ) | num
+
+We will begin by removing left recursion as in section 4.2.3 
+creating two new nonterminals: expx and termx. 
+
+Step 0: remove left recursion
+
+<exp>   ::= <term> <expx>
+<expx>  ::= <addop> <term> <expx> | \epsilon 
+<addop> ::= + | - 
+<term>  ::= <factor> <termx>
+<termx> ::= <mulop> <factor> <termx> | \epsilon
+<mulop> ::= *
+<factor> ::= ( <exp> ) | num 
+ 
+
+STEP 1: remove alternation and list the terms and nonterms for clarity 
+
+1) <exp>   ::= <term> <expx>
+2) <expx>  ::= <addop> <term> <expx>
+3) <expx>  ::= \epsilon
+4) <addop> ::= + | -
+5) <term>  ::= <factor> <termx>
+6) <termx> ::= <mulop> <factor> <termx>
+7) <termx> ::= \epsilon
+8) <mulop> ::= * 
+9) <factor> ::= ( <exp> ) 
+a) <factor> ::= num
+
+TERMS = {+, -, *, (, ), num}
+NONTERMS = {<exp>, <expx>, <addop>, <term>, <termx>, <mulop>, <factor>}
+
+
+STEP 2: compute the first set
+
+          pass 1          pass 2          pass 3
+<exp>     first(term)     first(factor)   (,num 
+<expx>    +,-,\epsilon    +,-,\epsilon    +,-,\epsilon
+<addop>   +,-             +,-             +,-
+<term>    first(factor)   (,num           (,num
+<termx>   *,\epsilon      *,\epsilon      *,\epsilon
+<mulop>   *               *               *
+<factor>  (,num           (,num           (,num
+
+Note: \epsilon occurs only where the nonterminal can disappear by
+application of a production.
+
+STEP 3: compute the follow set
+Note: only productions 1,2,5,6,9 affect the follow sets
+
+1) <exp>   ::= <term> <expx>
+2) <expx>  ::= <addop> <term> <expx>
+3) <expx>  ::= \epsilon
+5) <term>  ::= <factor> <termx>
+6) <termx> ::= <mulop> <factor> <termx>
+7) <termx> ::= \epsilon
+9) <factor> ::= ( <exp> )
+ 
+ 
+The following shows what happens to the follow sets as each production
+is analyzed.
+
+
+           firstSet      prod 1&3   prod 2         prod 5     prod 6      prod 9
+<exp>      (,num                                                         )
+<expx>     +,-,\epsilon  fol(exp)  [fol(expx)]
+<addop>    +,-                     fst(term,expx) 
+<term>     (,num         fst(expx) fst(expx)
+                         &fol(exp) &fol(expx)
+<termx>    *,\epsilon                             fol(term)  [fol(termx)]
+<mulop>    *                                                 fst(factor,termx)
+<factor>   (,num                                  fst(termx) fst(termx)
+                                                  &fol(term) &fol(termx)
+
+pass 0:
+         Initialize fol(exp) = $
+
+Pass 1: 
+         firstSet      prod 1       prod 2         prod 5     prod 6      prod9  TOTAL
+<exp>    (,num         $                                                  )      $,)
+<expx>   +,-,\epsilon  $                                                         $ 
+<addop>  +,-                        (,num                                        (,num 
+<term>   (,num         +,-,$        +,-,$                                        +,-,$
+<termx>  *,\epsilon                                +,-,$                         +,-,$
+<mulop>  *                                                    (,num              (,num
+<factor> (,num                                     *,+,-,$    *,+,-,$            *,+,-,$
+ 
+Pass 2: 
+         firstSet      prod 1       prod 2         prod 5     prod 6    prod9  TOTAL
+<exp>    (,num         $                                                )      $,)
+<expx>   +,-,\epsilon  $,)                                                     $,)
+<addop>  +,-                        (,num                                      (,num 
+<term>   (,num         +,-,$,)      +,-,$,)                                    +,-,$,) 
+<termx>  *,\epsilon                                +,-,$,)                     +,-,$,)
+<mulop>  *                                                    (,num            (,num 
+<factor> (,num                                     *,+,-,$,)  *,+,-,$,)        *,+,-,$,)
+
+Pass 3:
+     no change
+
+
+           firstSet      followSet
+<exp>      (,num         $,)
+<expx>     +,-,\epsilon  $,) 
+<addop>    +,-           (,num 
+<term>     (,num         +,-,$,)
+<termx>    *,\epsilon    +,-,$,)
+<mulop>    *             (,num
+<factor>   (,num         *,+,-,$,)
+
+
+
+STEP 4. Compute the predict sets:
+
+      production                        Predict Set     Predict Set 
+1) <exp>   ::= <term> <expx>            First(term)     (,num
+2) <expx>  ::= <addop> <term> <expx>    First(addop)    +,-
+3) <expx>  ::= \epsilon                 Follow(expx)    $,)
+4) <addop> ::= + | -                    First(+|-)      +,-
+5) <term>  ::= <factor> <termx>         First(factor)   (,num
+6) <termx> ::= <mulop> <factor> <termx> First(mulop)    *
+7) <termx> ::= \epsilon                 Follow(termx)   +,-,$,)
+8) <mulop> ::= *                        First(*)        *
+9) <factor> ::= ( <exp> )               First("(")      (
+a) <factor> ::= num                     First(num)      num
+
+STEP 5. Create M(NONTERMS, TERMS)
+
+M(A, t) where A is \elemof NONTERMS and t \elem Predict(A::=X_1 X_2...X_n)
+
+
+M          $      +      -      *       (       )     num
+<exp>                                   1             1
+<expx>     3      2      2                      3
+<addop>           4      4
+<term>                                  5             5 
+<termx>    7      7      7      6               7 
+<mulop>                         8
+<factor>                                9             a
+
+
+
+
+RUN THE EXAMPLE ON SOME INPUT
+----------------------------- 
+
+
+PARSE STACK                  INPUT      production
+exp $                        3+4*5$
+                                        1
+<term> <expx> $              3+4*5$
+                                        5
+<factor><termx><expx>$       3+4*5$
+                                        a
+num<termx><expx>$            3+4*5$
+                                        match 
+<termx><expx>$               +4*5$
+                                        7
+<expx>$                      +4*5$ 
+                                        2 
+<addop><term><expx>$         +4*5$
+                                        4
+(+|-)<term><expx>$           +4*5$
+                                        match
+<term><expx>$                 4*5$ 
+                                        5 
+<factor><termx><expx>$        4*5$
+                                        a
+num<termx><expx>$             4*5$
+                                        match 
+<termx><expx>$                *5$ 
+                                        6
+<mulop><factor><termx><expx>$ *5$ 
+                                        8
+*<factor><termx><expx>$       *5$
+                                        match
+<factor><termx><expx>$         5$
+                                        a
+num<termx><expx>$              5$
+                                        match
+<termx><expx>$                  $
+                                        7 
+<expx>$                         $ 
+                                        3
+$                               $
+                                        match
+
+Holy cow!  It works!

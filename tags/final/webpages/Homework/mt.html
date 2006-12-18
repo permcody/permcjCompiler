@@ -1,0 +1,245 @@
+<html>
+<head>
+<title> MidTerm </title>
+</head>
+<!-- adobe  <body bgcolor=#ff8040> -->
+<body background=../../Textures/cs445.jpg>
+
+<center>
+<h1>Practice MidTerm</h1> 
+</center> 
+
+This practice test is not for a grade.  Please feel free to talk
+about this test on the discussion group.  The midterm is on
+Thursday Mar 25.
+
+<hr>
+
+<ol>
+<li> Name the six parts of a compiler on page 7 in your book and
+the products of each part.
+ 
+<p> <img src=../Textures/cs445.jpg width=1 height=10> <p>
+
+<li> What is the purpose of generating tokens?
+
+<p> <img src=../Textures/cs445.jpg width=1 height=10> <p>
+
+<li> Why are there multiple passes in many compilers?
+
+<p> <img src=../Textures/cs445.jpg width=1 height=10> <p>
+
+<li> What is the difference between a syntax tree and a parse tree?
+The tree in our compiler is which?
+
+<p> <img src=../Textures/cs445.jpg width=1 height=10> <p>
+
+<li> Give an example of a
+<ol type=a>
+<li> lexical analysis error.
+
+<p>
+<li> syntactic analysis error. 
+<p> 
+
+<li> semantic analysis error.
+<p>
+</ol>
+
+<li> What 4 operations are allowed in basic regular expressions. (p38)
+
+<p> <img src=../Textures/cs445.jpg width=1 height=10> <p> 
+
+<li> Write a regular expression suitable for flex for the following <b>or</b>
+tell me why it cannot be done.
+
+<ol type=a>
+<li>All strings of digits which do not begin with a 0 but allow the number
+0.
+<p>
+<li>A list of lowercase letters separated by commas.  (e.g. x,y,x)
+<p>
+ 
+<li>A list of alternating a's and b's (e.g. ababa  or ba  or bab or b)
+<p>
+ 
+<li>A list containing unnested matched pairs of parentheses 
+<p>
+
+<li>A list containing nested matched pairs of parentheses
+<p>
+ 
+<li>A list of 3 a's followed by 3 b's 
+<p>
+
+<li>A list of k a's followed by k b's
+</ol> 
+<p>
+ 
+<li> Draw a NFA for (a|b)*a(a|b|EPSILON).  Convert it to a DFA by
+collapsing the epsilon productions.  See around page 66. 
+
+<p> <img src=../Textures/cs445.jpg width=1 height=10> <p>
+
+<p> <img src=../Textures/cs445.jpg width=1 height=10> <p>
+
+<li> Why is a context free grammar more powerful than a regular
+grammar?
+
+<p> <img src=../Textures/cs445.jpg width=1 height=10> <p> 
+ 
+<li> Consider this grammar:
+
+<pre>
+stmt -> <b>IF</b> <b>(</b> test <b>)</b> stmt <b>ENDIF</b>
+stmt -> <b>IF</b> <b>(</b> test <b>)</b> stmt <b>ELSE</b> stmt <b>ENDIF</b>
+stmt -> <b>ACTION </b>
+stmt -> compound-stmt
+compound-stmt -> <b>{</b> stmt-list <b>}</b>
+stmt-list -> stmt | stmt <b>;</b> stmt-list
+test -> <b>EXP</b> 
+</pre>
+and consider the statement <tt>IF ( EXP ) ACTION ELSE { ACTION ; ACTION }</tt>
+<ol type=a>
+<li> Draw the parse tree for this statement.
+
+<p> <img src=../Textures/cs445.jpg width=1 height=10> <p>
+
+<li> Draw the syntax tree for this statement.
+
+<p> <img src=../Textures/cs445.jpg width=1 height=10> <p>
+
+<li> Draw the treeNode data structure from our C- compiler for this
+statement.
+
+<p> <img src=../Textures/cs445.jpg width=1 height=10> <p>
+
+</ol>
+<li> In class we used a trick for solving the dangling else
+problem that involved splitting the if statement into
+two classes of if statements one called matched and the other
+called unmatched.  Write out the grammar for the matched/unmatched 
+solution from class for the C- if statement using Bison style 
+formating.  Do not do the
+while statement.  Do not include the action part of the grammar.  Begin with
+the start symbol <b>statement</b> and assume the only other statements
+are return statments which look like <b>RETURN exp ;</b> and that you
+have an nonterm <b>exp</b> you can use in the test position.
+
+<p> <img src=../Textures/cs445.jpg width=1 height=10> <p>
+ 
+Now add an
+<b>unless</b> statement: <tt><b>unless ( test ) statement</b></tt> and
+a <b>loop forever</b> statement: <tt><b>loop</b> statement
+<b>forever</b> </tt>
+
+You can have statements
+<tt>statement <b>if</b> exp <b>;</b></tt>
+and  <tt><b>if (</b> exp <b>) {</b> statement <b>}</b></tt>.
+Perl <b>requires</b> the second if to have braces.  Why?
+Using only these two kinds of statements
+give an example where not having the braces would be a problem. 
+
+<p> <img src=../Textures/cs445.jpg width=1 height=10> <p>
+ 
+<li> What is a shift/reduce error?  Give an example grammar where this is 
+the error.
+
+<p> <img src=../Textures/cs445.jpg width=1 height=10> <p>
+
+<li> What is a reduce/reduce error? Give an example grammar where this is 
+the error. 
+
+<p> <img src=../Textures/cs445.jpg width=1 height=10> <p>
+
+<li> What is a recursive descent parser?  Why is left 
+recursion a problem for recursive descent parsers?
+ 
+<p> <img src=../Textures/cs445.jpg width=1 height=10> <p>
+ 
+<li> What is the difference between a derivation and a parse tree?
+What is a left most derivation?
+
+<p> <img src=../Textures/cs445.jpg width=1 height=10> <p>
+
+<li> Show how left recursion removal is done for
+<tt>exp -> exp + term | exp - term | term</tt>
+
+<p> <img src=../Textures/cs445.jpg width=1 height=10> <p> 
+ 
+<li> Show the example of left factoring for the if-else statement
+in the book.  Why might we need to do left factoring?
+
+<p> <img src=../Textures/cs445.jpg width=1 height=10> <p>
+
+<li>
+
+In the mock grammar below what are the first and follow sets?
+<pre>
+%token IF EXP ELSE RR 
+%%
+statement : IF '(' EXP ')' statement ';'
+          | statement IF '(' EXP ')'
+          | return_stmt
+          | compount_stmt
+          ;
+
+return_stmt : RR
+;
+
+compount_stmt : '{' statementlist '}'
+              | '[' statementlist ']'
+              ;
+
+statementlist : statement
+              | statementlist ';' statement
+
+</pre>
+<li> What does the 1 in LR(1) mean?
+
+<p> <img src=../Textures/cs445.jpg width=1 height=10> <p> 
+ 
+<li> What are the LR(0) items for the grammar:
+<pre>
+S' -> S
+S  ->  (S) S | empty
+</pre>
+
+<li> Derive an SLR(1) parser very similar to this sequence:<br>
+<ul> 
+<li>the grammar of example 5.3 on page 202
+<li>the LR(0) items for that grammar on page 202
+<li>the NFA for the LR(0) items in example 5.5 page 204
+<li>the DFA for the NFA on page 205 figure 5.3
+<li>the example parsing table in example 5.11 on page 212
+<li>the parsing of an example from the language in table 5.8 on page 213
+</ul>
+
+<p> <img src=../Textures/cs445.jpg width=1 height=10> <p>
+
+<li> What is the difference between an SLR(1) and an LR(1) parser? 
+
+<p> <img src=../Textures/cs445.jpg width=1 height=10> <p>
+ 
+<li> What is the difference between an LR(1) and an LALR(1) parser? 
+
+<p> <img src=../Textures/cs445.jpg width=1 height=10> <p>
+
+<li> Which parser does Bison use?
+ 
+<p> <img src=../Textures/cs445.jpg width=1 height=10> <p> 
+
+<li> Understand the algorithms in
+<a href=../parserAlgorithms.txt>Parser Algorithms</a>.  Be sure you know
+what the Goto column is used for in LR parsers. 
+
+<p> <img src=../Textures/cs445.jpg width=1 height=10> <p> 
+
+</ol> 
+<hr><table width=100% border=0><tr>
+<td align=left><a href=../../index.html>Robert Heckendorn</a></td>
+<td align=center><a href=..>Up One Level</a>
+<td align=right>Last updated:&nbsp;<datestamp>Mar 11, 2004  11:21</datestamp></td>
+</tr></table>
+</body>
+</html>

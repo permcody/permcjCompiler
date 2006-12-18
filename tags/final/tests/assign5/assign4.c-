@@ -1,0 +1,51 @@
+// C-F06
+int gx; int gy;
+
+void main(void)
+{
+    int x; int y;
+     
+    x = x + 111;
+    output(x);
+    y = y + 222;
+    output(y);
+    outnl();
+
+    gx = gx + 333;
+    output(gx);
+    gy = gy + 444;
+    output(gy);
+    outnl();
+     
+    x = x + y;
+    output(x);
+    outnl();
+
+    gx = gx + gy;
+    output(gx);
+    outnl();
+
+
+
+    x = x - 111;
+    output(x);
+    y = y - 222;
+    output(y);
+    outnl();
+
+    gx = gx - 333;
+    output(gx);
+    gy = gy - 444;
+    output(gy);
+    outnl();
+     
+    x = x - y;
+    output(x);
+    outnl();
+
+    gx = gx - gy;
+    output(gx);
+    outnl();
+
+    return;
+}

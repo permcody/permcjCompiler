@@ -1,0 +1,24 @@
+//
+// Randomly generated C- code
+//
+bool w(void)
+{
+    void w;
+    bool x;
+    int u;
+
+    x=x=true;
+    u=u=true;
+    if (w = 0) {
+	if (x + 7 - v)
+	    v;
+    }	
+    {
+	int x;
+	x = u;
+    }
+    {
+	bool x;
+	x = u;
+    }
+}

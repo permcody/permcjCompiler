@@ -1,0 +1,4 @@
+// C-F06
+void ThereIsNoProcedureCalledMainInThisFileToBeFoundAnywhereAtAll(void)
+{
+}

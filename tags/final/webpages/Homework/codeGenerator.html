@@ -1,0 +1,52 @@
+<html>
+<head>
+<title> Example from my Code Generator </title>
+</head>
+<body background=../../Textures/cs445>
+<h1>Example from my Code Generator</h1>
+Here is some code taken straight from my code generator phase of
+my compiler.  It contains an example of back patching as
+well as a couple of simple statements.  (Credit and thanks for some of this
+code goes to Jorge Williams who worked on this a year ago.)  
+<pre>
+    case WhileK:
+	emitComment("WHILE");
+	currloc = emitSkip(0);
+	codegen_expression(currnode->child[0]);
+
+	emitRM("LDC", ac1, 1, 6, "Load constant 1");
+	emitRO("SUB", ac, ac, ac1, "While cond check");
+	emitRM("JGE", ac, 1, pc, "Jump to while part");
+	emitComment("DO");
+	skiploc = emitSkip(1);
+	codegen_next(currnode->child[1]);
+	emitRMAbs("LDA", pc, currloc, "go to beginning of loop");
+
+	currloc = emitSkip(0);
+	emitBackup(skiploc);
+	emitRMAbs("LDA", pc, currloc, "No more loop");
+	emitBackup(currloc);
+
+	emitComment("ENDWHILE");
+	break;
+
+    case ReturnK:
+	emitComment("RETURN");
+	if (currnode->child[0]) {
+	    codegen_expression(currnode->child[0]);
+	}
+
+	emitRM("LDA", rt, 0, ac, "Copy result to rt register");
+	emitRM("LD", ac, RETURN_OFFSET, fp, "Load return address");
+	emitRM("LD", fp, OFPOFF, fp, "Adjust fp");
+	emitRM("LDA", pc, 0, ac, "Return");
+	break;
+
+    case CompoundK:
+	emitComment("BEGIN");
+	codegen_next(currnode->child[1]);
+	emitComment("END");
+	break;
+</pre>
+</body>
+</html>

@@ -1,0 +1,212 @@
+<html>
+<head>
+<title> Assignment 4 </title>
+</head>
+<body background="../../Textures/cs445.jpg">
+<p>
+<center>
+<font size=+2>CS445 Introduction to Compilers</font>
+</center> 
+<table width=100% cellpadding=0> 
+<tr><td align=left>
+<font size=+2> Assignment 4 <br>
+(Error Handling and Catch-up Assignment)</font>
+</td>
+<td align=right>
+<font size=+2>200 points</font>
+</td>
+<tr>
+<td align=left>
+<font size=+2>DUE: Sun Apr 18 at 5 PM PST </font> 
+<img src=../Icons/newyellow.gif>
+</td>
+<td align=right>
+<font size=+2>DUE (VIDEO): <b>exactly</b> 2 weeks later</font>
+</td>
+</tr>
+</table>
+<p>
+<p>
+
+If you have fallen behind this is your big chance to catch up.  So in
+order to pass the course you need to keep up with the work.  With this
+assignment I want to get everyone back on track.  The main credit for
+this course is the compiler itself.  I want to be able to congratulate
+everyone on having built their own compiler.  (Yes, all compiler
+courses are like this.)
+<p>
+<b>NOTE: I will be out of town from Apr 3 through Apr 10.
+There will be no class.</b>  You can catch up on your compiler
+work with those extra hours.  
+<p>
+
+There are several parts to this assignment.
+
+<h3>New Errors</h3>
+The following errors should be added:
+<ol>
+<li>
+An error should be printed if a parameter in a function declaration or
+a variable should be declared to be of type void.  The error message should be:
+<pre>
+printf("ERROR lineno(%d): %s cannot be of type void.\n", 
+</pre>
+<li> 
+An error should be printed if a variable is called as a function.
+The error message should be:
+<pre>
+printf("ERROR lineno(%d): %s is a simple variable and cannot be called.\n",
+</pre>
+
+<li> 
+An error should be printed if a function name is used as a variable.
+The error message should be:
+<pre>
+printf("ERROR lineno(%d): Cannot use function %s as a simple variable.\n",
+</pre>
+</ol>
+
+<h3>Nicer Errors</h3>
+<p>
+<img src=../../Icons/updated.gif>
+I forgot this small part.  I will give you some code for it.
+The message that comes back from the parser to yyerror sometimes
+says expecting some kinds of tokens and sometimes says other
+things.  I would like you test for this using the function
+<b>strstr</b> and emmit two kinds of
+errors.  Since I forgot to tell you this I make up for that
+by giving you some code.  You can detect the type of 
+error message you were given by testing if the message contains
+the string "expecting" (yes a little cheezy but will serve).  Here
+is some code from my yyerror to show you what I mean:
+
+<pre>
+    if (strstr(msg, "expecting")) {
+	printf("ERROR lineno(%d): %s but got: %s\n", lineno, msg, scanToken);
+	numErrors++;
+    }
+    else {
+	printf("ERROR lineno(%d): Unexpected token: %s\n", lineno, scanToken);
+	numErrors++;
+    }
+</pre>
+
+This will help you match my error messages.  You don't have to implement
+it this way.
+
+
+<h3>Error Count</h3>
+There will be two global variables counting
+the number of errors and number of warnings.
+At the end of assignment 3 we only hand errors.  Warnings will not
+stop the successful compiliation of the program.  Keep count of 
+both kinds and report at the end of the compile as in this example:
+<pre>
+Number of errors: 1
+Number of warnings: 2
+</pre>
+<h3>Compiler Phases</h3>
+Our compiler now was three phases: lexical analysis, syntax analysis, and
+semantic analysis.  Each phase 
+can produce its own errors.  Inspired by a student
+question from class I think I want to perserve that.  
+Here is the desciption of what you need to do:
+<ul>
+<li><b>lexical analysis:</b>
+In this phase each input character that is not part of 
+a legal token is reported as a warning.  I have modified by
+yyerror routine to help me do error reporting in one place.
+You can do this as you like.
+yylex does not return a token for these "bad characters" 
+and the lexical analysis
+continues to run.
+Example warning to use:
+<pre>
+WARNING lineno(2): Invalid input character: ^.  Character ignored.
+WARNING lineno(2): Invalid input character: #.  Character ignored.
+</pre>
+These errors will increase the global warning count.
+
+<li><b>syntax analysis:</b>
+The syntax analysis errors will continue to work as before 
+(except as noted below) but
+these errors will also increase the global error count.
+
+<li><b>semantic analysis:</b>
+If there are <b>no errors</b> in the syntax analysis then
+you proceed to semantic analysis.
+The errors in semantic analysis will increase the global error count.
+</ul>
+
+<h3>Inserting Error Tokens</h3>
+
+Add the following error productions to the grammar:
+<pre>
+'(' error ')'                                 { $$=NULL; printf("**ERROR paren exp\n"); yyerrok;}
+'{' error '}'                                 { $$=NULL; printf("**ERROR compound\n"); yyerrok;}
+ID '(' error ')'                              { $$=NULL; printf("**ERROR call\n"); yyerrok;}
+IF '(' error ')' matched ELSE matched         { $$=NULL; printf("**ERROR matched IF 1\n"); yyerrok;}
+IF '(' error ')' matched ELSE unmatched       { $$=NULL; printf("**ERROR unmatched IF 2\n"); yyerrok;}
+IF '(' error ')' statement                    { $$=NULL; printf("**ERROR unmatched IF 1\n"); yyerrok;}
+IF '(' expression ')' error ELSE matched      { $$=NULL; printf("**ERROR matched IF 2\n"); yyerrok;}
+IF '(' expression ')' error ELSE unmatched    { $$=NULL; printf("**ERROR unmatched IF 3\n"); yyerrok;}
+RETURN error ';'                              { $$=NULL; printf("**ERROR return\n"); yyerrok;}
+WHILE '(' error ')' matched                   { $$=NULL; printf("**ERROR matched while 1\n"); yyerrok;}
+WHILE '(' error ')' unmatched                 { $$=NULL; printf("**ERROR unmatched WHILE 1\n"); yyerrok;}
+arg_list ',' error                            { $$=NULL; printf("**ERROR arglist 4\n")}
+arg_list error expression                     { $$=NULL; printf("**ERROR arglist 3\n"); yyerrok;}
+arg_list error                                { $$=NULL; printf("**ERROR arglist 2\n")}
+error '(' params ')' compound_stmt            { $$=NULL; printf("**ERROR fun_declaration 1\n"); yyerrok;}
+error ';'                                     { $$=NULL; printf("**ERROR expression_stmt\n"); yyerrok;}
+error ';'                                     { $$=NULL; printf("**ERROR var_declaration\n"); yyerrok;}
+error                                         { $$=NULL; printf("**ERROR arglist 1\n")}
+type_specifier ID '(' error ')' compound_stmt { $$=NULL; printf("**ERROR fun_declaration 2\n"); yyerrok;}
+</pre>
+
+The result of adding these tokens will be that you have 3 shift/reduce conflicts.  We will
+discuss why in class but in short:
+
+<ol>
+
+<li> local_declarations can be an error
+<pre>
+    compound_stmt  ->  '{' . local_declarations statement_list '}'   (rule 21)
+    compound_stmt  ->  '{' . error '}'   (rule 22)
+</pre>
+
+<li> statement_list can be empty
+<pre>
+    compound_stmt  ->  '{' local_declarations . statement_list '}'   (rule 21)
+    local_declarations  ->  local_declarations . var_declaration   (rule 23)
+</pre>
+
+<li> The follow set of arg_list can contain ')'
+<pre>
+    call  ->  ID '(' error . ')'   (rule 86)
+    arg_list  ->  error .   (rule 91)
+</pre>
+</ol>
+
+<h3>Submission</h3>
+
+Homework will be submitted as an <b>uncompressed</b> tar file to the
+<a href=../submitTar.html>homework submission</a> page.  You can
+submit as many times as you like.  <b>The LAST file you submit BEFORE the
+deadline will be the one graded.</b>   For all submissions you will receive
+email showing how your file performed on the pre-grade tests.  The 
+grading program will use more extensive tests and those results will 
+be mailed to when they are run.
+<p>
+
+<img src=../../Icons/hand_r.gif>
+If you have tests you really think are important or just cool please
+send them to me and I will consider adding them to the test suite.
+
+<hr><table width=100% border=0><tr>
+<td align=left><a href=../../index.html>Robert Heckendorn</a></td>
+<td align=center><a href=..>Up One Level</a> 
+<td align=right>Last updated:&nbsp;<datestamp>Mar 12, 2004  23:34</datestamp></td>
+</tr></table>
+
+</body>
+</html>

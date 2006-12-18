@@ -1,0 +1,239 @@
+<html>
+<head>
+<title> A Flex Primer </title>
+</head>
+<body background="../Textures/cs445.jpg">
+<h1>A Flex Primer</h1>
+<p>
+Flex is a preprocessor.
+Flex can generate C or C++ compatible code.
+It is essentially the same program as Lex with a few changes.
+<p>
+A Flex program has 3 sections: definitions, rules, user subroutines.
+Each section is separated by a pair of percents signs (%) in the first
+column.
+The form is roughly like:
+<p>
+<pre>
+definitions
+%%
+rules
+%%
+user subroutine section
+</pre>
+<p>
+<h3>The Definition Section</h3>
+In the definitions section you can have a region of
+text that is
+explicitly copied to the output.  This section usually
+contains includes, global variables declarations and
+prototypes of functions declared in the user subroutine
+section.  This region of copied code is contained 
+between  %{ and %} <b>Warning:</b> It is NOT &nbsp; %{ and }%!:
+<p>
+<pre>
+%{
+code to copy into the final program
+%}
+</pre>
+<p>
+After this can come pattern macros and few other options.
+<p>
+Pattern Macros are defined by giving a name followed by the definition.
+For example:
+name [a-z][a-z0-9]*
+
+<p>
+<h3>The Rules Section</h3>
+The rules section contains pattern/action pairs.
+<p>
+<pre>
+pattern action
+pattern action
+pattern action
+</pre>
+<p>
+The user subroutine section, of course, contains user subroutines
+and the main program which usually invokes the yylex subroutine.
+<p>
+<p>
+Patterns are regular expressions for matching strings.
+<p>
+<table  border=1 cellpadding=4>
+<tr><td width=10%>&nbsp; </td><td>Any character that does not have special meaning matches itself.</tr>
+</tr><tr><td> <b>\t</b></td><td> matches tab</td>
+</tr><tr><td> <b>\n</b></td><td> matches newline</td>
+</tr><tr><td> <b>.</b></td><td> dot matches any char except a newline</td>
+</tr><tr><td> <b>\</b></td><td> is used to make any special character lose its special status
+and match just the character, except in the special cases where the
+\ character has a meaning in C such as tab or newline.</td>
+</tr><tr><td> <b>*</b></td><td>  matches 0 or more copies of the pattern preceding the *</td>
+</tr><tr><td> <b>+</b></td><td>  matches 1 or more copies of the previous pattern</td>
+</tr><tr><td> <b>?</b></td><td>  matches 0 or 1 copies of the previous pattern</td>
+</tr><tr><td> <b>{x,y}</b></td><td> x through y copies of the previous patterns</td>
+</tr><tr><td> <b>[&nbsp;]</b></td><td> character set.  If (^) is the first character it is the
+inverse or complement of the character set about to be specified.
+- in between two characters in a character set means range of characters
+as in [a-z] means the lowercase letters and [aeiou] means the vowels and
+[a-zA-Z] means all letters.  Note that if you use the not character (^) that 
+the resulting character class pattern <b>will match \n</b></td>
+</tr><tr><td> <b>/</b></td><td> means "match if followed by" for example dog/cat match the
+3 characters "dog" if followed by the three characters "cat".  "cat"
+is not actually matched.</td>
+</tr><tr><td> <b>$</b></td><td>  at the end of a pattern matches at the end of line</td>
+</tr><tr><td> <b>^</b></td><td>  at the beginning of a pattern matches beginning of line</td>
+</tr><tr><td> <b>|</b></td><td>  alternation.  cat|dog means cat or dog.</td>
+</tr><tr><td> <b>""</b></td><td> are takes the contents of the string as characters and not as
+special pattern characters.</td>
+</tr><tr><td> <b>(&nbsp;)</b></td><td> grouping.  (cat|dog)+  is one or more occurrances of cat or dog.</td>
+</tr><tr><td> <b>{</b><i>name</i><b>}</b> </td><td>is the invocation of the pattern macro named <i>name</i> that was defined in the definition section.
+</tr>
+</table>
+<p>
+
+<b>Warning:</b> Anytime you want to match a string that contains any
+suspicious characters such as say &gt; or &lt; you should enclose the
+constant characters in quotes.  For example: dogs"&lt;"[0-9] matches
+the word dogs followed by &lt; followed by a digit.  See <a
+href=regex.html>A Regular Expression Primer</a> for a comparison with
+other regular expression using tools.
+
+<p>
+The <b>four rules for matching tokens</b> are:
+<ol>
+<li> characters are only matched once.  That is, each character is matched
+by only one pattern.
+<li> longest matching string gets matched first.  That is, if 
+one pattern matches "zin" and a later pattern matches "zinjanthropus"
+the second pattern is the one that matches.
+<li> if same length of matching string then first rule matches.
+<li> if no pattern matches then the character is printed to standard output.
+</ol>
+<p>
+<h3> The User Subroutine Section </h3>
+Simply put other routines that you want here including any routines that
+refer to routines created by Flex such as a main which refers to yylex.
+See below.
+<h3> Example </h3>
+The results of compiling the program with flex will be to create several
+variables and a scanner routine called yylex which can be called as
+in the example below.
+A example
+program to print out all of the numbers and words in an input file:
+
+<pre>
+%{
+#include &lt;stdio.h>
+%}
+letter [a-zA-Z]
+%%
+[0-9]+ { printf("NUM:  %s\n", yytext); }
+{letter}+ { printf("WORD: %s\n", yytext); }
+.|\n     ;
+%%
+main()
+{
+        yylex();
+}
+</pre>
+<p>
+If this lex file is stored in <b>numwords.l</b> then 
+this can be compiled by using:
+<p>
+<pre>
+flex -d  numwords.l   # -d turns on tracing for hardcore debugging
+gcc -g lex.yy.c -lfl -o numwords 
+</pre>
+<p>
+
+This will compile the lex file using flex to generate the lex.yy.c
+file.  The <b>-d</b> puts in code to turn on tracing in your scanner.
+Then <b>gcc</b> with the debug option <b>-g</b> and adding in the flex
+library <b>-lfl</b> and putting the program in <b>numwords</b> using the
+<b>-o</b> option.  In this case <b>g++</b> would work as well.
+
+<h2>A makefile for Flex Only</h2>
+<pre>
+BIN  = t0   # name of thing to be built goes here. e.g. this builds t0
+CC   = g++
+CFLAGS = -g -DCPLUSPLUS
+
+SRCS = $(BIN).l
+OBJS = lex.yy.o
+LIBS = -lfl
+
+$(BIN): $(OBJS)
+	$(CC) $(CCFLAGS) $(OBJS) $(LIBS) -o $(BIN)
+
+lex.yy.c: $(BIN).l
+	flex $(BIN).l
+
+clean:
+	rm -f $(OBJS) $(BIN) lex.yy.c $(BIN).tab.h $(BIN).tab.c
+</pre>
+
+
+<h2>Further Reading</h2>
+<a href=http://www.sens.buffalo.edu/UBiquity/software/gnu/doc/web/share/doc/flex/html/>The Flex Manual</a>
+
+<h2>Further Flex Examples</h2>
+
+Here are some more examples.
+
+<hr>
+Count the number of characters, words, and lines coming from stdin.
+<pre>
+%{
+#include &lt;stdio.h>
+int c=0, w=0, l=0;
+%}
+
+word [^ \t\n]+
+eol  \n 
+
+%%
+{word} {w++; c+=yyleng;};
+{eol}  {c++; l++;}
+.      {c++;}
+%%
+main()
+{
+        yylex();
+        printf("%d %d %d\n", l, w, c);
+}
+</pre>
+<hr>
+Renumber all numbers in stdin.
+<pre>
+%{
+#include &lt;iostream.h>
+
+int counter = 0;               &lt;- why here and not in main
+%}
+%%
+[0-9]* { cout &lt;< counter++; }  &lt;- why no endl?
+%%
+main()
+{
+    yylex();
+}
+</pre>
+<hr>
+Print out all HTTP tags.
+<pre>
+%{
+#include &lt;stdio.h>
+%}
+%%
+"&lt;"[^>]*> { printf("VALUE: %s\n", yytext); }   &lt;- stretches across \n
+.|\n     ;
+%%
+main()
+{
+        yylex();
+}
+</pre>
+<hr>
+
+</body>
+</html>

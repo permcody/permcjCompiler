@@ -1,0 +1,179 @@
+<html>
+<head>
+<title> A Bison Primer</title>
+</head>
+<body background="../Textures/cs445.jpg">
+<h1>A Bison Primer</h1>
+
+<p>
+Bison is a preprocessor.
+Bison can generate C or C++ compatible code.
+It is essentially the same program as yacc with a few changes.
+<p>
+Like Flex
+a Bison program has 3 sections: definitions, rules, user subroutines.
+Each section is separated by a pair of percents signs (%) in the first
+column.
+The form is roughly like:
+<p>
+<pre>
+definitions
+%%
+rules
+%%
+user subroutine section
+</pre>
+<p>
+<h3>The Definition Section</h3>
+In the definitions section you can have a region of
+text that is
+explicitly copied to the output.  This section usually
+contains includes, global variables declarations and
+prototypes of functions declared in the user subroutine
+section.  This region of copied code is contained 
+between  %{ and %} <b>Warning:</b> It is NOT &nbsp; %{ and }%!:
+<p>
+<pre>
+%{
+code to copy into the final program
+%}
+</pre>
+<p>
+After this comes token declarations, nonterminal type 
+declarations, precedence/association 
+rules, and other options.
+<p>
+Tokens are declared by the type of value information they return.
+<pre>
+%token &lt;dvalue> NUMBER
+%token &lt;varindex> NAME
+</pre>
+Declares token <b>NUMBER</b> to return value information of type &lt;dvalue>
+<p>
+Nonterminal types must also be declared as in:
+<pre>
+%type &lt;dvalue> expression
+%type &lt;dvalue> term
+%type &lt;dvalue> varornum
+</pre>
+<p>
+Which declares <b>expression</b> to return type &lt;dvalue>.
+<p>
+<p>
+A list of equal precedence operators preceded by %left if the operators 
+are left associative, or %right if they are right associative, can be
+given.  The order in the list is from lowest precedence to 
+highest.  For example the three lines in this order:
+<pre>
+%right implies
+%left or xor
+%left and
+</pre>
+Means <b>and</b> has the highest precedence and is left associative.
+<b>or</b> and <b>xor</b> are of equal precedence and lower precedence
+than <b>and</b> and finally <b>implies</b> is the lowest precedence
+and is right associative.
+<h3>The Rules Section</h3>
+Consists of a collection of productions in a BNF like format.
+For each production and in fact for each symbol you can attach
+a block of code.  For example:
+<pre>
+expression: expression '+' term     { $$ = $1 + $3; }
+          | term                    { $$ = $1; }
+          ;
+</pre>
+Also see the program example to follow.
+<p>
+<h3> The User Subroutine Section </h3>
+Simply put other routines that you want here including any routines that
+refer to routines created by flex such as a main which refers to yyparse.
+See below.
+<p>
+<h3>Example</h3>
+Here is a simple numeric calculator program that uses flex to build
+a scanner and bison to process the syntax.  A by-product of the 
+syntax analysis happens to be the calculations.  For more complex programs
+this is not possible.
+<p>
+The bison source code is <a href=calc.y>calc.y</a><br>
+The flex source code is <a href=calc.l>calc.l</a><br>
+<p>
+Here is a Bourne shell script for our Sun machines to compile a program that
+uses both Bison and Flex using either C or C++:
+<pre>
+#!/bin/sh -x
+bison -v -t -d $1.y                # create $1.tab.c and $1.tab.h
+flex -d $1.l                          # create lex.yy.c
+# gcc -g lex.yy.c $1.tab.c -lfl -lm -o $1  # create calc using C
+g++ -DCPLUSPLUS -g $1.tab.c lex.yy.c -lfl -lm -o $1  # create calc using C++
+</pre>
+For bison the <b>-v</b> option creates a <b>.output</b> file that contains
+a verbose description of the parser table created including states and
+conflicts.  The <b>-t</b> option defines a C macro YYDEBUG that if set
+will cause debugging facilities to be turned on.  <b>-d</b> creates
+the mandatory <b>.h</b> file for the token definitions that will be used
+by the flex file.
+<p>
+
+You can choose either the <b>gcc</b> compiler or the <b>g++</b>
+compiler note the inclusion of the flex library with <b>-lfl</b> and
+the optional math library <b>-lm</b>.  If this scripts is called
+<b>dobison</b> then for files <b>calc.y</b> and <b>calc.l</b> you
+would call <b>dobison calc</b> and the executable file <b>calc</b>
+would be created.
+
+<h2>What are those shift/reduce reduce/reduce errors?</h2>
+
+Bison uses what is known as a shift/reduce parser to build a parse
+tree.  In the process of analyzing the input it can either reduce the
+code by the use of some production or shift a token onto a stack and
+continue looking.  When it can't tell if it should shift or reduce you
+get a shift/reduce error and it makes a wild guess what you want.
+This generally happens as a result of a ambiguity in your grammar.  If
+you get a reduce/reduce error that means it can't tell which of two
+production you meant.  It will make a guess and move on.
+<p>
+If you get these errors look to resolve ambiguities in your grammar.
+
+<h2>A makefile for Bison/Flex</h2>
+<pre>
+BIN  = cb1   # name of thing to be built goes here
+CC   = g++
+# CFLAGS = -g
+# CCFLAGS = -DCPLUSPLUS -g  # for use with C++ if file ext is .cc
+CFLAGS = -DCPLUSPLUS -g  # for use with C++ if file ext is .c
+
+SRCS = $(BIN).y $(BIN).l
+OBJS = lex.yy.o $(BIN).tab.o
+LIBS = -lfl -lm 
+
+$(BIN): $(OBJS)
+	$(CC) $(CCFLAGS) $(OBJS) $(LIBS) -o $(BIN)
+
+$(BIN).tab.h $(BIN).tab.c: $(BIN).y
+	bison -v -t -d $(BIN).y  
+
+lex.yy.c: $(BIN).l $(BIN).tab.h
+	flex -d $(BIN).l  # -d debug
+
+all:    
+	touch $(SRCS)
+	make
+
+clean:
+	rm -f $(OBJS) $(BIN) lex.yy.c $(BIN).tab.h $(BIN).tab.c $(BIN).tar
+
+tar:
+	tar -cvf $(BIN).tar $(SRCS) makefile 
+
+</pre>
+
+<h2>Further Reading</h2>
+<a href=http://www.sens.buffalo.edu/UBiquity/software/gnu/doc/web/share/doc/bison/html/>The Bison Manual</a>
+
+</body>
+</html>
+
+
+
+

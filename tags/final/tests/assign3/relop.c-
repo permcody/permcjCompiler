@@ -1,0 +1,21 @@
+void main(void)
+{
+	while(x<y);
+	while(x>y);
+	while(x==y) {};
+	while(x<=y) {int x;};
+	while(x>=y) {int x; x=4;};
+	while(x!=y) while(x==y);
+
+	if(x>y);
+	if(x==y) {};
+	if(x<=y) {int x;};
+	if(x>=y) {int x; x=4;};
+	if(x!=y) while(x==y);
+
+	if(x>y);
+	if(x>y); else ;
+	if(x==y) {} else {}
+	if(x<y) if(x>y) x=2; else x=3;
+	if(x<y) { if(x>y) x=2;} else x=3;
+}

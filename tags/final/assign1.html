@@ -1,0 +1,172 @@
+<html>
+<head>
+<title> Assignment 1 </title>
+</head>
+<body background="../../Textures/cs445.jpg">
+<p>
+<center>
+<font size=+2>CS445 Introduction to Compilers</font>
+</center> 
+<table width=100% cellpadding=0> 
+<tr><td align=left>
+<font size=+2> Assignment 1 <br>
+(The Scanner)</font>
+</td>
+<td align=right>
+<font size=+2>120 points</font>
+</td>
+<tr>
+<td align=left>
+<font size=+2>DUE: Sat Feb 14 at noon PST </font> 
+</td>
+<td align=right>
+<font size=+2>DUE (VIDEO): <b>exactly</b> 2 weeks later</font>
+</td>
+</tr>
+</table>
+<p>
+<p>
+
+Because the output of your program will first be preprocessed
+by an automatic comparison program before being handed to a
+human being. Please follow formatting instructions/examples carefully.  The
+results your program produces will need to look exactly like the
+target.  Please do not embellish with extra titles or other text such
+as "run complete" or "CS445 output".  The testing facility of the
+submit script will help you get this annoying detail right.  Thanks
+for your patience.
+
+<h3>The Problem</h3>
+<p>
+Use Flex and Bison to 
+build a scanner for the <a href=c-Grammar.pdf>C- language</a>. 
+The scanner will be named <b>c-</b> <b>(</b>note the lowercase.  That is
+<b>c-</b> will be the compiler for the language <b>C-</b> in uppercase.<b>)</b>.
+It will read and process a stream of tokens from a filename given
+as the first argument to the <b>c-</b> command or from standard
+input if the filename argument is not present.
+It will produce a stream of tokens as its output as described below.
+It will be constructed using flex and bison to run on the
+Sun machines named after the planets in the CS department.  That 
+is where the grading will occur.  Logon is at sunsol.cs.uidaho.edu.
+
+<h3>The Flex Part</h3>
+
+Build a flex scanner that returns a token classes for all the tokens
+in the C- grammar.  For numbers it should also "return" a numerical
+value.  For ids it should also return a string.  For boolean
+values it should return a boolean value (which you may implement,
+if you choose, as an int).  The scanner should ignore comments
+and not return anything.  If the scanner finds a character that it
+doesn't recognize it should return the ERROR token and a string containing 
+that character.  The scanner should keep track of the line
+number of each token and either return it with the token somehow
+or keep it in a global variable. 
+<p> 
+Note that in C- like C and C++ newline is not an element of the
+grammar and is merely whitespace.  This was not true for the calculator
+program. 
+ 
+<h3>The Bison Part</h3>
+
+Build a grammar that recognizes a stream of tokens in any order.
+(HINT: yes this is just a couple of productions, at most, with long
+alternation of tokens) Build a bison parser that accepts any stream of 
+tokens from the scanner and prints out the line number, the token
+type, and any extra information returned by the scanner as specified
+above.  An example of the output from various test inputs is:
+
+<p>
+For starting on line 5:<br>
+<b>if (v==0)<br>
+return u;</b>
+<pre> 
+Line 5 Token: IF 
+Line 5 Token: (
+Line 5 Token: ID Value: v
+Line 5 Token: EQ
+Line 5 Token: NUM Value: 0
+Line 5 Token: )
+Line 6 Token: RETURN
+Line 6 Token: ID Value: u
+Line 6 Token: ;
+</pre>
+or for:<br> 
+<b>pi=3.14159;</b>
+<pre>
+Line 1 Token: ID Value: pi
+Line 1 Token: =
+Line 1 Token: NUM Value: 3
+Line 1 Token: ERROR Value: .
+Line 1 Token: NUM Value: 14159
+Line 1 Token: ;
+</pre>
+or for<br>
+<b>x=true && y;</b>
+
+<pre>
+Line 1 Token: ID Value: x
+Line 1 Token: =
+Line 1 Token: TRUE Value: T
+Line 1 Token: AND
+Line 1 Token: ID Value: y
+Line 1 Token: ;
+</pre>
+Notice that ERROR, NUM, ID, TRUE, and FALSE all have 
+alternate values.  Numbers are printed as numbers, 
+strings as strings, boolean true as T and boolean false
+as F.
+<p>
+The type of any single character token
+is <b>printed</b> as
+the character itself.  The type of any
+multicharacter token is printed as follows:
+<pre> 
+!=        NEQ
+<=        LEQ
+==        EQ
+>=        GEQ
+&&        AND
+||        OR
+bool      BOOLEAN
+else      ELSE
+false     FALSE
+if        IF
+int       INT 
+return    RETURN
+true      TRUE
+void      VOID 
+while     WHILE 
+an id     ID
+a number  NUM
+</pre> 
+Note that you can use whatever internal symbols you want but 
+the output must print token types as above for comparison.
+
+<h3>Build and Test</h3>
+
+You will include a makefile (note the lowercase) that I will execute 
+to build <b>c-</b>.  I will then run several files containing tokens
+through <b>c-</b> and compare the results.
+
+<h3>Submission</h3>
+
+Homework will be submitted as an <b>uncompressed</b> tar file to the
+<a href=submitTar.html>homework submission</a> page.  The submission tool
+is still under construction.  You can
+submit as many times as you like.  <b>The LAST file you submit BEFORE the 
+deadline will be the one graded.</b>   For all submissions you will receive 
+email showing how your file performed on the pre-grade tests.  The
+grading program will use more extensive tests.
+<p>
+
+If you have tests you really think are important or just cool please
+send them to me and I will consider adding them to the test suite.
+
+
+<hr><table width=100% border=0><tr>
+<td align=left><a href=../../index.html>Robert Heckendorn</a></td> 
+<td align=right>Last updated:&nbsp;<datestamp>Feb 21, 2004  22:28</datestamp></td>
+</tr></table>
+</body>
+</html>

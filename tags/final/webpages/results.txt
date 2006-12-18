@@ -1,0 +1,124 @@
+In the following analysis the test programs are numbered:
+1 permlist.c-  
+2 polynum.c-   
+3 queensno.c-  
+4 walsh.c-
+
+IN CONTEST FOR CODE SIZE:
+
+program 1
+  cpermann-D6.test:EXEC 252.000
+     ulery-D6.test:EXEC 264.000
+     henry-D6.test:EXEC 275.000
+    nguyen-D6.test:EXEC 306.000
+phillabaum-D6.test:EXEC 320.000
+      MINE-D6.test:EXEC 322.000
+     yates-D6.test:EXEC 322.000
+    ortman-D6.test:EXEC 322.000
+
+program 2
+  cpermann-D6.test:EXEC 181.000
+     ulery-D6.test:EXEC 211.000
+    nguyen-D6.test:EXEC 229.000
+phillabaum-D6.test:EXEC 232.000
+     henry-D6.test:EXEC 233.000
+     yates-D6.test:EXEC 235.000
+    ortman-D6.test:EXEC 235.000
+      MINE-D6.test:EXEC 239.000
+
+program 3
+  cpermann-D6.test:EXEC 287.000
+     ulery-D6.test:EXEC 307.000
+     henry-D6.test:EXEC 318.000
+    nguyen-D6.test:EXEC 356.000
+phillabaum-D6.test:EXEC 364.000
+     yates-D6.test:EXEC 366.000
+      MINE-D6.test:EXEC 370.000
+    ortman-D6.test:EXEC 370.000
+
+program 4
+  cpermann-D6.test:EXEC 421.000
+     ulery-D6.test:EXEC 428.000
+     henry-D6.test:EXEC 468.000
+    nguyen-D6.test:EXEC 487.000
+phillabaum-D6.test:EXEC 493.000
+     yates-D6.test:EXEC 499.000
+      MINE-D6.test:EXEC 511.000
+    ortman-D6.test:EXEC 511.000
+
+average
+  cpermann-D6.test:EXEC 285.250
+     ulery-D6.test:EXEC 302.500
+     henry-D6.test:EXEC 323.500
+    nguyen-D6.test:EXEC 344.500
+phillabaum-D6.test:EXEC 352.250
+     yates-D6.test:EXEC 355.500
+    ortman-D6.test:EXEC 359.500
+      MINE-D6.test:EXEC 360.500
+
+
+IN CONTEST FOR SPEED:
+
+program 1
+  cpermann-D6.test:EXEC 203303.000
+     ulery-D6.test:EXEC 226800.000
+     henry-D6.test:EXEC 234034.000
+    nguyen-D6.test:EXEC 269075.000
+phillabaum-D6.test:EXEC 277963.000
+      MINE-D6.test:EXEC 279403.000
+     yates-D6.test:EXEC 279403.000
+    ortman-D6.test:EXEC 279403.000
+
+program 2
+  cpermann-D6.test:EXEC 4655659.000
+     ulery-D6.test:EXEC 6400944.000
+     henry-D6.test:EXEC 6963314.000
+    ortman-D6.test:EXEC 6973405.000
+    nguyen-D6.test:EXEC 7122289.000
+phillabaum-D6.test:EXEC 7286747.000
+      MINE-D6.test:EXEC 7286765.000
+     yates-D6.test:EXEC 7286765.000
+
+program 3
+  cpermann-D6.test:EXEC  823707.000
+     ulery-D6.test:EXEC  854140.000
+     henry-D6.test:EXEC 1367256.000
+    nguyen-D6.test:EXEC 1661304.000
+phillabaum-D6.test:EXEC 1694311.000
+      MINE-D6.test:EXEC 1694404.000
+     yates-D6.test:EXEC 1694404.000
+    ortman-D6.test:EXEC 1694404.000
+
+program 4
+  cpermann-D6.test:EXEC   527156.000
+     ulery-D6.test:EXEC   603187.000
+     henry-D6.test:EXEC   613541.000
+    nguyen-D6.test:EXEC   709273.000
+      MINE-D6.test:EXEC   738337.000
+    ortman-D6.test:EXEC   738337.000
+     yates-D6.test:EXEC 10000000.000
+phillabaum-D6.test:EXEC 10000000.000
+
+
+average
+  cpermann-D6.test:EXEC 1552456.250
+     ulery-D6.test:EXEC 2021267.750
+     henry-D6.test:EXEC 2294536.250
+    ortman-D6.test:EXEC 2421387.250
+    nguyen-D6.test:EXEC 2440485.250
+      MINE-D6.test:EXEC 2499727.250
+phillabaum-D6.test:EXEC 4814755.250
+     yates-D6.test:EXEC 4815143.000
+
+
+THE FINAL RESULTS:
+
+       name speed size points
+   cpermann     1    1     60
+      ulery     2    2     60
+      henry     3    3     50
+     ortman     4    -     50
+     nguyen     5    4     40
+ phillabaum     -    5     40
+      yates     -    6     30 
+     ortman     -    7     30

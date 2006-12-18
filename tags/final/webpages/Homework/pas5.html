@@ -1,0 +1,300 @@
+<html>
+<head>
+<title> Assignment 5 </title>
+</head>
+<body background="../../Textures/cs445.jpg">
+<p>
+<center>
+<font size=+2>CS445 Introduction to Compilers</font>
+</center> 
+<table width=100% cellpadding=0> 
+<tr><td align=left>
+<font size=+2> Assignment 5 <br>
+(Finally!  The code generating assignment)</font>
+</td>
+<td align=right>
+<font size=+2>300 points</font>
+</td>
+<tr>
+<td align=left>
+<font size=+2>DUE: Sat May 8 at 5 PM PST </font> 
+</td>
+<td align=right>
+<font size=+2>DUE (VIDEO): <b>exactly</b> 2 weeks later</font>
+</td>
+</tr>
+</table>
+<p>
+<p>
+In this assignment you will
+convert your compiler into a full code generating compiler.
+This is the moment we have been waiting for.  Congratulations!
+You have created
+a large complex program that will compile programs!  You will
+be able to compile a C- program and amazingly it will execute on the TM
+machine.  It is so cool to see the code actually run!  This was our
+goal starting in January.
+<p>
+To do this final stage,
+you will need to make modifications to the sementic section
+and to create a code generation section.  The assignment below
+combined with what you learn in class will tell you what you 
+will need to do to get this to work. 
+<p>
+The results will be a C- compiler that will compile files for
+execution on the TM machine.  The assignment will be graded by
+running your compiler on each test file and generating code
+if there are no errors (warnings are OK).  The code will then be given to the
+TM machine to execute.  Your code running on my TM will
+need to produce the same behavior as my code on my TM.
+The programs will start out extremely simple and get harder. 
+<p>
+I will try to write about 10 for the testing phase and then
+about 10 more for the grading phase.
+<p>
+There will also be two contests (bonus assignment 6) that will be run
+separately to compete for the most compact code in instruction space
+that performs the same as my code and a second that is for the fewest
+number of instructions executed.  There will be some restrictions on
+what you can and cannot do in your compiler.  The test programs will
+not be available ahead of time but they will be broad so that many
+things you do to improve your compiler will help.  There contest 
+winners (top 5 in each category)
+will get some number of bonus points TBD and their names will we
+sung in songs of glory remembered down through the ages much like 
+what's-his-name from last year... :-)  Rules will be given in 
+the bonus assignment.
+<p>
+<h3>Command Line Improvements</h3>
+<p>
+<ol> 
+<li> Add the <b>-o filename</b> option that lets the user specify where 
+the tm code will go.  This option can go anywhere in the command argument
+list.  If it is not specified then the code will be written to stdout.
+Some example invocations:
+<pre>
+c- fred.c- -o fred.tm
+c- -o fred.tm -p fred.c- 
+c- fred.c- 
+c- < fred.c-
+</ol>
+(HINT: See the <a href=../getopt.txt>man page for the getop</a> and
+look at the optind variable.  You can use getopt to swallow options
+up to the first thing that isn't an option.  Then you can read
+the nonoption in.  Then you can try to get more options.  This
+is a small change by adding a loop and using the optind variable.) 
+<p>
+<h3>The Semantic Analysis Changes</h3>
+<p>
+<ol>
+<li><b>Remove the print statements from the error token lines.</b>  They
+are nice while debugging how the error token stuff works and in duplicating
+my output but they need to be cleared out.  Leave the rest of the error
+token stuff in the parser.
+<p> 
+<li>Next you will need to <b>augment the TreeNode</b> to handle offsets of 
+space on local and global space for declared variables.  This
+you can do was we described in class.  The result will be that
+every declaration that requires space will store the offset of that
+space
+and the size in the treenode.  A flag for whether the space
+comes from the global space or local space will also be set.
+<p>
+The offset and size that is used for variables goes unused for
+all the rest of the nodes accept the function declaration nodes
+which will borrow the size for storing the top of the local memory 
+on exit of the code generation for the declarations in each function.
+The offset in function declaration nodes will be used later for
+storing the starting address of the function so that it can be looked up
+in the symbol table.
+<p>
+<li>
+The symbol table is already used to point to the TreeNodes
+so you can now find the offset of <b>every</b> reference to a variable when
+you arrive at them and look them up in the symbol table.  You can
+now <b>copy that information for use in those referencing nodes</b>
+(e.g. variables in equations) as well.
+<p>
+<li>
+When you leave the Semantic Analysis section the symbol table will
+have been reduced back down to the globals section.  If you freed
+the symbol table before... don't... you should <b>pass symbol table
+of globals</b> along with
+the <b>end of the global space</b> to the code generation section as described
+below.
+<p>
+<li> 
+When I did the compiler 
+I included function and parameter declaration tree nodes for the
+<b>I/O routines:</b>
+input, output, inputb, and outputb in the symbol table.
+I Frankensteined this in the tree
+before processing any parts of the tree for the code.  That way the types
+for I/O routines can be compared.  The semantic section is responsible for
+setting the size to the locals so you will need to do that manually in the
+nodes you declare as well as return type and types of arguments. 
+Here is the list of the four I/O routines:
+<per>
+int input(void)
+int inputb(void)
+void output(int)
+void outputb(bool)
+</pre>
+HINT: You can see you will need 4 function nodes and 2 parameter nodes.
+<li>
+</ol>
+<p> 
+<h3>The Code Generator</h3>
+<p>
+If there are no errors (warnings OK), 
+the Code Generation section will take the annotated tree, the 
+symbol table containing the pointers to the global declaration nodes
+and the value of the top of the global space and generate the TM
+code as discussed in class.  (HINT: I passed the size of the global
+space in a separate variable from the tree.)
+<p> 
+<ol> 
+<p>
+<li> I recomment you clone and cannibalize your semantic tree
+traversal for your code generator.  The code generator is written to
+<b>traverse the tree generating the code</b> by producing code snipits for
+the different nodes encountered.  This may include code before,
+processing children, between processing then and after processing 
+them. 
+<p>
+I will supply you with the <b>emit code</b> you can use to write out
+TM code.  If you want to modify this code or do it completely differently
+then great.  Be my guest.  This is your compiler.
+<p>
+
+<li> Figure out (or do as I suggested in class) how to <b>install the 
+I/O routines</b> and install the <b>prolog code</b>.  This task
+consists of putting in the prolog with the jump to main in the right
+place and placing the first frame right after the globals (as we discussed
+in class).  The code for the I/O routines is copied into place
+after the prolog and the offset in the
+declartion nodes in the symbol table is updated to reflect where each
+routine lays in memory.
+<p>
+The prolog and 
+I/O code <b>must be exactly as given</b>.  This restriction will be 
+true for the contest as well.  Your optimizations will be in the
+remainder of the code.
+
+<p>
+<li> Although the offset, size, type of  all declared symbols is in
+the annotated tree, the <b>offsets for temporary space</b> and <b>the location
+in instruction space</b> of the various routines can't be known until
+code generation time.  You will need to manage a temporary offset for
+the temporary stack used as described in class for holding pending values
+in calculating expressions. 
+<p>
+You will need to put the address of each routine as you come
+across the declartion during code generation.  Calls can then
+be managed by symbol table lookups.
+<p>
+<li>You may do the simple <b>backpatching</b> illustrated in my
+code or you can save more information and do a more clever
+job of backpatching to produce more compact/efficient code.
+<p>
+</ol>
+<p>
+<h3>Code Examples and Source Code</h3>
+<p>
+<h4>Free Code</h4>
+<ul>
+<li><a href=emitcode.c>emitcode.c</a>
+<li><a href=emitcode.h>emitcode.h</a>
+<li>Get the prolog code from any of the over 20 examples provided
+below.
+</ul>
+<h4>Example C- Source and Output</h4> 
+<ul> 
+<li><a href=tests-5.tar>tests.tar</a>
+</ul>
+<h4>Code Generator Example</h4>
+<ul>
+<li><a href=codeGenerator.html>Code Generator Code</a>
+</ul>
+
+<h3>Extra Credit (50pts)</h3> 
+<p>
+Add a <b>-m</b> option to the compiler which prints memory layout out
+by traversing the annotated
+parse tree.  In particular this includes the offsets, size (where relevant)
+and whether the symbol
+is global, parameter, or local (the values you need to generate the code
+anyway).  This is an excellent debugging tool for making sure you get
+the memory layout right so I highly recommend you do this anyway.
+This is extra credit for the whole course so it is added post letter grade
+assignment to see if you get a higher letter grade.  Put the code for
+this between the semantic phase and the code generation phase. 
+<p>
+For the file
+mem.c- in the tests above and using: 
+<pre> 
+c- -m Tests/mem.c- -o z.tm
+</pre>
+the output looks <b>exactly</b> like:
+<pre>
+Memory Layout 
+globalOffset: -5 
+
+input Func returns int [size: -2]
+
+output Func returns void [size: -3]
+*dummy* int Param [offset: -2 type: parameter]
+ 
+inputb Func returns bool [size: -2] 
+
+outputb Func returns void [size: -3]
+*dummy* bool Param [offset: -2 type: parameter]
+
+u int Var [offset: 0 type: global]
+
+v bool Var is array of size 4 [offset: -1 type: global] 
+
+polgara Func returns int [size: -5]
+a int Param [offset: -2 type: parameter]
+b bool Param [offset: -3 type: parameter]
+x int Var [offset: -4 type: local]
+
+main Func returns void [size: -10]
+i int Var [offset: -2 type: local]
+b bool Var [offset: -3 type: local] 
+ai int Var is array of size 3 [offset: -4 type: local] 
+ab bool Var is array of size 2 [offset: -7 type: local]
+z int Var [offset: -9 type: local]
+Number of errors: 0
+Number of warnings: 0
+</pre>
+
+<p>
+<ul>
+<li><a href=queens.c->The N queens problem</a><img src=../../Icons/newyellow.gif>
+<li><a href=queens.out>The N queens problem</a><img src=../../Icons/newyellow.gif> 
+</ul>
+
+<h3>Submission</h3>
+<p>
+Homework will be submitted as an <b>uncompressed</b> tar file to the
+<a href=../submitTar.html>homework submission</a> page.  You can
+submit as many times as you like.  <b>The LAST file you submit BEFORE the
+deadline will be the one graded.</b>   For all submissions you will receive
+email showing how your file performed on the pre-grade tests.  The
+grading program will use more extensive tests and those results will
+be mailed to when they are run.
+<p>
+<p>
+<img src=../../Icons/hand_r.gif>
+If you have tests you really think are important or just cool please
+send them to me and I will consider adding them to the test suite.
+<p>
+<hr><table width=100% border=0><tr>
+<td align=left><a href=../../index.html>Robert Heckendorn</a></td>
+<td align=center><a href=..>Up One Level</a>
+<td align=right>Last updated:&nbsp;<datestamp>May 4, 2004  15:13</datestamp></td> 
+</tr></table> 
+<p>
+</body>
+</html>

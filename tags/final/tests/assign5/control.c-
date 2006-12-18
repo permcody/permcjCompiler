@@ -1,0 +1,25 @@
+// C-F06
+// a small set of control structures
+//
+void main(void)
+{
+    int x;
+    int y;
+
+    x=2;
+    y=3;
+
+    if (x!=y);
+    if (x<y) output(11);
+    if (x==y) output(22); 	
+    else output(33);
+    if (x!=y) if (true) output(22); 	
+    else output(33);
+    if (x!=y) if (false) output(22); 	
+    else output(33);
+    while(x>=y);
+    while(x<y) { output(44); x=500; };
+    outnl();
+
+    return;
+}
