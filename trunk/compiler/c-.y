@@ -1,5 +1,6 @@
 %{ 
 #include "globals.h"
+#include "symtab.h"
 
 #ifdef CPLUSPLUS
 extern int yylex();
@@ -236,7 +237,11 @@ iteration_stmt		: WHILE '(' expression ')' statement
 						}
 					;
 					
-return_stmt			: RETURN ';' {	$$ = (TreeNode *)new StatementNode(TreeNode::ReturnK); }						
+return_stmt			: RETURN ';' 
+						{	StatementNode *sNode = new StatementNode(TreeNode::ReturnK);
+							sNode->lineNumber = $1;
+							$$ = (TreeNode *)sNode; 
+						}						
 					| RETURN expression ';'
 						{	StatementNode *sNode = new StatementNode(TreeNode::ReturnK);
 							sNode->lineNumber = $1;			// save the linenumber from 'RETURN'
@@ -298,21 +303,24 @@ constant			: NUM
 						{	ExpressionNode *eNode = new ExpressionNode(TreeNode::ConstK);
 							eNode->lineNumber = $1->lineno;	// save the linenumber from 'NUM'
 							eNode->val = $1->number;
+							eNode->type = TreeNode::Int;	// Numbers are type int no need to process in semantics
 							$$ = (TreeNode *)eNode;
 						}
 					| TRUE
 						{	ExpressionNode *eNode = new ExpressionNode(TreeNode::ConstK);
 							eNode->lineNumber = $1;			// save the linenumber from 'TRUE'
-							eNode->val = 1;		// value of true
-							eNode->isBool = true;
+							eNode->val = 1;					// value of true
+							eNode->type = TreeNode::Bool;
+							//eNode->isBool = true;			// MAY NOT NEED THIS LINE
 							$$ = (TreeNode *)eNode;
 						}
 					| FALSE 
 						{	ExpressionNode *eNode = new ExpressionNode(TreeNode::ConstK);
 							eNode->lineNumber = $1;			// save the linenumber from 'FALSE'
-							eNode->val = 0;		// value of false
-							eNode->isBool = true;
-							$$ = (TreeNode *)eNode;
+							eNode->val = 0;					// value of false
+							eNode->type = TreeNode::Bool;			
+							//eNode->isBool = true;			// MAY NOT NEED THIS LINE
+							$$ = (TreeNode *)eNode;	
 						}
 					;
 					
@@ -353,16 +361,19 @@ TreeNode *newOpExpNode(char *op, TreeNode *child0, TreeNode *child1, long lineno
 	return (TreeNode *)eNode;
 }
 
+// Static function declaration passed to symtab constructor for printing declarations
+void PrintNode(void *dPtr) { DeclarationNode::PrintNode(cout, (DeclarationNode *)dPtr); }
 
 int main(int argc, char *argv[]) {
 		
 	char *progname;
 	extern FILE *yyin;
-	bool fileOpen=false;
-	bool printSyntaxTree=false;
-	bool symbolTableTracing=false;
+	bool fileOpen = false;
+	bool printSyntaxTree = false;
+	bool symbolTableTracing = false;
 	char c;
-	
+	int numErrors=0;	// number of errors found by the semantic analyzer
+
 	progname = argv[0];
 	
 	yydebug = 0;
@@ -400,13 +411,23 @@ int main(int argc, char *argv[]) {
 		}			
 	}
 
-	// let bison take it from here	
+	// ********************* PARSER (Bison) *******************************
+	// run the parser (parser calls the lexer internally)
 	yyparse();
-	
-	// print the tree if option is on
-	if (printSyntaxTree) savedTree->PrintTree(cout);
-	// print the symbol table tracing information if optino is on
-	if (symbolTableTracing) cout << "Symbol Table Tracing Info\n";
+	// print the Syntax tree if command line option '-p' is set	
+	if (printSyntaxTree) savedTree->PrintTree(cout); 
+	// ********************* PARSER (Bison) *******************************
+		
+	// ********************* SEMANTIC ANALYZER ****************************
+	// create the symbol table
+	TreeNode::symtab = new SymTab(PrintNode);
+	// turn on the debug for the symbol table if option '-s' is set
+	if (symbolTableTracing) TreeNode::symtab->debug(DEBUG_TABLE);
+	// run the semantic analyzer
+	savedTree->ScopeAndType(cout, numErrors);
+	cout << "Number of errors: " << numErrors << endl;
+	// ********************* SEMANTIC ANALYZER ****************************
+
 	// close the open input file if necessary
 	if (fileOpen) fclose(yyin);
 }
