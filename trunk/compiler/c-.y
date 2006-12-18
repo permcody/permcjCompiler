@@ -36,7 +36,12 @@ string & copyString(char *source)
 
 %token ELSE IF RETURN WHILE TRUE FALSE ERROR
 %token <identifier> ID
-%token <number> NUM INT VOID BOOL NEQ LEQ EQ GEQ AND OR
+%token <number> NUM INT VOID BOOL
+
+%left <number> '<' '>' LEQ GEQ EQ NEQ
+%left <number> '+' '-' OR
+%left <number> '*' '/' '%' AND
+%left <number> '!' UMINUS
 
 %type <tree>	program 
 				declaration_list 
@@ -61,7 +66,6 @@ string & copyString(char *source)
 				expression
 				var
 				simple_expression
-				unary_expression
 				factor
 				call
 				constant
@@ -69,12 +73,6 @@ string & copyString(char *source)
 				arg_list
 
 %type <number>	type_specifier
-				op
-				unaryop
-				
-%left '<' '>' LEQ GEQ EQ NEQ
-%left '+' '-' OR
-%left '*' '/' '%' AND
 
 %%
 
@@ -98,18 +96,18 @@ declaration			: var_declaration { $$ = $1; }
 					| fun_declaration { $$ = $1; }
 					;
 					
-var_declaration		: type_specifier ID { savedName = copyString($2); }  ';' 
+var_declaration		: type_specifier ID ';' 
 						{	DeclarationNode *dNode = new DeclarationNode(TreeNode::VarK);
 							dNode->type = (TreeNode::Types)$1;					// save the type
-							dNode->name = savedName;			// save the ID
+							dNode->name = $2;			// save the ID
 							$$ = (TreeNode *)dNode;
 						}
-					| type_specifier ID { savedName = copyString($2); } '[' NUM { savedNumber = $5; } ']' ';' 
+					| type_specifier ID '[' NUM ']' ';' 
 						{	DeclarationNode *dNode = new DeclarationNode(TreeNode::VarK);
 							dNode->type = (TreeNode::Types)$1;				// save the type
-							dNode->name = savedName;		// save the ID
+							dNode->name = $2;		// save the ID
 							dNode->isArray = true;
-							dNode->size = savedNumber;		// save the array size
+							dNode->size = $4;		// save the array size
 							$$ = (TreeNode *)dNode;
 						}							
 					;
@@ -119,12 +117,12 @@ type_specifier		: INT	{ $$ = TreeNode::Int; }
 					| BOOL	{ $$ = TreeNode::Bool; }
 					;
 					
-fun_declaration		: type_specifier ID { savedName = copyString($2); } '(' params ')' compound_stmt 
+fun_declaration		: type_specifier ID '(' params ')' compound_stmt 
 						{	DeclarationNode *dNode = new DeclarationNode(TreeNode::FuncK);
 							dNode->type = (TreeNode::Types)$1;					// save the type
-							dNode->name = savedName;			// save the ID
-							dNode->child[0] = $5;				// params are the first child of the function declaration
-							dNode->child[1] = $7;				// statements are the second child of the function declaration							
+							dNode->name = $2;			// save the ID
+							dNode->child[0] = $4;				// params are the first child of the function declaration
+							dNode->child[1] = $6;				// statements are the second child of the function declaration							
 							$$ = (TreeNode *)dNode;	
 						}
 					;
@@ -149,13 +147,13 @@ param_list			: param_list ',' param
 param				: type_specifier ID 
 						{	DeclarationNode *dNode = new DeclarationNode(TreeNode::ParamK);
 							dNode->type = (TreeNode::Types)$1;
-							dNode->name = copyString($2);
+							dNode->name = $2;
 							$$ = (TreeNode *)dNode;
 						}
-					| type_specifier ID { savedName = copyString($2); } '[' ']' 
+					| type_specifier ID '[' ']' 
 						{	DeclarationNode *dNode = new DeclarationNode(TreeNode::ParamK);
 							dNode->type = (TreeNode::Types)$1;
-							dNode->name = savedName;
+							dNode->name = $2;
 							dNode->isArray = true;
 							dNode->size = -1;				// no size was specified
 							$$ = (TreeNode *)dNode;
@@ -277,51 +275,119 @@ var					: ID
 							eNode->name = $1;
 							$$ = (TreeNode *)eNode;
 						}
-					| ID { savedName = copyString($1); } '[' expression ']'
+					| ID '[' expression ']'
 						{	ExpressionNode *eNode = new ExpressionNode(TreeNode::IdK);
-							eNode->name = savedName;
-							eNode->child[0] = $4;
+							eNode->name = $1;
+							eNode->child[0] = $3;
 							$$ = (TreeNode *)eNode;
 						}
 					;
 
-simple_expression	: simple_expression op simple_expression
+simple_expression	:  simple_expression '+' simple_expression
 						{	ExpressionNode *eNode = new ExpressionNode(TreeNode::OpK);
 							eNode->child[0] = $1;
 							eNode->child[1] = $3;
-							eNode->op = (TreeNode::Ops)$2;
+							eNode->op = TreeNode::Plus;
 							$$ = (TreeNode *)eNode;
 						}
-					| unary_expression						// default action
-					;
-					
-op					: LEQ { $$ = TreeNode::Leq; }
-					| '<' { $$ = TreeNode::Lt; }
-					| '>' { $$ = TreeNode::Gt; }
-					| GEQ { $$ = TreeNode::Geq; }
-					| EQ  { $$ = TreeNode::Eq; }
-					| NEQ { $$ = TreeNode::Neq; }
-					| '+' { $$ = TreeNode::Plus; }	
-					| '-' { $$ = TreeNode::Minus; }
-					| OR  { $$ = TreeNode::Or; }
-					| '*' { $$ = TreeNode::Multiply; }
-					| '/' { $$ = TreeNode::Divide; }
-					| '%' { $$ = TreeNode::Mod; }
-					| AND { $$ = TreeNode::And; }
-					;					
-					
-unary_expression	: unaryop unary_expression
+					|	simple_expression '-' simple_expression
+						{	ExpressionNode *eNode = new ExpressionNode(TreeNode::OpK);
+							eNode->child[0] = $1;
+							eNode->child[1] = $3;
+							eNode->op = TreeNode::Minus;
+							$$ = (TreeNode *)eNode;
+						}
+					|	simple_expression '*' simple_expression
+						{	ExpressionNode *eNode = new ExpressionNode(TreeNode::OpK);
+							eNode->child[0] = $1;
+							eNode->child[1] = $3;
+							eNode->op = TreeNode::Multiply;
+							$$ = (TreeNode *)eNode;
+						}
+					|	simple_expression '/' simple_expression
+						{	ExpressionNode *eNode = new ExpressionNode(TreeNode::OpK);
+							eNode->child[0] = $1;
+							eNode->child[1] = $3;
+							eNode->op = TreeNode::Divide;
+							$$ = (TreeNode *)eNode;
+						}
+					|	simple_expression '%' simple_expression
+						{	ExpressionNode *eNode = new ExpressionNode(TreeNode::OpK);
+							eNode->child[0] = $1;
+							eNode->child[1] = $3;
+							eNode->op = TreeNode::Mod;
+							$$ = (TreeNode *)eNode;
+						}
+					|	simple_expression '<' simple_expression
+						{	ExpressionNode *eNode = new ExpressionNode(TreeNode::OpK);
+							eNode->child[0] = $1;
+							eNode->child[1] = $3;
+							eNode->op = TreeNode::Lt;
+							$$ = (TreeNode *)eNode;
+						}
+					|	simple_expression '>' simple_expression
+						{	ExpressionNode *eNode = new ExpressionNode(TreeNode::OpK);
+							eNode->child[0] = $1;
+							eNode->child[1] = $3;
+							eNode->op = TreeNode::Gt;
+							$$ = (TreeNode *)eNode;
+						}
+					|	simple_expression LEQ simple_expression
+						{	ExpressionNode *eNode = new ExpressionNode(TreeNode::OpK);
+							eNode->child[0] = $1;
+							eNode->child[1] = $3;
+							eNode->op = TreeNode::Leq;
+							$$ = (TreeNode *)eNode;
+						}
+					|	simple_expression GEQ simple_expression
+						{	ExpressionNode *eNode = new ExpressionNode(TreeNode::OpK);
+							eNode->child[0] = $1;
+							eNode->child[1] = $3;
+							eNode->op = TreeNode::Geq;
+							$$ = (TreeNode *)eNode;
+						}
+					|	simple_expression EQ simple_expression
+						{	ExpressionNode *eNode = new ExpressionNode(TreeNode::OpK);
+							eNode->child[0] = $1;
+							eNode->child[1] = $3;
+							eNode->op = TreeNode::Eq;
+							$$ = (TreeNode *)eNode;
+						}
+					|	simple_expression NEQ simple_expression
+						{	ExpressionNode *eNode = new ExpressionNode(TreeNode::OpK);
+							eNode->child[0] = $1;
+							eNode->child[1] = $3;
+							eNode->op = TreeNode::Neq;
+							$$ = (TreeNode *)eNode;
+						}
+					|	simple_expression OR simple_expression
+						{	ExpressionNode *eNode = new ExpressionNode(TreeNode::OpK);
+							eNode->child[0] = $1;
+							eNode->child[1] = $3;
+							eNode->op = TreeNode::Or;
+							$$ = (TreeNode *)eNode;
+						}
+					|	simple_expression AND simple_expression
+						{	ExpressionNode *eNode = new ExpressionNode(TreeNode::OpK);
+							eNode->child[0] = $1;
+							eNode->child[1] = $3;
+							eNode->op = TreeNode::And;
+							$$ = (TreeNode *)eNode;
+						}
+					| '-' simple_expression %prec UMINUS
 						{	ExpressionNode *eNode = new ExpressionNode(TreeNode::OpK);
 							eNode->child[0] = $2;
-							eNode->op = (TreeNode::Ops)$1;
+							eNode->op = TreeNode::Minus;
 							$$ = (TreeNode *)eNode;
 						}
+					| '!' simple_expression
+						{	ExpressionNode *eNode = new ExpressionNode(TreeNode::OpK);
+							eNode->child[0] = $2;
+							eNode->op = TreeNode::Not;
+							$$ = (TreeNode *)eNode;
+						}				
 					| factor
-					;
-					
-unaryop				: '!' { $$ = TreeNode::Not; }						
-					| '-' { $$ = TreeNode::Minus; }
-					;
+					;				
 					
 factor				: '(' expression ')'
 						{	ExpressionNode *eNode = new ExpressionNode(TreeNode::OpK);
@@ -352,10 +418,10 @@ constant			: NUM
 						}
 					;
 					
-call				: ID { savedName = copyString($1); } '(' args ')'
+call				: ID '(' args ')'
 						{	ExpressionNode *eNode = new ExpressionNode(TreeNode::CallK);
-							eNode->name = savedName;
-                            eNode->child[0] = $4;
+							eNode->name = $1;
+                            eNode->child[0] = $3;
 							$$ = (TreeNode *)eNode;
 						}
 					;
@@ -400,7 +466,7 @@ int main(int argc, char *argv[]) {
 		cerr << "usage: " << progname << " [-d] [infile]\n";
 		exit(1);
 	}
-	if (argc > 1 && (argc != 2 && yydebug)) {
+	if (argc == 2 && !yydebug || argc == 3 && yydebug) {
 		if (argc == 2 && !yydebug)
 			infile = argv[1];
 		else

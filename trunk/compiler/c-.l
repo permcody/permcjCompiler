@@ -46,7 +46,7 @@ false				{ SaveToken(); return FALSE; }
 \n					{ currentLineNo++; }					
 [ \t]+		 		;
 \/\/.*				;
-[-\]<>;=[,{}()+*/!]	{ SaveToken(); return yytext[0]; }
+[-%\]<>;=[,{}()+*/!] { SaveToken(); return yytext[0]; }
 .					{ SaveToken(); return ERROR; }
 %%
 

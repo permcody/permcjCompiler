@@ -163,13 +163,26 @@ void DeclarationNode::PrintTree(ostream &out, int spaces, int siblingNum) const 
 			out << "Function " << name << " returns " << PrintType(type) << '\n';
 			break;
 		case VarK:
-			out << "Var " << name << " of type " << PrintType(type) << '\n';
-			if (isArray)
-				out << " is array of size " << size << '\n';
+			out << "Var " << name << " of type " << PrintType(type);
+			if (isArray) {
+				out << " is array";
+				if (size >= 0)
+					out << " of size " << size;
+				out << '\n';
+			}
+			else
+				out << '\n';
+			break;
 		case ParamK:
-			out << "Param " << name << " of type " << PrintType(type) << '\n';
-			if (isArray)
-				out << " is array of size " << size << '\n';
+			out << "Param " << name << " of type " << PrintType(type);
+			if (isArray) {
+				out << " is array";
+				if (size >= 0)
+					out << " of size " << size;
+				out << '\n';
+			}
+			else
+				out << '\n';
 			break;
 	}		
 	TreeNode::PrintTree(out, spaces, siblingNum);

@@ -5,7 +5,7 @@ CCFLAGS = -DCPLUSPLUS -g  # for use with C++ if file ext is .cc
 CFLAGS = -DCPLUSPLUS -g  # for use with C++ if file ext is .c
 
 HDRS = globals.h
-SRCS = $(BIN).y globals.c  $(BIN).l
+SRCS = $(BIN).y globals.cc  $(BIN).l
 OBJS = lex.yy.o globals.o  $(BIN).tab.o
 LIBS = -lfl -lm 
 
@@ -23,7 +23,7 @@ all:
 	make
 
 clean:
-	rm -f $(OBJS) $(BIN) $(BIN).output lex.yy.c $(BIN).tab.h $(BIN).tab.c cpermann.tar core
+	rm -f $(OBJS) $(BIN) $(BIN).output lex.yy.c $(BIN).tab.h $(BIN).tab.c $(BIN).tar core
 
 tar:
 	tar -cvf $(TARNAME).tar $(SRCS) $(HDRS)  makefile
