@@ -13,7 +13,7 @@ public:
 	enum ExprKind {OpK, AssignK, ConstK, IdK, SimpK, CallK};
 	enum DeclKind {FuncK, VarK, ParamK};	
 	enum Types {Undefined, Int, Void, Bool};
-	enum Ops {Und, Plus, Minus, Multiply, Divide, Eq, Geq, Leq, Lt, Gt, Neq, Or, And, Not, Mod};
+	//enum Ops {Und, Plus, Minus, Multiply, Divide, Eq, Geq, Leq, Lt, Gt, Neq, Or, And, Not, Mod};
 	enum {MAXCHILDREN=3};
 
 	TreeNode *child[MAXCHILDREN];
@@ -25,22 +25,24 @@ public:
 	TreeNode(NodeKind sKind);
 	//~TreeNode();
 
+
+
 protected:
 	void virtual PrintTree(ostream &out, int spaces, int siblingNum) const;
 	void PrintSpaces(ostream &out, int numSpaces) const;
 	string PrintType(Types t) const;
-	string PrintOp(Ops op) const;
+	//string PrintOp(Ops op) const;
 };
 
 class ExpressionNode : public TreeNode {
 public:
 	ExprKind subKind;
 	string name;
-	Ops op;
+	string op;
 	int val;
 	bool isBool;
 
-	ExpressionNode(ExprKind eKind);
+	ExpressionNode(ExprKind eKind) : TreeNode(ExprK), subKind(eKind), val(0), isBool(false) {}
 	void virtual PrintTree(ostream &out, int spaces, int siblingNum) const;
 };
 
@@ -48,7 +50,7 @@ class StatementNode : public TreeNode {
 public:
 	StmtKind subKind;
 	
-	StatementNode(StmtKind sKind);
+	StatementNode(StmtKind sKind) : TreeNode(StmtK), subKind(sKind) {}
 	void virtual PrintTree(ostream &out, int spaces, int siblingNum) const;
 };
 
@@ -60,7 +62,8 @@ public:
 	bool isArray;
 	int size;
 
-	DeclarationNode(DeclKind dKind);
+	DeclarationNode(DeclKind dKind) 
+		: TreeNode(DeclK), subKind(dKind), type(Undefined), size(0), isArray(false) {}
 	void virtual PrintTree(ostream &out, int spaces, int siblingNum) const;
 };
 

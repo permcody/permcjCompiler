@@ -10,9 +10,9 @@ extern int yylex();
 extern unsigned int currentLineNo;
 extern char currentToken[255];
 
-string savedName;
-long savedNumber;
 TreeNode *savedTree;
+
+TreeNode *newOpExpNode(char *op, TreeNode *child0, TreeNode *child1);
 
 // flex requires that you supply this function
 void yyerror(const char *msg)
@@ -42,6 +42,8 @@ string & copyString(char *source)
 %left <number> '+' '-' OR
 %left <number> '*' '/' '%' AND
 %left <number> '!' UMINUS
+%nonassoc LOWER_THAN_ELSE
+%nonassoc ELSE
 
 %type <tree>	program 
 				declaration_list 
@@ -55,13 +57,9 @@ string & copyString(char *source)
 				local_declarations
 				statement_list
 				statement
-				matched_stmt
-				unmatched_stmt
 				expression_stmt
-				m_selection_stmt
-				u_selection_stmt
-				m_iteration_stmt
-				u_iteration_stmt
+				selection_stmt
+				iteration_stmt
 				return_stmt
 				expression
 				var
@@ -194,41 +192,24 @@ statement_list		: statement_list statement
 					|	{ $$ = NULL; }
 					;
 
-statement			: matched_stmt { $$ = $1; }
-					| unmatched_stmt { $$ = $1; }
-					;
-					
-matched_stmt		: expression_stmt { $$ = $1; }
+statement			: expression_stmt { $$ = $1; }
 					| compound_stmt { $$ = $1; }
-					| m_selection_stmt { $$ = $1; }
-					| m_iteration_stmt { $$ = $1; }
+					| selection_stmt { $$ = $1; }
+					| iteration_stmt { $$ = $1; }
 					| return_stmt { $$ = $1; }
 					;
 					
-unmatched_stmt		: u_selection_stmt { $$ = $1; }
-					| u_iteration_stmt { $$ = $1; }
-					;
-
 expression_stmt		: expression ';' { $$ = $1; }
 					| ';' { $$ = NULL; }
 					;
 					
-m_selection_stmt	: IF '(' expression ')' matched_stmt ELSE matched_stmt 
-						{	StatementNode *sNode = new StatementNode(TreeNode::IfK);
-							sNode->child[0] = $3;
-							sNode->child[1] = $5;
-							sNode->child[2] = $7;
-							$$ = (TreeNode *)sNode;
-						}
-					;
-					
-u_selection_stmt	: IF '(' expression ')' statement 
+selection_stmt		: IF '(' expression ')' statement %prec LOWER_THAN_ELSE
 						{	StatementNode *sNode = new StatementNode(TreeNode::IfK);
 							sNode->child[0] = $3;
 							sNode->child[1] = $5;
 							$$ = (TreeNode *)sNode;
 						}
-					| IF '(' expression ')' matched_stmt ELSE unmatched_stmt
+					| IF '(' expression ')' statement ELSE statement
 						{	StatementNode *sNode = new StatementNode(TreeNode::IfK);
 							sNode->child[0] = $3;
 							sNode->child[1] = $5;
@@ -237,18 +218,10 @@ u_selection_stmt	: IF '(' expression ')' statement
 						}
 					;  
 					
-m_iteration_stmt	: WHILE '(' expression ')' matched_stmt
+iteration_stmt		: WHILE '(' expression ')' statement
 						{	StatementNode *sNode = new StatementNode(TreeNode::WhileK);
 							sNode->child[0] = $3;
 							sNode->child[1] = $5;
-							$$ = (TreeNode *)sNode;
-						}
-					;
-					
-u_iteration_stmt	: WHILE '(' expression ')' unmatched_stmt
-						{	StatementNode *sNode = new StatementNode(TreeNode::WhileK);
-							$$->child[0] = $3;
-							$$->child[1] = $5;
 							$$ = (TreeNode *)sNode;
 						}
 					;
@@ -283,117 +256,25 @@ var					: ID
 						}
 					;
 
-simple_expression	:  simple_expression '+' simple_expression
-						{	ExpressionNode *eNode = new ExpressionNode(TreeNode::OpK);
-							eNode->child[0] = $1;
-							eNode->child[1] = $3;
-							eNode->op = TreeNode::Plus;
-							$$ = (TreeNode *)eNode;
-						}
-					|	simple_expression '-' simple_expression
-						{	ExpressionNode *eNode = new ExpressionNode(TreeNode::OpK);
-							eNode->child[0] = $1;
-							eNode->child[1] = $3;
-							eNode->op = TreeNode::Minus;
-							$$ = (TreeNode *)eNode;
-						}
-					|	simple_expression '*' simple_expression
-						{	ExpressionNode *eNode = new ExpressionNode(TreeNode::OpK);
-							eNode->child[0] = $1;
-							eNode->child[1] = $3;
-							eNode->op = TreeNode::Multiply;
-							$$ = (TreeNode *)eNode;
-						}
-					|	simple_expression '/' simple_expression
-						{	ExpressionNode *eNode = new ExpressionNode(TreeNode::OpK);
-							eNode->child[0] = $1;
-							eNode->child[1] = $3;
-							eNode->op = TreeNode::Divide;
-							$$ = (TreeNode *)eNode;
-						}
-					|	simple_expression '%' simple_expression
-						{	ExpressionNode *eNode = new ExpressionNode(TreeNode::OpK);
-							eNode->child[0] = $1;
-							eNode->child[1] = $3;
-							eNode->op = TreeNode::Mod;
-							$$ = (TreeNode *)eNode;
-						}
-					|	simple_expression '<' simple_expression
-						{	ExpressionNode *eNode = new ExpressionNode(TreeNode::OpK);
-							eNode->child[0] = $1;
-							eNode->child[1] = $3;
-							eNode->op = TreeNode::Lt;
-							$$ = (TreeNode *)eNode;
-						}
-					|	simple_expression '>' simple_expression
-						{	ExpressionNode *eNode = new ExpressionNode(TreeNode::OpK);
-							eNode->child[0] = $1;
-							eNode->child[1] = $3;
-							eNode->op = TreeNode::Gt;
-							$$ = (TreeNode *)eNode;
-						}
-					|	simple_expression LEQ simple_expression
-						{	ExpressionNode *eNode = new ExpressionNode(TreeNode::OpK);
-							eNode->child[0] = $1;
-							eNode->child[1] = $3;
-							eNode->op = TreeNode::Leq;
-							$$ = (TreeNode *)eNode;
-						}
-					|	simple_expression GEQ simple_expression
-						{	ExpressionNode *eNode = new ExpressionNode(TreeNode::OpK);
-							eNode->child[0] = $1;
-							eNode->child[1] = $3;
-							eNode->op = TreeNode::Geq;
-							$$ = (TreeNode *)eNode;
-						}
-					|	simple_expression EQ simple_expression
-						{	ExpressionNode *eNode = new ExpressionNode(TreeNode::OpK);
-							eNode->child[0] = $1;
-							eNode->child[1] = $3;
-							eNode->op = TreeNode::Eq;
-							$$ = (TreeNode *)eNode;
-						}
-					|	simple_expression NEQ simple_expression
-						{	ExpressionNode *eNode = new ExpressionNode(TreeNode::OpK);
-							eNode->child[0] = $1;
-							eNode->child[1] = $3;
-							eNode->op = TreeNode::Neq;
-							$$ = (TreeNode *)eNode;
-						}
-					|	simple_expression OR simple_expression
-						{	ExpressionNode *eNode = new ExpressionNode(TreeNode::OpK);
-							eNode->child[0] = $1;
-							eNode->child[1] = $3;
-							eNode->op = TreeNode::Or;
-							$$ = (TreeNode *)eNode;
-						}
-					|	simple_expression AND simple_expression
-						{	ExpressionNode *eNode = new ExpressionNode(TreeNode::OpK);
-							eNode->child[0] = $1;
-							eNode->child[1] = $3;
-							eNode->op = TreeNode::And;
-							$$ = (TreeNode *)eNode;
-						}
-					| '-' simple_expression %prec UMINUS
-						{	ExpressionNode *eNode = new ExpressionNode(TreeNode::OpK);
-							eNode->child[0] = $2;
-							eNode->op = TreeNode::Minus;
-							$$ = (TreeNode *)eNode;
-						}
-					| '!' simple_expression
-						{	ExpressionNode *eNode = new ExpressionNode(TreeNode::OpK);
-							eNode->child[0] = $2;
-							eNode->op = TreeNode::Not;
-							$$ = (TreeNode *)eNode;
-						}				
-					| factor
+simple_expression	: simple_expression '+' simple_expression	{ $$ = newOpExpNode("+", $1, $3); }
+					| simple_expression '-' simple_expression	{ $$ = newOpExpNode("-", $1, $3); }
+					| simple_expression '*' simple_expression	{ $$ = newOpExpNode("*", $1, $3); }
+					| simple_expression '/' simple_expression	{ $$ = newOpExpNode("/", $1, $3); }
+					| simple_expression '%' simple_expression	{ $$ = newOpExpNode("%", $1, $3); }
+					| simple_expression '<' simple_expression	{ $$ = newOpExpNode("<", $1, $3); }
+					| simple_expression '>' simple_expression	{ $$ = newOpExpNode(">", $1, $3); }
+					| simple_expression LEQ simple_expression	{ $$ = newOpExpNode("<=", $1, $3); }
+					| simple_expression GEQ simple_expression	{ $$ = newOpExpNode(">=", $1, $3); }
+					| simple_expression EQ simple_expression	{ $$ = newOpExpNode("==", $1, $3); }
+					| simple_expression NEQ simple_expression	{ $$ = newOpExpNode("!=", $1, $3); }
+					| simple_expression OR simple_expression	{ $$ = newOpExpNode("||", $1, $3); }
+					| simple_expression AND simple_expression	{ $$ = newOpExpNode("&&", $1, $3); }
+					| '-' simple_expression %prec UMINUS		{ $$ = newOpExpNode("-", $2, NULL); }
+					| '!' simple_expression						{ $$ = newOpExpNode("!", $2, NULL); }
+					| factor									{ $$ = $1; }
 					;				
 					
-factor				: '(' expression ')'
-						{	ExpressionNode *eNode = new ExpressionNode(TreeNode::OpK);
-							eNode->child[0] = $2;
-							$$ = (TreeNode *)eNode;
-						}
+factor				: '(' expression ')'	{ $$ = $2; }
 					| var
 					| call
 					| constant
@@ -444,6 +325,15 @@ arg_list			: arg_list ',' expression
 					;
 
 %%
+
+TreeNode *newOpExpNode(char *op, TreeNode *child0, TreeNode *child1) {
+	ExpressionNode *eNode = new ExpressionNode(TreeNode::OpK);
+	eNode->child[0] = child0;
+	eNode->child[1] = child1;
+	eNode->op = copyString(op);
+	return (TreeNode *)eNode;
+}
+
 
 int main(int argc, char *argv[]) {
 		
