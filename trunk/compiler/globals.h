@@ -6,6 +6,13 @@
 #include <cstdlib>  // used for getopt
 using namespace std;
 
+struct FlexStruct {
+public:
+	char *identifier;
+	long number;
+	long lineno;
+};
+
 class TreeNode {
 public:	
 	enum NodeKind {StmtK, ExprK, DeclK};
@@ -13,25 +20,21 @@ public:
 	enum ExprKind {OpK, AssignK, ConstK, IdK, SimpK, CallK};
 	enum DeclKind {FuncK, VarK, ParamK};	
 	enum Types {Undefined, Int, Void, Bool};
-	//enum Ops {Und, Plus, Minus, Multiply, Divide, Eq, Geq, Leq, Lt, Gt, Neq, Or, And, Not, Mod};
 	enum {MAXCHILDREN=3};
 
 	TreeNode *child[MAXCHILDREN];
 	TreeNode *sibling;
-	unsigned short lineNumber;
+	long lineNumber;
 	NodeKind kind;
 
 	void PrintTree(ostream &out) const { this->PrintTree(out, 0, 0); }
 	TreeNode(NodeKind sKind);
 	//~TreeNode();
 
-
-
 protected:
 	void virtual PrintTree(ostream &out, int spaces, int siblingNum) const;
 	void PrintSpaces(ostream &out, int numSpaces) const;
 	string PrintType(Types t) const;
-	//string PrintOp(Ops op) const;
 };
 
 class ExpressionNode : public TreeNode {
@@ -40,7 +43,7 @@ public:
 	string name;
 	string op;
 	int val;
-	bool isBool;
+	bool isBool;	
 
 	ExpressionNode(ExprKind eKind) : TreeNode(ExprK), subKind(eKind), val(0), isBool(false) {}
 	void virtual PrintTree(ostream &out, int spaces, int siblingNum) const;

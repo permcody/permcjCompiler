@@ -3,9 +3,6 @@
 TreeNode::TreeNode(NodeKind sKind) : sibling(NULL), lineNumber(0), kind(sKind) {
 	for (short i=0; i<MAXCHILDREN; i++)
 		child[i] = NULL;
-	//sibling = NULL;
-	//lineNumber = 0;
-	//kind = sKind;
 }
 
 void TreeNode::PrintTree(ostream &out, int spaces, int siblingNum) const {
@@ -51,22 +48,22 @@ void ExpressionNode::PrintTree(ostream &out, int spaces, int siblingNum) const {
 
 	switch (subKind) {
 		case OpK:
-			out << "Op: " << op << '\n';
+			out << "Op: " << op << " [line: " << lineNumber << "]\n";
 			break;
 		case AssignK:
-			out << "Assign" << '\n';
+			out << "Assign" << " [line: " << lineNumber << "]\n";
 			break;
 		case ConstK:
 			if (isBool)
-				out << "Const: " << boolalpha << (bool)val << noboolalpha << '\n';
+				out << "Const: " << boolalpha << (bool)val << noboolalpha << " [line: " << lineNumber << "]\n";
 			else
-				out << "Const: " << val << '\n';
+				out << "Const: " << val << " [line: " << lineNumber << "]\n";
 			break;
 		case IdK:
-			out << "Id: " << name << '\n';
+			out << "Id: " << name << " [line: " << lineNumber << "]\n";
 			break;
 		case CallK:
-			out << "Call: " << name << '\n';
+			out << "Call: " << name << " [line: " << lineNumber << "]\n";
 			break;
 	}    
 	TreeNode::PrintTree(out, spaces, siblingNum);
@@ -77,16 +74,16 @@ void StatementNode::PrintTree(ostream &out, int spaces, int siblingNum) const {
     
 	switch (subKind) {
 		case IfK:
-			out << "If\n";
+			out << "If" << " [line: " << lineNumber << "]\n";
 			break;
 		case CompK:
-			out << "Compound\n";
+			out << "Compound" << " [line: " << lineNumber << "]\n";
 			break;
 		case WhileK:
-			out << "While\n";
+			out << "While" << " [line: " << lineNumber << "]\n";
 			break;
 		case ReturnK:
-			out << "Return\n";
+			out << "Return" << " [line: " << lineNumber << "]\n";
 			break;
 	}
 	TreeNode::PrintTree(out, spaces, siblingNum);
@@ -96,7 +93,7 @@ void DeclarationNode::PrintTree(ostream &out, int spaces, int siblingNum) const 
 	PrintSpaces(out, spaces);
     switch (subKind) {
 		case FuncK:
-			out << "Function " << name << " returns " << PrintType(type) << '\n';
+			out << "Function " << name << " returns " << PrintType(type) << " [line: " << lineNumber << "]\n";
 			break;
 		case VarK:
 			out << "Var " << name << " of type " << PrintType(type);
@@ -104,10 +101,10 @@ void DeclarationNode::PrintTree(ostream &out, int spaces, int siblingNum) const 
 				out << " is array";
 				if (size >= 0)
 					out << " of size " << size;
-				out << '\n';
+				out << " [line: " << lineNumber << "]\n";
 			}
 			else
-				out << '\n';
+				out << " [line: " << lineNumber << "]\n";
 			break;
 		case ParamK:
 			out << "Param " << name << " of type " << PrintType(type);
@@ -115,10 +112,10 @@ void DeclarationNode::PrintTree(ostream &out, int spaces, int siblingNum) const 
 				out << " is array";
 				if (size >= 0)
 					out << " of size " << size;
-				out << '\n';
+				out << " [line: " << lineNumber << "]\n";
 			}
 			else
-				out << '\n';
+				out << " [line: " << lineNumber << "]\n";
 			break;
 	}		
 	TreeNode::PrintTree(out, spaces, siblingNum);

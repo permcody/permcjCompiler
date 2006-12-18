@@ -12,7 +12,7 @@ extern char currentToken[255];
 
 TreeNode *savedTree;
 
-TreeNode *newOpExpNode(char *op, TreeNode *child0, TreeNode *child1);
+TreeNode *newOpExpNode(char *op, TreeNode *child0, TreeNode *child1, long lineno);
 
 // flex requires that you supply this function
 void yyerror(const char *msg)
@@ -29,21 +29,22 @@ string & copyString(char *source)
 %}
 
 %union {
+	long lineno;
 	long number;
-	char *identifier;
 	TreeNode *tree;
+	FlexStruct *fPtr;
 }
 
-%token ELSE IF RETURN WHILE TRUE FALSE ERROR
-%token <identifier> ID
-%token <number> NUM INT VOID BOOL
+%token <lineno> IF RETURN WHILE TRUE FALSE ERROR INT VOID BOOL '{' '='
+%token <fPtr> ID NUM
 
-%left <number> '<' '>' LEQ GEQ EQ NEQ
-%left <number> '+' '-' OR
-%left <number> '*' '/' '%' AND
-%left <number> '!' UMINUS
+%left <lineno> '<' '>' LEQ GEQ EQ NEQ
+%left <lineno> '+' '-' OR
+%left <lineno> '*' '/' '%' AND
+%left <lineno> '!' UMINUS
+
 %nonassoc LOWER_THAN_ELSE
-%nonassoc ELSE
+%nonassoc <lineno> ELSE
 
 %type <tree>	program 
 				declaration_list 
@@ -96,16 +97,18 @@ declaration			: var_declaration { $$ = $1; }
 					
 var_declaration		: type_specifier ID ';' 
 						{	DeclarationNode *dNode = new DeclarationNode(TreeNode::VarK);
-							dNode->type = (TreeNode::Types)$1;					// save the type
-							dNode->name = $2;			// save the ID
+							dNode->type = (TreeNode::Types)$1;		// save the type
+							dNode->name = $2->identifier;			// save the ID
+							dNode->lineNumber = $2->lineno;			// save the lineNumber
 							$$ = (TreeNode *)dNode;
 						}
 					| type_specifier ID '[' NUM ']' ';' 
 						{	DeclarationNode *dNode = new DeclarationNode(TreeNode::VarK);
-							dNode->type = (TreeNode::Types)$1;				// save the type
-							dNode->name = $2;		// save the ID
+							dNode->type = (TreeNode::Types)$1;		// save the type
+							dNode->name = $2->identifier;			// save the ID
+							dNode->lineNumber = $2->lineno;			// save the lineNumber
 							dNode->isArray = true;
-							dNode->size = $4;		// save the array size
+							dNode->size = $4->number;				// save the array size
 							$$ = (TreeNode *)dNode;
 						}							
 					;
@@ -117,8 +120,9 @@ type_specifier		: INT	{ $$ = TreeNode::Int; }
 					
 fun_declaration		: type_specifier ID '(' params ')' compound_stmt 
 						{	DeclarationNode *dNode = new DeclarationNode(TreeNode::FuncK);
-							dNode->type = (TreeNode::Types)$1;					// save the type
-							dNode->name = $2;			// save the ID
+							dNode->type = (TreeNode::Types)$1;		// save the type
+							dNode->name = $2->identifier;			// save the ID
+							dNode->lineNumber = $2->lineno;			// save the lineNumber
 							dNode->child[0] = $4;				// params are the first child of the function declaration
 							dNode->child[1] = $6;				// statements are the second child of the function declaration							
 							$$ = (TreeNode *)dNode;	
@@ -145,13 +149,15 @@ param_list			: param_list ',' param
 param				: type_specifier ID 
 						{	DeclarationNode *dNode = new DeclarationNode(TreeNode::ParamK);
 							dNode->type = (TreeNode::Types)$1;
-							dNode->name = $2;
+							dNode->name = $2->identifier;
+							dNode->lineNumber = $2->lineno;			// save the lineNumber
 							$$ = (TreeNode *)dNode;
 						}
 					| type_specifier ID '[' ']' 
 						{	DeclarationNode *dNode = new DeclarationNode(TreeNode::ParamK);
 							dNode->type = (TreeNode::Types)$1;
-							dNode->name = $2;
+							dNode->name = $2->identifier;
+							dNode->lineNumber = $2->lineno;			// save the lineNumber
 							dNode->isArray = true;
 							dNode->size = -1;				// no size was specified
 							$$ = (TreeNode *)dNode;
@@ -160,6 +166,7 @@ param				: type_specifier ID
 					
 compound_stmt		: '{' local_declarations statement_list '}' 
 						{	StatementNode *sNode = new StatementNode(TreeNode::CompK);
+							sNode->lineNumber = $1;				// save the lineNumber from '{'
 							sNode->child[0] = $2;				// local_declarations go into the first child of compound_stmt
 							sNode->child[1] = $3;				// statment_list goes into the second child of compound_stmt
 							$$ = (TreeNode *)sNode;
@@ -205,12 +212,14 @@ expression_stmt		: expression ';' { $$ = $1; }
 					
 selection_stmt		: IF '(' expression ')' statement %prec LOWER_THAN_ELSE
 						{	StatementNode *sNode = new StatementNode(TreeNode::IfK);
+							sNode->lineNumber = $1;			// save the linenumber from 'IF'
 							sNode->child[0] = $3;
 							sNode->child[1] = $5;
 							$$ = (TreeNode *)sNode;
 						}
 					| IF '(' expression ')' statement ELSE statement
 						{	StatementNode *sNode = new StatementNode(TreeNode::IfK);
+							sNode->lineNumber = $1;			// save the linenumber from 'IF'
 							sNode->child[0] = $3;
 							sNode->child[1] = $5;
 							sNode->child[2] = $7;
@@ -220,6 +229,7 @@ selection_stmt		: IF '(' expression ')' statement %prec LOWER_THAN_ELSE
 					
 iteration_stmt		: WHILE '(' expression ')' statement
 						{	StatementNode *sNode = new StatementNode(TreeNode::WhileK);
+							sNode->lineNumber = $1;			// save the linenumber from 'WHILE'
 							sNode->child[0] = $3;
 							sNode->child[1] = $5;
 							$$ = (TreeNode *)sNode;
@@ -229,6 +239,7 @@ iteration_stmt		: WHILE '(' expression ')' statement
 return_stmt			: RETURN ';' {	$$ = (TreeNode *)new StatementNode(TreeNode::ReturnK); }						
 					| RETURN expression ';'
 						{	StatementNode *sNode = new StatementNode(TreeNode::ReturnK);
+							sNode->lineNumber = $1;			// save the linenumber from 'RETURN'
 							sNode->child[0] = $2;
 							$$ = (TreeNode *)sNode;
 						}
@@ -236,6 +247,7 @@ return_stmt			: RETURN ';' {	$$ = (TreeNode *)new StatementNode(TreeNode::Return
 					
 expression			: var '=' expression
 						{	ExpressionNode *eNode = new ExpressionNode(TreeNode::AssignK);
+							eNode->lineNumber = $2;			// save the linenumber from '='
 							eNode->child[0] = $1;
 							eNode->child[1] = $3;
 							$$ = (TreeNode *)eNode;
@@ -245,32 +257,34 @@ expression			: var '=' expression
 					
 var					: ID
 						{	ExpressionNode *eNode = new ExpressionNode(TreeNode::IdK);
-							eNode->name = $1;
+							eNode->name = $1->identifier;
+							eNode->lineNumber = $1->lineno;	// save the linenumber from 'ID'
 							$$ = (TreeNode *)eNode;
 						}
 					| ID '[' expression ']'
 						{	ExpressionNode *eNode = new ExpressionNode(TreeNode::IdK);
-							eNode->name = $1;
+							eNode->name = $1->identifier;
+							eNode->lineNumber = $1->lineno;	// save the linenumber from 'ID'
 							eNode->child[0] = $3;
 							$$ = (TreeNode *)eNode;
 						}
 					;
 
-simple_expression	: simple_expression '+' simple_expression	{ $$ = newOpExpNode("+", $1, $3); }
-					| simple_expression '-' simple_expression	{ $$ = newOpExpNode("-", $1, $3); }
-					| simple_expression '*' simple_expression	{ $$ = newOpExpNode("*", $1, $3); }
-					| simple_expression '/' simple_expression	{ $$ = newOpExpNode("/", $1, $3); }
-					| simple_expression '%' simple_expression	{ $$ = newOpExpNode("%", $1, $3); }
-					| simple_expression '<' simple_expression	{ $$ = newOpExpNode("<", $1, $3); }
-					| simple_expression '>' simple_expression	{ $$ = newOpExpNode(">", $1, $3); }
-					| simple_expression LEQ simple_expression	{ $$ = newOpExpNode("<=", $1, $3); }
-					| simple_expression GEQ simple_expression	{ $$ = newOpExpNode(">=", $1, $3); }
-					| simple_expression EQ simple_expression	{ $$ = newOpExpNode("==", $1, $3); }
-					| simple_expression NEQ simple_expression	{ $$ = newOpExpNode("!=", $1, $3); }
-					| simple_expression OR simple_expression	{ $$ = newOpExpNode("||", $1, $3); }
-					| simple_expression AND simple_expression	{ $$ = newOpExpNode("&&", $1, $3); }
-					| '-' simple_expression %prec UMINUS		{ $$ = newOpExpNode("-", $2, NULL); }
-					| '!' simple_expression						{ $$ = newOpExpNode("!", $2, NULL); }
+simple_expression	: simple_expression '+' simple_expression	{ $$ = newOpExpNode("+", $1, $3, $2); }
+					| simple_expression '-' simple_expression	{ $$ = newOpExpNode("-", $1, $3, $2); }
+					| simple_expression '*' simple_expression	{ $$ = newOpExpNode("*", $1, $3, $2); }
+					| simple_expression '/' simple_expression	{ $$ = newOpExpNode("/", $1, $3, $2); }
+					| simple_expression '%' simple_expression	{ $$ = newOpExpNode("%", $1, $3, $2); }
+					| simple_expression '<' simple_expression	{ $$ = newOpExpNode("<", $1, $3, $2); }
+					| simple_expression '>' simple_expression	{ $$ = newOpExpNode(">", $1, $3, $2); }
+					| simple_expression LEQ simple_expression	{ $$ = newOpExpNode("<=", $1, $3, $2); }
+					| simple_expression GEQ simple_expression	{ $$ = newOpExpNode(">=", $1, $3, $2); }
+					| simple_expression EQ simple_expression	{ $$ = newOpExpNode("==", $1, $3, $2); }
+					| simple_expression NEQ simple_expression	{ $$ = newOpExpNode("!=", $1, $3, $2); }
+					| simple_expression OR simple_expression	{ $$ = newOpExpNode("||", $1, $3, $2); }
+					| simple_expression AND simple_expression	{ $$ = newOpExpNode("&&", $1, $3, $2); }
+					| '-' simple_expression %prec UMINUS		{ $$ = newOpExpNode("-", $2, NULL, $1); }
+					| '!' simple_expression						{ $$ = newOpExpNode("!", $2, NULL, $1); }
 					| factor									{ $$ = $1; }
 					;				
 					
@@ -282,17 +296,20 @@ factor				: '(' expression ')'	{ $$ = $2; }
 					
 constant			: NUM 
 						{	ExpressionNode *eNode = new ExpressionNode(TreeNode::ConstK);
-							eNode->val = $1;
+							eNode->lineNumber = $1->lineno;	// save the linenumber from 'NUM'
+							eNode->val = $1->number;
 							$$ = (TreeNode *)eNode;
 						}
 					| TRUE
 						{	ExpressionNode *eNode = new ExpressionNode(TreeNode::ConstK);
+							eNode->lineNumber = $1;			// save the linenumber from 'TRUE'
 							eNode->val = 1;		// value of true
 							eNode->isBool = true;
 							$$ = (TreeNode *)eNode;
 						}
 					| FALSE 
 						{	ExpressionNode *eNode = new ExpressionNode(TreeNode::ConstK);
+							eNode->lineNumber = $1;			// save the linenumber from 'FALSE'
 							eNode->val = 0;		// value of false
 							eNode->isBool = true;
 							$$ = (TreeNode *)eNode;
@@ -301,8 +318,9 @@ constant			: NUM
 					
 call				: ID '(' args ')'
 						{	ExpressionNode *eNode = new ExpressionNode(TreeNode::CallK);
-							eNode->name = $1;
-                            eNode->child[0] = $3;
+							eNode->name = $1->identifier;
+                            eNode->lineNumber = $1->lineno;	// save the linenumber from 'ID'
+							eNode->child[0] = $3;
 							$$ = (TreeNode *)eNode;
 						}
 					;
@@ -326,8 +344,9 @@ arg_list			: arg_list ',' expression
 
 %%
 
-TreeNode *newOpExpNode(char *op, TreeNode *child0, TreeNode *child1) {
+TreeNode *newOpExpNode(char *op, TreeNode *child0, TreeNode *child1, long lineno) {
 	ExpressionNode *eNode = new ExpressionNode(TreeNode::OpK);
+	eNode->lineNumber = lineno;
 	eNode->child[0] = child0;
 	eNode->child[1] = child1;
 	eNode->op = copyString(op);
