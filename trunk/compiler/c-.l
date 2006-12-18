@@ -1,9 +1,15 @@
 %{
-#include <stdlib.h>
-#include <string.h>
+#include <cstdlib>
+#include <cstring>
+using namespace std;
+
+#include "globals.h"
 #include "c-.tab.h"
 
-uint lineNo = 1;
+unsigned int currentLineNo = 1;
+char currentToken[255] = "\0";
+
+void SaveToken();
 %}
 
 ID	[A-Za-z]+
@@ -11,39 +17,41 @@ NUM	[0-9]+
 
 %%		
 		
-"!="				{ return NEQ; }
-"<="				{ return LEQ; } 
-"=="				{ return EQ; }
-">="				{ return GEQ; }
-"&&"				{ return AND; }
-"||"				{ return OR; }
+"!="				{ SaveToken(); return NEQ; }
+"<="				{ SaveToken(); return LEQ; } 
+"=="				{ SaveToken(); return EQ; }
+">="				{ SaveToken(); return GEQ; }
+"&&"				{ SaveToken(); return AND; }
+"||"				{ SaveToken(); return OR; }
 
-bool				{ return BOOL; }
-else				{ return ELSE; }
-if					{ return IF; }
-int					{ return INT; }
-void				{ return VOID; }
-while				{ return WHILE; }
-return				{ return RETURN; }
-true				{ yylval.cvalue = 'T';
-					  return TRUE; 
-					}
-false				{ yylval.cvalue = 'F';
-					  return FALSE; 
-					}
-{NUM}+				{ yylval.lvalue = atol((char *)yytext);
+bool				{ SaveToken(); return BOOL; }
+else				{ SaveToken(); return ELSE; }
+if					{ SaveToken(); return IF; }
+int					{ SaveToken(); return INT; }
+void				{ SaveToken(); return VOID; }
+while				{ SaveToken(); return WHILE; }
+return				{ SaveToken(); return RETURN; }
+true				{ SaveToken(); return TRUE; }
+false				{ SaveToken(); return FALSE; }
+{NUM}+				{ SaveToken();
+					  yylval.number = atol((char *)yytext);
+					  // currentNumber = yylval.number;
 					  return NUM; 
 					}
-{ID}+				{ yylval.svalue = new char[strlen(yytext)];
-					  strcpy(yylval.svalue, yytext);
+{ID}+				{ SaveToken();
+					  yylval.identifier = new char[strlen(yytext)];
+					  strcpy(yylval.identifier, yytext);					  
 					  return ID; 
 					}
-\n					{ lineNo++; }					
+\n					{ currentLineNo++; }					
 [ \t]+		 		;
 \/\/.*				;
-[-\]<>;=[,{}()+*/!]	{ return yytext[0]; }
-.					{ yylval.cvalue = yytext[0];				  
-					  return ERROR; 
-					}
+[-\]<>;=[,{}()+*/!]	{ SaveToken(); return yytext[0]; }
+.					{ SaveToken(); return ERROR; }
 %%
+
+void SaveToken()
+{
+	strcpy(currentToken, yytext);
+}
 

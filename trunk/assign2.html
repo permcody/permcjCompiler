@@ -1,0 +1,289 @@
+<html>
+<head>
+<title> Assignment 2 </title>
+</head>
+<body background="../../Textures/cs445.jpg">
+<p>
+<center>
+<font size=+2>CS445 Introduction to Compilers</font>
+</center> 
+<table width=100% cellpadding=0> 
+<tr><td align=left>
+<font size=+2> Assignment 2 <br>
+(Construct the Syntax Tree)</font>
+</td>
+<td align=right>
+<font size=+2>250 points</font>
+</td>
+<tr>
+<td align=left>
+<font size=+2>DUE: Sat Mar 6 at 5pm PST </font> 
+</td>
+<td align=right>
+<font size=+2>DUE (VIDEO): <b>exactly</b> 2 weeks later</font>
+</td>
+</tr>
+</table>
+<p>
+<p>
+
+<h3>The Problem</h3>
+<p>
+This homework consists of these tasks:
+<ul>
+<li>Tweak-in some improvements to the interface.
+<li>Use Flex and Bison to
+build a parser for the <a href=c-Grammar.pdf>C- language</a>.
+(Note that the grammar was updated when I caught some typos and
+that I have added the % operator as in in C.)
+<li>While doing the parsing you will construct the syntax tree.  This
+is <b>not</b> the annotated syntax tree but just the initial tree.
+<li> 
+You will write the procedure <b>printTree</b> which will 
+print out the tree exactly as I have in the examples I
+give below.  <b>printTree</b> is declared:
+<pre>
+void printTree(FILE *, TreeNode *);
+</pre>
+Your main program will contain:
+<pre>
+yyparse(); 
+printTree(stdout, syntaxTree);
+</pre>
+The first line calls the parser which will store the tree in
+the global called <b>syntaxTree</b> which is defined:
+<pre>
+TreeNode *syntaxTree;
+</pre>
+</ul>
+<center>
+<table><tr>
+<td><img src=../../Icons/skull.gif></td><td> 
+<b><font color=red>Do not be fooled.  This is a nontrivial homework.
+Do not put off this
+assignment.  It is complicated. </font></b> 
+</td><td><img src=../../Icons/skull.gif></td></tr> 
+</table>
+</center>
+<p>
+These tasks are descibed further below.
+ 
+<h3>Improving the interface</h3> 
+<p>
+When done with this assignment you will have created code that will
+recognize legal <b>C-</b> programs and generate the first pass at
+the tree. 
+<p> 
+
+The parser will be named <b>c-</b> just like last time.  It will read
+and process a stream of tokens from a filename given as the first
+argument to the <b>c-</b> command or from standard input if the
+filename argument is not present.
+<p> 
+
+It will now also take the <b>-d</b> option as a first argument.  I
+recommend using the <a href=../getopt.txt><b>getopt</b></a> routine since
+this will handle UNIX arguments in a uniform and standard way.  The
+<b>-d</b> option turns on the yydebug flag by setting it to 1.  <p>
+For example: <b>c- -d sort.c-</b> should run the <b>c-</b> compiler
+on the program sort.c- and give details of the parsing that is going on.
+While <b>c- sort.c-</b> should simply run the <b>c-</b> compiler.
+ 
+<p> 
+Your compiler should now record the line number and last token
+scanned in
+global variables.  Rewrite your <b>yyerror</b> routine to
+print a message as in this error message:
+<pre>
+printf("ERROR lineno(%d):%s.  I got: %s\n", lineno, msg, scanToken);
+</pre>
+The <b>msg</b> is passed into the <b>yyerror</b> routine as we will
+discuss in class.
+You can write out the error message using any method you like but the 
+content of the error message must be exactly like the above.
+To get this all to work nicely,
+turn on verbose error messaging with:
+<pre>
+#define YYERROR_VERBOSE
+</pre>
+We will continue to improve on the invocation line and error reporting as
+our compiler gets more sophisticated.
+<b>HINT:</b> As we will discuss it class it is important that
+the you allocate a new string for each token as it is scanned to
+avoid the problem of referring to a reusable buffer.
+
+<h3>The Parser</h3>
+<p>
+For the parsing part of the assignment modify your Bison grammar to
+parse C- code.  A good approach is to initially forget about the
+syntax tree part of the assignment.  If you get the right grammar
+into your compiler it will successfully parse any <b>C-</b> program.
+A program that simply recognizes whether a program is legal or not
+is called a <b>recognizer</b>.  When you build your bison grammar directly from
+the one supplied you will find that you have the dangling else problem. 
+There are several ways to fix this problem.  I will discuss one in class. 
+<b><font color=red>Coding restriction:</font></b>
+Do not fix this or any other problem with your
+grammar by using the <b>%expect</b> feature of Bison.  This
+causes Bison to ignore some number of parsing errors and me to
+deduct points from your assignment.  Really, you can do this with out this "feature".
+
+<p>
+Now that your recognizer is working.  Let's look at the syntax tree I want 
+you to produce.  As we will discuss in class the tree is an abbreviated portion
+of the parse tree containing the parts we are interested in.  Here is a sample
+TreeNode that I used:
+<pre>
+typedef struct treeNode
+{
+    struct treeNode *child[MAXCHILDREN];   // children of the node
+    struct treeNode *sibling;              // siblings for the node
+    NodeKind nodekind;                     // type of node
+    union                                  // subtype of type
+    { 
+	DeclKind decl;                     // used when DeclK
+	StmtKind stmt;                     // used when StmtK
+	ExpKind exp;                       // used when ExpK 
+    } kind; 
+    union                                  // relevant data in type -> attr
+    {
+        OpKind op;                         // type of token (same as in bison)
+	int val;                           // used when ConstantK
+	char *name;                        // used when IdK 
+    } attr; 
+    ExpType expType;		           // used when ExpK for type checking
+    int size;                              // used for size of array
+    bool isArray;                          // is this an array
+    bool isBool;                           // is this a Boolean 
+} TreeNode; 
+</pre>
+This design is stolen straight from the book.  This way you can
+use the one in the book as an example to work from.  Ours has to
+have extra features and node types.  We will discuss this in detail in
+class.
+ 
+<p>
+To encode the program as a tree you need to make the right nodes
+at the right steps in the parsing.  When you need to make a node you
+will use routines you write similar to the <b>newStmtNode</b>
+function in <b>util.c</b> in Tiny.  These will be passed up the
+tree and assembled as in the tiny example in the book.
+<b><font color=red>Coding restriction:</font></b>
+<b>Do not use
+YYSTYPE</b> as used in the book.  This subverts features that 
+are there to <b>help you</b>.  I will discuss how to use 
+this to your advantage.
+I will also talk about how to use this:
+<pre>
+%union {
+    int number;
+    char *string;
+    TreeNode *tree;
+}
+</pre>
+<p> 
+
+<h3>The Parser and printTree</h3>
+So what should the tree look like for a given program?
+This is essentially described the the Bison code.  I think
+the best way to describe this is in class and by example.
+
+To understand the examples you must understand the output format
+of the <b>printTree</b> function.
+The <b>printTree</b> function prints the the important
+information contained in the node pointed to by
+the second argument.  It then applies the <b>printTree</b> function
+to all the nonnull children and prints them out numbered by
+their index in the <b>child</b> array.  It then follows the
+<b>sibling</b> pointer if it is nonnull and applies
+the <b>printTree</b> function to that.  The first sibling
+found is numbered 1.  Reading the syntax tree printed
+for sample input programs shows you what to do in each case.
+
+For example, given this program:
+<pre>
+int max(int x, int y) { 
+    int z; 
+    if (x>y) z=x;
+    else z=y;
+    return z;
+}
+</pre>
+you should get the following output from your <b>c-</b>.  The // comments are
+<b>not part of the output</b> but to explain what you are seeing.
+<pre> 
+Function max returns int      // this is the declaration node for a function
+Child: 0                      // it has 2 children.  Child 0 are parameters.
+    Param x of type int       // the first parameter is x of type int
+    Sibling: 1                // the parameters are tied together as a linked list of siblings
+    Param y of type int       // the second parameter is y of type int
+Child: 1                      // the second child of the function declaration is the statements
+    Compound                  // the body of a function is treated as a compound statement
+    Child: 0                  // the first child of a compound statement is a list of declarations
+        Var z of type int     // z is declared of type int
+    Child: 1                  // the second child of a compound statement is a list of statements
+        If                    // the if node has two or three children 
+        Child: 0              // the first child is the test
+            Op: >             // a relational operator > applied
+            Child: 0          // to the two children 
+                Id: x         // the first of which is x 
+            Child: 1
+                Id: y         // the second is y
+        Child: 1              // the second child of the if is the then clause
+            Assign            // z = x
+            Child: 0 
+                Id: z 
+            Child: 1
+                Id: x
+        Child: 2              // the third child of the if is the else clause
+            Assign            // z = y 
+            Child: 0 
+                Id: z
+            Child: 1
+                Id: y
+        Sibling: 1            // the second statement in the body of the compound statement
+        Return                // return which takes as its only child
+        Child: 0 
+            Id: z             // the variable z
+</pre>
+In the cases where there is an optional expression or statement the
+corresponding child pointer is set to NULL (i.e. 0).
+For example compound statements might not have any declarations so <b>child[0]</b>
+would be set to NULL.  Return optionally takes an expression.  If there isn't an
+expression then the <b>Child[0]</b> is NULL.  The while statement might not
+have a body: for example <b>while (searching());</b> in which case <b>child[1]</b>
+is NULL.  The default for unneeded children and siblings is always NULL. 
+<p> 
+
+<b>HINT:</b> The yacc code in the book is a good example of how to
+connect the nodes you create.  The node create code is a good model
+for how to create nodes and print a tree.  Use your notes from class
+on how to put the rest of it together.
+
+<h3>Examples</h3>
+
+For examples files please go to the tar file stored on the
+<a href=../submitTar.html>homework submission</a> page or the 
+<a href=../Examples/>examples page</a>.
+
+<h3>Submission</h3>
+
+Homework will be submitted as an <b>uncompressed</b> tar file to the
+<a href=../submitTar.html>homework submission</a> page.  You can
+submit as many times as you like.  <b>The LAST file you submit BEFORE the
+deadline will be the one graded.</b>   For all submissions you will receive
+email showing how your file performed on the pre-grade tests.  The
+grading program will use more extensive tests and those results will
+be mailed to when they ar erun.
+<p>
+
+If you have tests you really think are important or just cool please
+send them to me and I will consider adding them to the test suite.
+
+
+<hr><table width=100% border=0><tr>
+<td align=left><a href=../../index.html>Robert Heckendorn</a></td>
+<td align=right>Last updated:&nbsp;<datestamp>Mar 5, 2004  14:16</datestamp></td>
+</tr></table> 
+</body> 
+</html>
