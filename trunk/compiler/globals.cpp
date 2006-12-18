@@ -15,75 +15,75 @@ TreeNode::TreeNode(NodeKind sKind) : sibling(NULL), lineNumber(0), kind(sKind) {
 		child[i] = NULL;
 }
 
-void TreeNode::GenCode() {
+void TreeNode::GenCode(CodeEmitter &e, bool travSib) {
 	for (short i=0; i<MAXCHILDREN; i++)
 		if (child[i] != NULL)
-			child[i]->GenCode();
+			child[i]->GenCode(e, true);
 	if (sibling != NULL)
-		sibling->GenCode();
+		sibling->GenCode(e, true);
 }
 
-void TreeNode::CodeGeneration() {
+void TreeNode::CodeGeneration(CodeEmitter &e) {
 	
-	GenProlog(jumpMain);
-	GenIOFunctions();
+	GenProlog(jumpMain, e);
+	GenIOFunctions(e);
 
 	// Traverse the tree
-	GenCode();
+	GenCode(e, true);
 }
 
-void TreeNode::GenProlog(int &jumpMain) const {
+void TreeNode::GenProlog(int &jumpMain, CodeEmitter &e) const {
 	
-	emitComment("Begin Prolog code");
-	emitRM("LD", 0, 0, 0, "load global poiniter with end of memory");
-	emitRM("LDA", 1, 0, 0, "load fp");
-	emitRM("ST", 1, 0, 1, "store old fp");
-	emitRM("LDA", 3, 1, 7, "return address in ac");
-	jumpMain = emitSkip(1);	// save this address into the static variable for later
-	emitRO("HALT", 0, 0, 0, "DONE!");
-	emitComment("End Prolog code");
+	e.emitComment("Begin Prolog code");
+	e.emitRM("LD", 0, 0, 0, "load global poiniter with end of memory");
+	e.emitRM("LDA", 1, goff, 0, "load fp");
+	e.emitRM("ST", 1, 0, 1, "store old fp");
+	e.emitRM("LDA", 3, 1, 7, "return address in ac");
+	jumpMain = e.emitSkip(1);	// save this address into the static variable for later
+	e.emitRO("HALT", 0, 0, 0, "DONE!");
+	e.emitComment("End Prolog code");
 }
 
-void TreeNode::GenIOFunctions() const {
-	emitComment("Being Generating IO Functions");
+void TreeNode::GenIOFunctions(CodeEmitter &e) const {
+	e.emitComment("Being Generating IO Functions");
 	
-	emitComment("Begin function input");
-	emitRM("ST", 3, -1, 1, "store return address");
-	emitRO("IN", 2, 2, 2, "input integer");
-	emitRM("LD", 3, -1, 1, "load return address");
-	emitRM("LD", 1, 0, 1, "adjust fp");
-	emitRM("LDA", 7, 0, 3, "jump to return address");
-	emitComment("End function input");
+	e.emitComment("Begin function input");
+	e.emitRM("ST", 3, -1, 1, "store return address");
+	e.emitRO("IN", 2, 2, 2, "input integer");
+	e.emitRM("LD", 3, -1, 1, "load return address");
+	e.emitRM("LD", 1, 0, 1, "adjust fp");
+	e.emitRM("LDA", 7, 0, 3, "jump to return address");
+	e.emitComment("End function input");
 
-	emitComment("Begin function output");
-	emitRM("ST", 3, -1, 1, "store return address");
-	emitRM("LD", 3, -2, 1, "load parameter");
-	emitRO("OUT", 3, 3, 3, "output integer");
-	emitRM("LDC", 2, 0, 2, "set return to 0");
-	emitRM("LD", 3, -1, 1, "load return address");
-	emitRM("LD", 1, 0, 1, "adjust fp");
-	emitRM("LDA", 7, 0, 3, "jump to return address");
-	emitComment("End function output");
+	e.emitComment("Begin function output");
+	e.emitRM("ST", 3, -1, 1, "store return address");
+	e.emitRM("LD", 3, -2, 1, "load parameter");
+	e.emitRO("OUT", 3, 3, 3, "output integer");
+	e.emitRM("LDC", 2, 0, 2, "set return to 0");
+	e.emitRM("LD", 3, -1, 1, "load return address");
+	e.emitRM("LD", 1, 0, 1, "adjust fp");
+	e.emitRM("LDA", 7, 0, 3, "jump to return address");
+	e.emitComment("End function output");
 
-	emitComment("Begin function inputb");
-	emitRM("ST", 3, -1, 1, "store return address");
-	emitRO("INB", 2, 2, 2, "input boolean");
-	emitRM("LD", 3, -1, 1, "load return address");
-	emitRM("LD", 1, 0, 1, "adjust fp");
-	emitRM("LDA", 7, 0, 3, "jump to return address");
-	emitComment("End function inputb");
+	e.emitComment("Begin function inputb");
+	e.emitRM("ST", 3, -1, 1, "store return address");
+	e.emitRO("INB", 2, 2, 2, "input boolean");
+	e.emitRM("LD", 3, -1, 1, "load return address");
+	e.emitRM("LD", 1, 0, 1, "adjust fp");
+	e.emitRM("LDA", 7, 0, 3, "jump to return address");
+	e.emitComment("End function inputb");
 
-	emitComment("Begin function outputb");
-	emitRM("ST", 3, -1, 1, "store return address");
-	emitRM("LD", 3, -2, 1, "load parameter");
-	emitRO("OUTB", 3, 3, 3, "output boolean");
-	emitRM("LDC", 2, 0, 2, "set return to 0");
-	emitRM("LD", 3, -1, 1, "load return address");
-	emitRM("LD", 1, 0, 1, "adjust fp");
-	emitRM("LDA", 7, 0, 3, "jump to return address");
-	emitComment("End function outputb");
+	e.emitComment("Begin function outputb");
+	e.emitRM("ST", 3, -1, 1, "store return address");
+	e.emitRM("LD", 3, -2, 1, "load parameter");
+	e.emitRO("OUTB", 3, 3, 3, "output boolean");
+	e.emitRM("LDC", 2, 0, 2, "set return to 0");
+	e.emitRM("LD", 3, -1, 1, "load return address");
+	e.emitRM("LD", 1, 0, 1, "adjust fp");
+	e.emitRM("LDA", 7, 0, 3, "jump to return address");
+	e.emitComment("End function outputb");
 
-	emitComment("End Generating IO Functions");
+	e.emitComment("End Generating IO Functions");
 }
 
 TreeNode *TreeNode::AddIOFunctions() {
@@ -94,6 +94,7 @@ TreeNode *TreeNode::AddIOFunctions() {
 	dNode->type = Void;		
 	dNode->name = "outputb";
 	dNode->lineNumber = -1;
+	dNode->offset = 23;
 	dNode->sibling = this;
 	tPtr = dNode;
 	// boolean parameter
@@ -109,6 +110,7 @@ TreeNode *TreeNode::AddIOFunctions() {
 	dNode->type = Bool;		
 	dNode->name = "inputb";
 	dNode->lineNumber = -1;
+	dNode->offset = 18;
 	dNode->sibling = (TreeNode *)tPtr;
 	tPtr = dNode;
 
@@ -117,6 +119,7 @@ TreeNode *TreeNode::AddIOFunctions() {
 	dNode->type = Void;		
 	dNode->name = "output";
 	dNode->lineNumber = -1;
+	dNode->offset = 11;
 	dNode->sibling = (TreeNode *)tPtr;
 	tPtr = dNode;
 	// integer parameter
@@ -132,6 +135,7 @@ TreeNode *TreeNode::AddIOFunctions() {
 	dNode->type = Int;		
 	dNode->name = "input";
 	dNode->lineNumber = -1;
+	dNode->offset = 6;
 	dNode->sibling = (TreeNode *)tPtr;
 	tPtr = dNode;
 		
@@ -268,67 +272,225 @@ void TreeNode::PrintError(ostream &out, int errorNum, int lineno,
 	out << '.' << endl;
 }
 
-void ExpressionNode::GenCode() {
+void ExpressionNode::GenCode(CodeEmitter &e, bool travSib) {
 	DeclarationNode *dPtr;
+	ExpressionNode *argPtr;
+	int localToff, boolSkipLoc, currentLoc;
+	bool isUnary = true;
 	
 	switch (subKind) {
 		case OpK:
 			// process left child
 			if (child[0] != NULL)
-				child[0]->GenCode();
-			
-			// save left side
-			emitRM("ST", ac, 666, fp, "save left side");
-			
-			// process right child
-			if (child[1] != NULL)
-				child[1]->GenCode();
+				child[0]->GenCode(e, true);
 
-			// load left back into the accumulator
-			emitRM("LD", ac1, 666, fp, "load left into ac1");
+			/*if (op == "&&" || op == "||")
+                boolSkipLoc = e.emitSkip(1);
+			*/
+
+			if (child[1] != NULL) {
+				isUnary = false;
+				
+				// save left side
+				localToff = toff--;
+				e.emitRM("ST", ac, localToff, fp, "save left side");
+				
+				// process right child
+				child[1]->GenCode(e, true);
+
+				// load left back into the accumulator
+				toff = localToff;
+				e.emitRM("LD", ac1, localToff, fp, "load left into ac1");
+			}
 			
-			// process operator
+			// process operators
+			// arithmetic operators
 			if (op == "+")
-				emitRO("ADD", ac, ac1, ac, "op +");
-			else if (op == "-")
-                emitRO("SUB", ac, ac1, ac, "op -");
+				e.emitRO("ADD", ac, ac1, ac, "op +");
+			else if (op == "-" && !isUnary) 
+                e.emitRO("SUB", ac, ac1, ac, "op -");
 			else if (op == "*")
-				emitRO("MUL", ac, ac1, ac, "op *");
+				e.emitRO("MUL", ac, ac1, ac, "op *");
 			else if (op == "/")
-				emitRO("DIV", ac, ac1, ac, "op /");
+				e.emitRO("DIV", ac, ac1, ac, "op /");
+			else if (op == "%") {
+				e.emitRO("DIV", rt, ac1, ac, "begin op %");
+				e.emitRO("MUL", ac, rt, ac, "");
+				e.emitRO("SUB", ac, ac1, ac, "end op %");
+			}
+			else if (op == "&&") {
+				e.emitRO("ADD", ac, ac1, ac, "prepare for && op");
+				e.emitRM("LDC", ac1, 2, ac3, "load constant for &&");
+				e.emitRO("SUB", ac, ac1, ac, "compute value in ac");
+				e.emitRM("JEQ", ac, 2, pc, "op &&");
+
+				e.emitRM("LDC", ac, 0, ac3, "load false into ac");
+				e.emitRM("LDA", pc, 1, pc, "jump past true case");
+				e.emitRM("LDC", ac, 1, ac3, "load true into ac");
+				
+				/*e.emitRM("JGT", ac, 2, pc, "op && (right side)");
+                
+				// special case: If left side of && is false then whole expression is false
+				currentLoc = e.emitSkip(0);
+				e.emitBackup(boolSkipLoc);
+				e.emitRMAbs("JEQ", ac, currentLoc, "Skip right child of && if left is false");
+				e.emitRestore();
+
+				e.emitRM("LDC", ac, 0, ac3, "load false into ac");
+				e.emitRM("LDA", pc, 1, pc, "jump past true case");
+				e.emitRM("LDC", ac, 1, ac3, "load true into ac");
+				*/
+			}
+			else if (op == "||") {
+				e.emitRO("ADD", ac, ac1, ac, "prepare for || op");
+				e.emitRM("JGT", ac, 2, pc, "op ||");
+
+				e.emitRM("LDC", ac, 0, ac3, "load false into ac");
+				e.emitRM("LDA", pc, 1, pc, "jump past true case");
+				e.emitRM("LDC", ac, 1, ac3, "load true into ac");
+				
+				/*e.emitRM("JGT", ac, 2, pc, "op || (right side)");
+				e.emitRM("LDC", ac, 0, ac3, "load false into ac");
+				e.emitRM("LDA", pc, 1, pc, "jump past true case");
+
+				// special case: If left side of || is true then whole expression is true
+				currentLoc = e.emitSkip(0);
+				e.emitBackup(boolSkipLoc);
+				e.emitRMAbs("JGT", ac, boolSkipLoc, "Skip right child of || if left is true");
+				e.emitRestore();
+
+				e.emitRM("LDC", ac, 1, ac3, "load true into ac");
+				*/
+			}
+			else if (op == "!") {
+				e.emitRM("JEQ", ac, 2, pc, "op !");
+				e.emitRM("LDC", ac, 0, ac3, "load false into ac");
+				e.emitRM("LDA", pc, 1, pc, "jump past true case");
+				e.emitRM("LDC", ac, 1, ac3, "load true into ac");
+			}
+			else if (op == "-" and isUnary) {
+				e.emitRM("LDC", ac1, 0, ac3, "Load zero in ac1 for unary -");
+				e.emitRO("SUB", ac, ac1, ac, "op unary -");
+			}
+			else { // comparison operators
+				e.emitRO("SUB", ac, ac1, ac, "prepare for comparison op");
+				
+				if (op == "==") 
+					e.emitRM("JEQ", ac, 2, pc, "op ==");
+				else if (op == "!=")
+					e.emitRM("JNE", ac, 2, pc, "op !=");
+				else if (op == "<")
+					e.emitRM("JLT", ac, 2, pc, "op <");					
+				else if (op == "<=")
+					e.emitRM("JLE", ac, 2, pc, "op <=");				
+				else if (op == ">")
+					e.emitRM("JGT", ac, 2, pc, "op >");
+				else if (op == ">=")
+					e.emitRM("JGE", ac, 2, pc, "op >=");
+
+				e.emitRM("LDC", ac, 0, ac3, "load false into ac");
+				e.emitRM("LDA", pc, 1, pc, "jump past true case");
+				e.emitRM("LDC", ac, 1, ac3, "load true into ac");
+			}
 			break;
 		case AssignK:
 			// process RHS of assignment
 			if (child[1] != NULL)
-				child[1]->GenCode();
+				child[1]->GenCode(e, true);
 
 			// variable will be in the left child
-			dPtr = (DeclarationNode *)this->child[0];
+			dPtr = ((ExpressionNode *)this->child[0])->dPtr;
 
-			/* DEBUG
-			dPtr->PrintTree(cout, 0, 0);
-			cout << "offset: " << dPtr->offset << '\n';
-			cout << "isGlobal: " << dPtr->isGlobal << '\n';
-			*/
+			// find out if this is an array or not
+			if (dPtr->isArray) {
+				// save RHS side
+				localToff = toff;
+				e.emitRM("ST", ac, toff--, fp, "Store RHS of assignment");
 
-			// retrieve variable offset and scope to emit instruction
-			emitRM("ST", ac, dPtr->offset, dPtr->isGlobal?gp:fp, ("store variable " + dPtr->name).c_str()); 
+				if (this->child[0]->child[0] != NULL)
+					this->child[0]->child[0]->GenCode(e, true); 
+					// array index will be in ac
+				e.emitRM("LD", ac2, localToff, fp, "Load RHS value");
+				// value will be in ac2 
+				if (dPtr->theScope == Parameter)
+					e.emitRM("LD", ac1, dPtr->offset, (dPtr->theScope == TreeNode::Global)?gp:fp, "array base");
+				else
+					e.emitRM("LDA", ac1, dPtr->offset, (dPtr->theScope == TreeNode::Global)?gp:fp, "array base");
+				// array base will be in ac1
+				e.emitRO("SUB", ac, ac1, ac, "index off of the base");
+				e.emitRM("ST", ac2, 0, ac, "store indexed variable " + dPtr->name);
+				e.emitRM("LDA", ac, 0, ac2, "adjust ac");
+				toff = localToff;
+			}
+			else {
+				// retrieve variable offset and scope to emit instruction
+				e.emitRM("ST", ac, dPtr->offset, (dPtr->theScope == TreeNode::Global)?gp:fp, "store variable " + dPtr->name); 
+			}	
 			break;
 		case ConstK:
-			emitRM("LDC", ac, val, 6, "load constant");
+			e.emitRM("LDC", ac, val, 6, "load constant");
 			break;
 		case IdK:
-			dPtr = (DeclarationNode *)this;
-			emitRM("LD", ac, dPtr->offset, dPtr->isGlobal?gp:fp, ("load variable " + name).c_str());
+			if (this->dPtr->isArray) {
+				// is this array indexed?
+				if (child[0] == NULL) {  // must be a parameter
+					if (this->dPtr->theScope == TreeNode::Parameter)
+						e.emitRM("LD", ac, this->dPtr->offset, (this->dPtr->theScope == TreeNode::Global)?gp:fp, "Load address of base of array " + this->name);
+					else
+						e.emitRM("LDA", ac, this->dPtr->offset, (this->dPtr->theScope == TreeNode::Global)?gp:fp, "Load address of base of array " + this->name);
+				}
+				else { 
+					child[0]->GenCode(e, true);
+					// index will be in ac
+					if (this->dPtr->theScope == TreeNode::Parameter)
+						e.emitRM("LD", ac1, this->dPtr->offset, (this->dPtr->theScope == TreeNode::Global)?gp:fp, "Load address of base of array " + this->name);
+					else
+						e.emitRM("LDA", ac1, this->dPtr->offset, (this->dPtr->theScope == TreeNode::Global)?gp:fp, "Load address of base of array " + this->name);
+
+					e.emitRO("SUB", ac, ac1, ac, "index off of the base");
+					e.emitRM("LD", ac, 0, ac, "load the value");
+				}
+			}
+			else {
+				e.emitRM("LD", ac, this->dPtr->offset, (this->dPtr->theScope == TreeNode::Global)?gp:fp, "load variable " + name);
+			}
 			break;
 		case CallK:
-			emitComment("Call Here");
+			dPtr = (DeclarationNode *)symtab->lookup(name.c_str());
+			localToff = toff;
+			e.emitRM("ST", fp, toff--, fp, "Store old fp in ghost frame");
+
+			// leave room for return param
+			--toff;
+
+			// process function parameters
+			argPtr = (ExpressionNode *)this->child[0];	// set the parameter pointer to the function declaration parameters
+			//localToff = toff;
+			while (argPtr != NULL) {
+				//localToff--;
+				//toff--;
+				argPtr->GenCode(e, false);
+				// store expression result
+				e.emitRM("ST", ac, toff-- /*localToff*/, fp, "Save parameter");
+				argPtr = (ExpressionNode *)argPtr->sibling;
+			}
+
+			// restore toff
+			toff = localToff;
+
+			// prepare for jump
+			e.emitRM("LDA", fp, localToff--, fp, "Load address of new frame");
+			e.emitRM("LDA", ac, 1, pc, "Put return address in ac");
+			e.emitRMAbs("LDA", pc, dPtr->offset, "Call " + dPtr->name);
+			
+			// save return value
+			e.emitRM("LDA", ac, 0, rt, "Save the result in ac");
 			break;
 	}
 
-	if (sibling != NULL) {
-		emitComment(NO_COMMENT);	
-		sibling->GenCode();
+	if (sibling != NULL && travSib) {
+		e.emitComment(NO_COMMENT);	
+		sibling->GenCode(e, true);
 	}
 }
 
@@ -505,6 +667,8 @@ void ExpressionNode::ScopeAndType(ostream &out, int &numErrors) {
 				}
 				else
 					this->type = dPtr->type;
+
+				this->dPtr = dPtr; // save this link for later in Code Generation
 			} 
 			else if (dPtr == NULL) {
 				++numErrors;
@@ -531,6 +695,7 @@ void ExpressionNode::ScopeAndType(ostream &out, int &numErrors) {
 		case CallK:
 			// make sure symbol exists			
 			dPtr = (DeclarationNode *)symtab->lookup(name.c_str());
+			this->dPtr = dPtr; // save this link for later in Code Generation
 			if (dPtr == NULL) {
 				++numErrors;
 				// this symbol has not been declared
@@ -624,94 +789,94 @@ void ExpressionNode::lookupTypes(const string &op, Types &lhs, Types &rhs, Types
 	}	
 }
 
-void StatementNode::GenCode() {
+void StatementNode::GenCode(CodeEmitter &e, bool travSib) {
 	int currLoc, skipLoc;
 	
 	switch (subKind) {
 		case IfK:
-			emitComment("IF");
+			e.emitComment("IF");
 			
 			// Test Condition
 			if (child[0] != NULL)
-				child[0]->GenCode();
-			emitRM("LDC", ac1, 1, 6, "load constant 1");
-			emitRO("SUB", ac, ac, ac1, "if condition check");
-			skipLoc = emitSkip(1);
+				child[0]->GenCode(e, true);
+			e.emitRM("LDC", ac1, 1, 6, "load constant 1");
+			e.emitRO("SUB", ac, ac, ac1, "if condition check");
+			skipLoc = e.emitSkip(1);
 
-			emitComment("THEN");
+			e.emitComment("THEN");
 			// Then part
 			if (child[1] != NULL)
-				child[1]->GenCode();
+				child[1]->GenCode(e, true);
 
 			// Else part
 			if (child[2] != NULL) {
-				currLoc = emitSkip(1);
-				emitBackup(skipLoc);
-				emitRMAbs("JLT", ac, currLoc+1, "jump to else if false");
-				emitRestore();
+				currLoc = e.emitSkip(1);
+				e.emitBackup(skipLoc);
+				e.emitRMAbs("JLT", ac, currLoc+1, "jump to else if false");
+				e.emitRestore();
 				skipLoc = currLoc;
 
-				child[2]->GenCode();
-				currLoc = emitSkip(0);
-				emitBackup(skipLoc);
-				emitRMAbs("LDA", pc, currLoc, "jump past else part");
-				emitRestore();
+				child[2]->GenCode(e, true);
+				currLoc = e.emitSkip(0);
+				e.emitBackup(skipLoc);
+				e.emitRMAbs("LDA", pc, currLoc, "jump past else part");
+				e.emitRestore();
 			}
 			else {
-				currLoc = emitSkip(0);
-				emitBackup(skipLoc);
-				emitRMAbs("JLT", ac, currLoc, "jump past then if false");
-				emitRestore();			
+				currLoc = e.emitSkip(0);
+				e.emitBackup(skipLoc);
+				e.emitRMAbs("JLT", ac, currLoc, "jump past then if false");
+				e.emitRestore();			
 			}
-			emitComment("END IF");
+			e.emitComment("END IF");
 			break;
 
 		case CompK:
-			emitComment("BEGIN");
+			e.emitComment("BEGIN");
 			if (child[1] != NULL)
-				child[1]->GenCode();
-			emitComment("END");
+				child[1]->GenCode(e, true);
+			e.emitComment("END");
 			break;
 		case WhileK:
-			emitComment("WHILE");
-			currLoc = emitSkip(0);
+			e.emitComment("WHILE");
+			currLoc = e.emitSkip(0);
 			
 			// Test Condition
 			if (child[0] != NULL)
-				child[0]->GenCode();
-			emitRM("LDC", ac1, 1, 6, "load constant 1");
-			emitRO("SUB", ac, ac, ac1, "while condition check");
-			skipLoc = emitSkip(1);
+				child[0]->GenCode(e, true);
+			e.emitRM("LDC", ac1, 1, 6, "load constant 1");
+			e.emitRO("SUB", ac, ac, ac1, "while condition check");
+			skipLoc = e.emitSkip(1);
 
-			emitComment("WHILE BODY");
+			e.emitComment("WHILE BODY");
 			// While Body
 			if (child[1] != NULL)
-				child[1]->GenCode();
-			emitRMAbs("LDA", pc, currLoc, "go to beginning of loop");
+				child[1]->GenCode(e, true);
+			e.emitRMAbs("LDA", pc, currLoc, "go to beginning of loop");
 			
 			// Save current location to jump when While cond. is false
-			currLoc = emitSkip(0);
-			emitBackup(skipLoc);
-			emitRMAbs("JLT", ac, currLoc, "break out of loop if false");
-			emitRestore();
-			emitComment("END WHILE");
+			currLoc = e.emitSkip(0);
+			e.emitBackup(skipLoc);
+			e.emitRMAbs("JLT", ac, currLoc, "break out of loop if false");
+			e.emitRestore();
+			e.emitComment("END WHILE");
 			break;
 
 		case ReturnK:
-			emitComment("RETURN");
+			e.emitComment("RETURN");
 			if (child[0] != NULL)
-				child[0]->GenCode();
+				child[0]->GenCode(e, true);
 
-			emitRM("LDA", rt, 0, ac, "copy result to rt register");
-			emitRM("LD", ac, 666, fp, "load return address");
-			emitRM("LD", fp, 666, fp, "adjust fp");
-			emitRM("LDA", pc, 0, ac, "Return");
+			e.emitRM("LDA", rt, 0, ac, "copy result to rt register");
+			e.emitRM("LD", ac, -1, fp, "load return address"); // Return address is one off from frame pointer
+			e.emitRM("LD", fp, 0, fp, "adjust fp");
+			e.emitRM("LDA", pc, 0, ac, "Return");
 			break;
 	}
 
 	if (sibling != NULL) {
-		emitComment(NO_COMMENT);
-		sibling->GenCode();
+		e.emitComment(NO_COMMENT);
+		sibling->GenCode(e, true);
 	}
 }
 
@@ -784,7 +949,7 @@ void StatementNode::ScopeAndType(ostream &out, int &numErrors) {
 					// cast this node to DeclarationNode and lookup
 					tempName = ((ExpressionNode *)child[0])->name;
 					dPtr = (DeclarationNode *)symtab->lookup(tempName.c_str());
-					if (dPtr != NULL && dPtr->isArray) {	// can't return an array
+					if (dPtr != NULL && dPtr->isArray && ((ExpressionNode *)child[0])->child[0] == NULL) {	// can't return an array
 						++numErrors;
 						// Illegal return type of array error
 						PrintError(out, 5, lineNumber, "", "", "", 0, 0);						
@@ -818,7 +983,7 @@ void StatementNode::ScopeAndType(ostream &out, int &numErrors) {
 	return;
 }
 
-void DeclarationNode::GenCode() {
+void DeclarationNode::GenCode(CodeEmitter &e, bool travSib) {
 	DeclarationNode *dPtr;
 	string tempComment;
 
@@ -826,29 +991,40 @@ void DeclarationNode::GenCode() {
 	if (subKind == FuncK && name != "input" && name != "output" && name != "inputb" && name != "outputb") {
 		// Lookup in symbol table - we'll need to set the "offset" variable
 		dPtr = (DeclarationNode *)this;
-		dPtr->offset = emitSkip(0); // save the current location for calls later
-		emitRM("ST", ac, -1, fp, "store return address"); // return address is always -1 away from current frame
+		dPtr->offset = e.emitSkip(0); // save the current location for calls later
+		e.emitRM("ST", ac, -1, fp, "store return address"); // return address is always -1 away from current frame
 	
 		// If this function is main, we need to backpatch in the jump from the prolog
 		if (name == "main") {
-			emitBackup(jumpMain);
-			emitRMAbs("LDA", pc, dPtr->offset, "jump to main");
-			emitRestore();
+			e.emitBackup(jumpMain);
+			e.emitRMAbs("LDA", pc, dPtr->offset, "jump to main");
+			e.emitRestore();
 		}
 
 		tempComment = "Function " + name + " returns " + PrintType(type);
-		emitComment(tempComment.c_str());
+		e.emitComment(tempComment.c_str());
+
+		// Load up the foff variable with the function size
+		foff = size;
+		// Reset temporary stack pointer
+		toff = foff;
 
 		// Function Body
 		if (child[1] != NULL) {
-			child[1]->GenCode();
+			child[1]->GenCode(e, true);
 		}
-		
-		emitComment(("End Function " + name).c_str());
+
+		// Standard Closing
+		e.emitComment("Add standard closing in case there is no return statement");
+		e.emitRM("LDC", rt, 0, ac3, "Set return value to 0");
+		e.emitRM("LD", ac, -1, fp, "Load return address");
+		e.emitRM("LD", fp, 0, fp, "Adjust fp");
+		e.emitRM("LDA", pc, 0, ac, "Return");		
+		e.emitComment(("End Function " + name).c_str());
 	}
 
 	if (sibling != NULL)
-		sibling->GenCode();
+		sibling->GenCode(e, true);
 }
 
 void DeclarationNode::PrintTree(ostream &out, int spaces, int siblingNum) const {
@@ -863,10 +1039,10 @@ void DeclarationNode::PrintMemory(ostream &out) const {
 			out << '\n' << name << " Func returns " << PrintType(type) << "[size: " << size << "]\n";
 			break;
 		case VarK:
-			out << (isGlobal?"\n":"") << name << ' ' << PrintType(type) << " Var ";
+			out << ((theScope == TreeNode::Global)?"\n":"") << name << ' ' << PrintType(type) << " Var ";
 			if (isArray)
 				out << "is array of size " << size << ' ';
-			out << "[offset: " << offset << " type: " << (isGlobal?"global":"local") << "]\n";
+			out << "[offset: " << offset << " type: " << ((theScope == TreeNode::Global)?"global":"local") << "]\n";
 			break;
 		case ParamK:
 			out << name << ' ' << PrintType(type) << " Param ";
@@ -935,12 +1111,15 @@ void DeclarationNode::ScopeAndType(ostream &out, int &numErrors) {
 		if (symtab->depth() == 1) { // global scope
 			offset = goff;
 			goff -= size;
-			isGlobal = true;
+			theScope = TreeNode::Global;
 		}
 		else {
 			offset = foff;
 			foff -= size;
-			isGlobal = false;
+			if (subKind == ParamK)
+				theScope = TreeNode::Parameter;
+			else
+				theScope = TreeNode::Local;
 		}
 	}
 

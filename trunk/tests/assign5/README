@@ -1,0 +1,12 @@
+files are of five types:
+
+.c-   is the source code
+.tm   is the TM code
+.in   in the input to the running tm machine
+.out  is the output of the compile
+.test is the results
+
+Also there is:
+runExamples which is a unix script for runing the tests
+
+good luck

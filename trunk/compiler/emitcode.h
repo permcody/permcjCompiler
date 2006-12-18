@@ -1,6 +1,11 @@
 #ifndef EMIT_CODE_H__
 #define EMIT_CODE_H__
 
+#include <iostream>
+#include <string>
+
+using namespace std;
+
 //
 //  Special register defines for optional use in calling the 
 //  routines below.
@@ -31,26 +36,36 @@
 //
 //  We always trace the code
 //
-#define TraceCode   1
+// #define TraceCode   1
 
 //
 //  The following functions were borrowed from Tiny compiler code generator
 //
 
-void emitComment2(const char *c, const char *cc);
-void emitComment(const char *c);
+class CodeEmitter {
+public:
+	//enum {gp=0, fp, rt, ac, ac1, ac2, ac3, pc};
 
-void emitRO2(char *op, int r, int s, int t, const char *c, const char *cc);
-void emitRO(char *op, int r, int s, int t, const char *c);
+	CodeEmitter() : code(&cout), emitLoc(0), highEmitLoc(0), traceCode(1) {}
+	CodeEmitter(ostream *codeStream, bool traceFlag) : code(codeStream),
+		emitLoc(0), highEmitLoc(0), traceCode(traceFlag) {}
 
-void emitRM2(char *op, int r, int d, int s, const char *c, const char *cc);
-void emitRM(char *op, int r, int d, int s, const char *c);
+	void emitComment(const string c);
+	void emitRO(const string &op, int r, int s, int t, const string c);
+	void emitRM(const string &op, int r, int d, int s, const string c);
+	void emitRMAbs(const string &op, int r, int a, const string c);
+	int emitSkip(int howMany);
+	void emitBackup(int loc);
+	void emitRestore(void);
 
-void emitRMAbs2(char *op, int r, int a, const char *c, const char *cc);
-void emitRMAbs(char *op, int r, int a, const char *c);
-
-int emitSkip(int howMany);
-void emitBackup(int loc);
-void emitRestore(void);
+private:
+	ostream *code; // The stream to output to
+	int emitLoc; //  TM location number for current instruction emission
+	int highEmitLoc; 
+	bool traceCode;
+	//  Highest TM location emitted so far
+	//   For use in conjunction with emitSkip,
+	//   emitBackup, and emitRestore
+};
 
 #endif

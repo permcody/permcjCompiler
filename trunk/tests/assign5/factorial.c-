@@ -1,0 +1,24 @@
+// C-F06
+// factorial function
+int factorial(int n)
+{
+        int i; int f;
+        f = i = 1;
+        while (i<=n) {
+        output(i);
+              f = f*i;
+              i = i + 1;
+        }
+        return f;
+}
+
+int main(void)
+{
+        int n;
+        n = input();
+        n = factorial(n);
+        output(n);
+        outnl();
+}
+
+        

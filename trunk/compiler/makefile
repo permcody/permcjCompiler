@@ -4,9 +4,9 @@ CC   = g++
 CCFLAGS = -DCPLUSPLUS -g  # for use with C++ if file ext is .cc
 CFLAGS = -DCPLUSPLUS -g  # for use with C++ if file ext is .c
 
-HDRS = globals.h symtab.h
-SRCS = $(BIN).y.cpp globals.cpp symtab.cpp emitcode.c $(BIN).l.cpp
-OBJS = lex.yy.o globals.o symtab.o emitcode.o $(BIN).tab.o
+HDRS = globals.h symtab.h emitcode.h compiler.h
+SRCS = $(BIN).y.cpp globals.cpp symtab.cpp emitcode.cpp compiler.cpp $(BIN).l.cpp
+OBJS = lex.yy.o globals.o symtab.o emitcode.o compiler.o $(BIN).tab.o
 LIBS = -lfl -lm 
 
 .cpp.o:

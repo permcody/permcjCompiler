@@ -1,0 +1,10 @@
+#!/bin/sh
+for file in `ls *.c-`
+do
+	file=`basename $file '.c-'`
+        rm -f $file.tm $file.out $file.test
+        ../c-  $file.c- > $file.out
+        tm $file.tm < $file.in > $file.test
+	ls -l $file.*
+#	diff $file.out $file.out2
+done

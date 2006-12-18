@@ -1,6 +1,7 @@
 %{ 
 #include "globals.h"
 #include "symtab.h"
+#include "compiler.h"
 
 #ifdef CPLUSPLUS
 extern int yylex();
@@ -8,20 +9,23 @@ extern int yylex();
 
 #define YYERROR_VERBOSE 1
 
-extern unsigned int currentLineNo;
-extern char currentToken[255];
-int numErrors=0;	// number of errors found by the symtactic and semantic analyzers
-int numWarnings=0;	// number of warnings found by the lexer
+//extern unsigned int currentLineNo;
+//extern char currentToken[255];
+//int numErrors=0;	// number of errors found by the symtactic and semantic analyzers
+//int numWarnings=0;	// number of warnings found by the lexer
 
 TreeNode *savedTree;
-ostream *code;
+//ostream *code;
+Compiler *compiler;
 
 TreeNode *newOpExpNode(char *op, TreeNode *child0, TreeNode *child1, long lineno);
 
 // flex requires that you supply this function
 void yyerror(const char *msg)
 {
-	if (strcmp(msg, "Flex Error") == 0) {
+	compiler->ParserLexerError(msg);
+
+	/*if (strcmp(msg, "Flex Error") == 0) {
 		// This error is called explicitly from the flex part (yylex)
 		++numWarnings;
 		cout << "WARNING lineno(" << currentLineNo << "): Invalid input character: " << currentToken << ".  Character ignored." << endl;
@@ -35,7 +39,7 @@ void yyerror(const char *msg)
 		// Parse Error
 		++numErrors;
 		cout << "ERROR lineno(" << currentLineNo << "): Unexpected token: " << currentToken << endl;
-	}	
+	}	*/
 }
 
 string & copyString(char *source) 
@@ -503,97 +507,74 @@ int main(int argc, char *argv[]) {
 	bool symbolTableTracing = false;
 	bool printMemoryLayout = false;
 	char c;
+	ostream *objFileStream;
 	
 	progname = argv[0];
 	
 	yydebug = 0;
-	while ((c = getopt(argc, argv, "dpsmo:"))!= EOF)
-		switch (c) {
-		case 'd':
-			// turn on Bison Debugging
-			yydebug = 1;
-			break;
-		case 'p':
-			printSyntaxTree = true;
-			break;
-		case 's':
-			symbolTableTracing = true;
-		case 'm':
-			printMemoryLayout = true;
-			break;
-		case 'o':
-			if (!(code = new ofstream(optarg))) /* open failed */
-			{
-				cerr << progname << ": cannot open " << optarg << endl;
+	while (optind < argc) { // keep processing until end of argument list
+		while ((c = getopt(argc, argv, "dpsmo:"))!= EOF)
+			switch (c) {
+			case 'd':
+				// turn on Bison Debugging
+				yydebug = 1;
+				break;
+			case 'p':
+				printSyntaxTree = true;
+				break;
+			case 's':
+				symbolTableTracing = true;
+			case 'm':
+				printMemoryLayout = true;
+				break;
+			case 'o':
+				if (!(objFileStream = new ofstream(optarg))) /* open failed */
+				{
+					cerr << progname << ": cannot open " << optarg << endl;
+					exit(1);
+				}
+				else
+					outFileOpen = true;
+				break;
+			}
+
+		// check for a filename on the command line
+		if (optind < argc) {
+			// there's another non-option arguement on the arg vector
+			if (inFileOpen) {
+				cerr << "usage: " << progname << " [-d] [-p] [-s] [-m] [-o outfile] [infile]\n";
 				exit(1);
 			}
-			else
-				outFileOpen = true;
-			break;
+
+			/* open infile for reading */
+			yyin = fopen(argv[optind], "r");
+			if (yyin == NULL) /* open failed */
+			{
+				cerr << progname << ": cannot open " << argv[optind] << endl;
+				exit(1);
+			} 
+			
+			inFileOpen = true;
+			optind++; // skip past this argument for the next call to getopt
 		}
+	}
 
 	// check to see if output file is open
 	if (!outFileOpen)
-		code = &cout;
-	
-	// check for a correct command line usage
-	if (argc-1 > optind) {
-		cerr << "usage: " << progname << " [-d] [infile]\n";
-		exit(1);
-	}
-	
-	// check for a filename on the command line
-	if (argc-1 == optind) {
-		/* open infile for reading */
-		yyin = fopen(argv[optind], "r");
-		if (yyin == NULL) /* open failed */
-		{
-			cerr << progname << ": cannot open " << argv[optind] << endl;
-			exit(1);
-		} 
-		else 
-			inFileOpen = true;
-	}
+		objFileStream = &cout;
 
-	// ********************* LEXER (Flex) AND PARSER (Bison) **************
-	// run the parser (parser calls the lexer internally)
-	yyparse();
-	// ********************* LEXER (Flex) AND PARSER (Bison) **************
-	
-	// ********************* Lack of Linker Section ***********************
-	// need to "Frankenstein" the input/output functions into the tree here
-	savedTree = savedTree->AddIOFunctions();
-	// ********************* Lack of Linker Section ***********************
+	// Create the C- Compiler and compile
+	compiler = new Compiler(printSyntaxTree, printMemoryLayout,
+		symbolTableTracing, true, &cout, objFileStream);
+	compiler->Compile();
 
-	// print the Syntax tree if command line option '-p' is set	
-	if (printSyntaxTree) savedTree->PrintTree(cout); 
-	
-	// ********************* SEMANTIC ANALYZER ****************************
-	if (!numErrors) {		
-		// create the symbol table
-		TreeNode::symtab = new SymTab(PrintNode);
-		// turn on the debug for the symbol table if option '-s' is set
-		if (symbolTableTracing) TreeNode::symtab->debug(DEBUG_TABLE);
-		// run the semantic analyzer
-		savedTree->ScopeAndType(cout, numErrors);		
-	
-	// ********************* SEMANTIC ANALYZER ****************************
-
-		// print the Memory layout if command line option '-m' is set
-		if (printMemoryLayout) savedTree->PrintMem(cout);
-	
-	// ********************** CODE GENERATION *****************************
-		savedTree->CodeGeneration();
-	}
-	// ********************** CODE GENERATION *****************************
-	
-	cout << "Number of errors: " << numErrors << "\nNumber of warnings: " << numWarnings << endl;
+	cout << "Number of errors: " << compiler->GetErrors() << "\nNumber of warnings: " << compiler->GetWarnings() << endl;
 	
 	// close the open input file if necessary
 	if (inFileOpen) fclose(yyin);
 	// close the open output file if necessary
 	if (outFileOpen) {
-		((ofstream *)code)->close();
-		delete code;
+		((ofstream *)objFileStream)->close();
+		delete objFileStream;
 	}
 }
