@@ -157,6 +157,7 @@ param				: type_specifier ID
 							dNode->type = (TreeNode::Types)$1;
 							dNode->name = savedName;
 							dNode->isArray = true;
+							dNode->size = -1;				// no size was specified
 							$$ = (TreeNode *)dNode;
 						}
 					;
@@ -268,11 +269,7 @@ expression			: var '=' expression
 							eNode->child[1] = $3;
 							$$ = (TreeNode *)eNode;
 						}
-					| simple_expression
-						{	ExpressionNode *eNode = new ExpressionNode(TreeNode::SimpK);		
-							eNode->child[0] = $1;				// check this out later
-							$$ = (TreeNode *)eNode;
-						}		
+					| simple_expression		// default							
 					;
 					
 var					: ID
@@ -288,7 +285,7 @@ var					: ID
 						}
 					;
 
-simple_expression	: simple_expression op unary_expression
+simple_expression	: simple_expression op simple_expression
 						{	ExpressionNode *eNode = new ExpressionNode(TreeNode::OpK);
 							eNode->child[0] = $1;
 							eNode->child[1] = $3;
@@ -403,7 +400,7 @@ int main(int argc, char *argv[]) {
 		cerr << "usage: " << progname << " [-d] [infile]\n";
 		exit(1);
 	}
-	if (argc > 1) {
+	if (argc > 1 && (argc != 2 && yydebug)) {
 		if (argc == 2 && !yydebug)
 			infile = argv[1];
 		else
