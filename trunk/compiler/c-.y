@@ -14,6 +14,7 @@ int numErrors=0;	// number of errors found by the symtactic and semantic analyze
 int numWarnings=0;	// number of warnings found by the lexer
 
 TreeNode *savedTree;
+ostream *code;
 
 TreeNode *newOpExpNode(char *op, TreeNode *child0, TreeNode *child1, long lineno);
 
@@ -118,6 +119,7 @@ var_declaration		: type_specifier ID ';'
 							dNode->type = (TreeNode::Types)$1;		// save the type
 							dNode->name = $2->identifier;			// save the ID
 							dNode->lineNumber = $2->lineno;			// save the lineNumber
+							dNode->size = 1;
 							$$ = (TreeNode *)dNode;
 						}
 					| type_specifier ID '[' NUM ']' ';' 
@@ -131,7 +133,7 @@ var_declaration		: type_specifier ID ';'
 						}
 					| error ';'		// ERROR handling
 						{	$$=NULL; 
-							cout << "**ERROR var_declaration\n"; 
+							//cout << "**ERROR var_declaration\n"; 
 							yyerrok;
 						}
 					;
@@ -152,12 +154,12 @@ fun_declaration		: type_specifier ID '(' params ')' compound_stmt
 						}
 					| error '(' params ')' compound_stmt  // ERROR handling
 						{	$$=NULL; 
-							cout << "**ERROR fun_declaration 1\n"; 
+							//cout << "**ERROR fun_declaration 1\n"; 
 							yyerrok;
 						}
 					| type_specifier ID '(' error ')' compound_stmt	// ERROR handling
 						{	$$=NULL; 
-							cout << "**ERROR fun_declaration 2\n"; 
+							//cout << "**ERROR fun_declaration 2\n"; 
 							yyerrok;
 						}
 					;
@@ -184,6 +186,7 @@ param				: type_specifier ID
 							dNode->type = (TreeNode::Types)$1;
 							dNode->name = $2->identifier;
 							dNode->lineNumber = $2->lineno;			// save the lineNumber
+							dNode->size = 1;
 							$$ = (TreeNode *)dNode;
 						}
 					| type_specifier ID '[' ']' 
@@ -192,7 +195,7 @@ param				: type_specifier ID
 							dNode->name = $2->identifier;
 							dNode->lineNumber = $2->lineno;			// save the lineNumber
 							dNode->isArray = true;
-							dNode->size = -1;				// no size was specified
+							dNode->size = 1;				// params are always size 1 - passed by address in c-
 							$$ = (TreeNode *)dNode;
 						}
 					;
@@ -206,7 +209,7 @@ compound_stmt		: '{' local_declarations statement_list '}'
 						}
 					| '{' error '}'						// ERROR handling
 						{	$$=NULL;
-							cout << "**ERROR compound\n";
+							//cout << "**ERROR compound\n";
 							yyerrok;
 						}
 					;
@@ -250,7 +253,7 @@ expression_stmt		: expression ';' { $$ = $1; }
 					| ';' { $$ = NULL; }
 					| error ';'			// ERROR handling
 						{	$$=NULL;
-							cout << "**ERROR expression_stmt\n";
+							//cout << "**ERROR expression_stmt\n";
 							yyerrok;
 						}
 					;
@@ -265,12 +268,12 @@ matched				: IF '(' expression ')' matched ELSE matched
 						}
 					| IF '(' error ')' matched ELSE matched	// ERROR handling
 						{	$$=NULL;
-							cout << "**ERROR matched IF 1\n";							
+							//cout << "**ERROR matched IF 1\n";							
 							yyerrok;
 						}
 					| IF '(' expression ')' error ELSE matched	// ERROR handling
 						{	$$=NULL;
-							cout << "**ERROR matched IF 2\n";							
+							//cout << "**ERROR matched IF 2\n";							
 							yyerrok;
 						}
 					| WHILE '(' expression ')' matched
@@ -283,7 +286,7 @@ matched				: IF '(' expression ')' matched ELSE matched
 					| WHILE '(' error ')' matched			// ERROR handling
                         {	$$=NULL;
 							StatementNode *sNode = (StatementNode *)$5;
-							cout << "**ERROR matched WHILE 1\n";
+							//cout << "**ERROR matched WHILE 1\n";
 							yyerrok;
 						}	
 					| others					
@@ -306,17 +309,17 @@ unmatched			: IF '(' expression ')' statement
 						}
 					| IF '(' error ')' statement					// ERROR handling
 						{	$$=NULL;
-							cout << "**ERROR unmatched IF 1\n"; 
+							//cout << "**ERROR unmatched IF 1\n"; 
 							yyerrok;
 						}
 					| IF '(' error ')' matched ELSE unmatched		// ERROR handling
 						{	$$=NULL;
-							cout << "**ERROR unmatched IF 2\n";						
+							//cout << "**ERROR unmatched IF 2\n";						
 							yyerrok;
 						}
 					| IF '(' expression ')' error ELSE unmatched	// ERROR handling
 						{	$$=NULL;
-							cout << "**ERROR unmatched IF 3\n";							
+							//cout << "**ERROR unmatched IF 3\n";							
 							yyerrok;
 						}
 					| WHILE '(' expression ')' unmatched
@@ -328,7 +331,7 @@ unmatched			: IF '(' expression ')' statement
 						}
 					| WHILE '(' error ')' unmatched					// ERROR handling
                         {	$$=NULL;
-							cout << "**ERROR unmatched WHILE 1\n";
+							//cout << "**ERROR unmatched WHILE 1\n";
 							yyerrok;
 						}
 					;  
@@ -346,7 +349,7 @@ return_stmt			: RETURN ';'
 						}
 					| RETURN error ';'		// ERROR handling
 						{	$$=NULL;
-							cout << "**ERROR return\n"; 
+							//cout << "**ERROR return\n"; 
 							yyerrok;
 						}
 					;
@@ -400,7 +403,7 @@ factor				: '(' expression ')'	{ $$ = $2; }
 					| constant
 					| '(' error ')'							// ERROR handling
 						{	$$=NULL;
-							cout << "**ERROR paren exp\n";
+							//cout << "**ERROR paren exp\n";
 							yyerrok;
 						}
 					;
@@ -416,16 +419,14 @@ constant			: NUM
 						{	ExpressionNode *eNode = new ExpressionNode(TreeNode::ConstK);
 							eNode->lineNumber = $1;			// save the linenumber from 'TRUE'
 							eNode->val = 1;					// value of true
-							eNode->type = TreeNode::Bool;
-							//eNode->isBool = true;			// MAY NOT NEED THIS LINE
+							eNode->type = TreeNode::Bool;							
 							$$ = (TreeNode *)eNode;
 						}
 					| FALSE 
 						{	ExpressionNode *eNode = new ExpressionNode(TreeNode::ConstK);
 							eNode->lineNumber = $1;			// save the linenumber from 'FALSE'
 							eNode->val = 0;					// value of false
-							eNode->type = TreeNode::Bool;			
-							//eNode->isBool = true;			// MAY NOT NEED THIS LINE
+							eNode->type = TreeNode::Bool;							
 							$$ = (TreeNode *)eNode;	
 						}
 					;
@@ -439,7 +440,7 @@ call				: ID '(' args ')'
 						}
 					| ID '(' error ')'			// ERROR handling
 						{	$$=NULL;
-							cout << "**ERROR call\n";
+							//cout << "**ERROR call\n";
 							yyerrok;
 						}
 					;
@@ -461,20 +462,20 @@ arg_list			: arg_list ',' expression
 					| expression { $$ = $1; }
 					| error						// ERROR handling
 						{	$$=NULL; 
-							cout << "**ERROR arglist 1\n";
+							//cout << "**ERROR arglist 1\n";
 						}
 					| arg_list error			// ERROR handling
 						{	$$=NULL; 
-							cout << "**ERROR arglist 2\n";
+							//cout << "**ERROR arglist 2\n";
 						}
 					| arg_list error expression	// ERROR handling
 						{	$$=NULL; 
-							cout << "**ERROR arglist 3\n"; 
+							//cout << "**ERROR arglist 3\n"; 
 							yyerrok;
 						}
 					| arg_list ',' error		// ERROR handling
 						{	$$=NULL;
-							cout << "**ERROR arglist 4\n";
+							//cout << "**ERROR arglist 4\n";
 						}
 					;
 
@@ -495,17 +496,18 @@ void PrintNode(void *dPtr) { DeclarationNode::PrintNode(cout, (DeclarationNode *
 int main(int argc, char *argv[]) {
 		
 	char *progname;
-	char *ofile;
 	extern FILE *yyin;
-	bool fileOpen = false;
+	bool inFileOpen = false;
+	bool outFileOpen = false;
 	bool printSyntaxTree = false;
 	bool symbolTableTracing = false;
+	bool printMemoryLayout = false;
 	char c;
 	
 	progname = argv[0];
 	
 	yydebug = 0;
-	while ((c = getopt(argc, argv, "dpso:"))!= EOF)
+	while ((c = getopt(argc, argv, "dpsmo:"))!= EOF)
 		switch (c) {
 		case 'd':
 			// turn on Bison Debugging
@@ -516,11 +518,23 @@ int main(int argc, char *argv[]) {
 			break;
 		case 's':
 			symbolTableTracing = true;
+		case 'm':
+			printMemoryLayout = true;
+			break;
 		case 'o':
-			ofile = optarg;
-			cout << "ofile = " << ofile;
-			break;		
+			if (!(code = new ofstream(optarg))) /* open failed */
+			{
+				cerr << progname << ": cannot open " << optarg << endl;
+				exit(1);
+			}
+			else
+				outFileOpen = true;
+			break;
 		}
+
+	// check to see if output file is open
+	if (!outFileOpen)
+		code = &cout;
 	
 	// check for a correct command line usage
 	if (argc-1 > optind) {
@@ -538,30 +552,48 @@ int main(int argc, char *argv[]) {
 			exit(1);
 		} 
 		else 
-		{
-			fileOpen = true;
-		}			
+			inFileOpen = true;
 	}
 
 	// ********************* LEXER (Flex) AND PARSER (Bison) **************
 	// run the parser (parser calls the lexer internally)
 	yyparse();
+	// ********************* LEXER (Flex) AND PARSER (Bison) **************
+	
+	// ********************* Lack of Linker Section ***********************
+	// need to "Frankenstein" the input/output functions into the tree here
+	savedTree = savedTree->AddIOFunctions();
+	// ********************* Lack of Linker Section ***********************
+
 	// print the Syntax tree if command line option '-p' is set	
 	if (printSyntaxTree) savedTree->PrintTree(cout); 
-	// ********************* LEXER (Flex) AND PARSER (Bison) **************
-		
-	if (!numErrors) {
-		// ********************* SEMANTIC ANALYZER ****************************
+	
+	// ********************* SEMANTIC ANALYZER ****************************
+	if (!numErrors) {		
 		// create the symbol table
 		TreeNode::symtab = new SymTab(PrintNode);
 		// turn on the debug for the symbol table if option '-s' is set
 		if (symbolTableTracing) TreeNode::symtab->debug(DEBUG_TABLE);
 		// run the semantic analyzer
 		savedTree->ScopeAndType(cout, numErrors);		
-		// ********************* SEMANTIC ANALYZER ****************************
-	}
-	cout << "Number of errors: " << numErrors << "\nNumber of warnings: " << numWarnings << endl;
+	
+	// ********************* SEMANTIC ANALYZER ****************************
 
+		// print the Memory layout if command line option '-m' is set
+		if (printMemoryLayout) savedTree->PrintMem(cout);
+	
+	// ********************** CODE GENERATION *****************************
+		savedTree->CodeGeneration();
+	}
+	// ********************** CODE GENERATION *****************************
+	
+	cout << "Number of errors: " << numErrors << "\nNumber of warnings: " << numWarnings << endl;
+	
 	// close the open input file if necessary
-	if (fileOpen) fclose(yyin);
+	if (inFileOpen) fclose(yyin);
+	// close the open output file if necessary
+	if (outFileOpen) {
+		((ofstream *)code)->close();
+		delete code;
+	}
 }

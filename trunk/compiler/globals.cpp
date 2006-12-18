@@ -1,13 +1,141 @@
 #include "globals.h"
+#include "emitcode.h"
 
 // static initialization
 TreeNode::Types TreeNode::funcReturnType = TreeNode::Undefined; // global for function return type checking
 bool TreeNode::newScope = false;
 SymTab *TreeNode::symtab = NULL;
+int TreeNode::goff = 0;
+int TreeNode::foff = -2; // 0 and -1 are for the previous frame address and return address respectively
+int TreeNode::toff = 0;
+int TreeNode::jumpMain = -1;
 
 TreeNode::TreeNode(NodeKind sKind) : sibling(NULL), lineNumber(0), kind(sKind) {
 	for (short i=0; i<MAXCHILDREN; i++)
 		child[i] = NULL;
+}
+
+void TreeNode::GenCode() {
+	for (short i=0; i<MAXCHILDREN; i++)
+		if (child[i] != NULL)
+			child[i]->GenCode();
+	if (sibling != NULL)
+		sibling->GenCode();
+}
+
+void TreeNode::CodeGeneration() {
+	
+	GenProlog(jumpMain);
+	GenIOFunctions();
+
+	// Traverse the tree
+	GenCode();
+}
+
+void TreeNode::GenProlog(int &jumpMain) const {
+	
+	emitComment("Begin Prolog code");
+	emitRM("LD", 0, 0, 0, "load global poiniter with end of memory");
+	emitRM("LDA", 1, 0, 0, "load fp");
+	emitRM("ST", 1, 0, 1, "store old fp");
+	emitRM("LDA", 3, 1, 7, "return address in ac");
+	jumpMain = emitSkip(1);	// save this address into the static variable for later
+	emitRO("HALT", 0, 0, 0, "DONE!");
+	emitComment("End Prolog code");
+}
+
+void TreeNode::GenIOFunctions() const {
+	emitComment("Being Generating IO Functions");
+	
+	emitComment("Begin function input");
+	emitRM("ST", 3, -1, 1, "store return address");
+	emitRO("IN", 2, 2, 2, "input integer");
+	emitRM("LD", 3, -1, 1, "load return address");
+	emitRM("LD", 1, 0, 1, "adjust fp");
+	emitRM("LDA", 7, 0, 3, "jump to return address");
+	emitComment("End function input");
+
+	emitComment("Begin function output");
+	emitRM("ST", 3, -1, 1, "store return address");
+	emitRM("LD", 3, -2, 1, "load parameter");
+	emitRO("OUT", 3, 3, 3, "output integer");
+	emitRM("LDC", 2, 0, 2, "set return to 0");
+	emitRM("LD", 3, -1, 1, "load return address");
+	emitRM("LD", 1, 0, 1, "adjust fp");
+	emitRM("LDA", 7, 0, 3, "jump to return address");
+	emitComment("End function output");
+
+	emitComment("Begin function inputb");
+	emitRM("ST", 3, -1, 1, "store return address");
+	emitRO("INB", 2, 2, 2, "input boolean");
+	emitRM("LD", 3, -1, 1, "load return address");
+	emitRM("LD", 1, 0, 1, "adjust fp");
+	emitRM("LDA", 7, 0, 3, "jump to return address");
+	emitComment("End function inputb");
+
+	emitComment("Begin function outputb");
+	emitRM("ST", 3, -1, 1, "store return address");
+	emitRM("LD", 3, -2, 1, "load parameter");
+	emitRO("OUTB", 3, 3, 3, "output boolean");
+	emitRM("LDC", 2, 0, 2, "set return to 0");
+	emitRM("LD", 3, -1, 1, "load return address");
+	emitRM("LD", 1, 0, 1, "adjust fp");
+	emitRM("LDA", 7, 0, 3, "jump to return address");
+	emitComment("End function outputb");
+
+	emitComment("End Generating IO Functions");
+}
+
+TreeNode *TreeNode::AddIOFunctions() {
+	DeclarationNode *tPtr, *dNode;
+
+	// Add Declaration for "void outputb(bool)"
+	dNode = new DeclarationNode(TreeNode::FuncK);
+	dNode->type = Void;		
+	dNode->name = "outputb";
+	dNode->lineNumber = -1;
+	dNode->sibling = this;
+	tPtr = dNode;
+	// boolean parameter
+	dNode = new DeclarationNode(TreeNode::ParamK);
+	dNode->type = Bool;
+	dNode->name = "*dummy*";
+    dNode->lineNumber = -1;
+	dNode->size = 1;
+	tPtr->child[0] = (TreeNode *)dNode;
+
+	// Add Declaration for "bool inputb(void)"
+	dNode = new DeclarationNode(TreeNode::FuncK);
+	dNode->type = Bool;		
+	dNode->name = "inputb";
+	dNode->lineNumber = -1;
+	dNode->sibling = (TreeNode *)tPtr;
+	tPtr = dNode;
+
+	// Add Declaration for "void output(int)"
+	dNode = new DeclarationNode(TreeNode::FuncK);
+	dNode->type = Void;		
+	dNode->name = "output";
+	dNode->lineNumber = -1;
+	dNode->sibling = (TreeNode *)tPtr;
+	tPtr = dNode;
+	// integer parameter
+	dNode = new DeclarationNode(TreeNode::ParamK);
+	dNode->type = Int;
+	dNode->name = "*dummy*";
+    dNode->lineNumber = -1;
+	dNode->size = 1;
+	tPtr->child[0] = (TreeNode *)dNode;
+
+	// Add Declaration for "int input(void)"
+	dNode = new DeclarationNode(TreeNode::FuncK);
+	dNode->type = Int;		
+	dNode->name = "input";
+	dNode->lineNumber = -1;
+	dNode->sibling = (TreeNode *)tPtr;
+	tPtr = dNode;
+		
+	return (TreeNode *)tPtr;	
 }
 
 void TreeNode::PrintTree(ostream &out, int spaces, int siblingNum) const {
@@ -24,6 +152,20 @@ void TreeNode::PrintTree(ostream &out, int spaces, int siblingNum) const {
 		out << "Sibling: " << ++siblingNum << '\n';
 		this->sibling->PrintTree(out, spaces, siblingNum);
 	}
+}
+
+void TreeNode::PrintMem(ostream &out) const {
+	out << "Memory Layout\nglobalOffset: " << goff << "\n";
+	this->PrintMemory(out);
+}
+
+void TreeNode::PrintMemory(ostream &out) const {
+	// print Children
+	for (int i=0; i<MAXCHILDREN; ++i)
+		if (child[i] != NULL) 
+			child[i]->PrintMemory(out);
+	if (sibling != NULL)
+		sibling->PrintMemory(out);
 }
 
 void TreeNode::PrintSpaces(ostream &out, int numSpaces) const {
@@ -124,6 +266,70 @@ void TreeNode::PrintError(ostream &out, int errorNum, int lineno,
 			break;
 	}
 	out << '.' << endl;
+}
+
+void ExpressionNode::GenCode() {
+	DeclarationNode *dPtr;
+	
+	switch (subKind) {
+		case OpK:
+			// process left child
+			if (child[0] != NULL)
+				child[0]->GenCode();
+			
+			// save left side
+			emitRM("ST", ac, 666, fp, "save left side");
+			
+			// process right child
+			if (child[1] != NULL)
+				child[1]->GenCode();
+
+			// load left back into the accumulator
+			emitRM("LD", ac1, 666, fp, "load left into ac1");
+			
+			// process operator
+			if (op == "+")
+				emitRO("ADD", ac, ac1, ac, "op +");
+			else if (op == "-")
+                emitRO("SUB", ac, ac1, ac, "op -");
+			else if (op == "*")
+				emitRO("MUL", ac, ac1, ac, "op *");
+			else if (op == "/")
+				emitRO("DIV", ac, ac1, ac, "op /");
+			break;
+		case AssignK:
+			// process RHS of assignment
+			if (child[1] != NULL)
+				child[1]->GenCode();
+
+			// variable will be in the left child
+			dPtr = (DeclarationNode *)this->child[0];
+
+			/* DEBUG
+			dPtr->PrintTree(cout, 0, 0);
+			cout << "offset: " << dPtr->offset << '\n';
+			cout << "isGlobal: " << dPtr->isGlobal << '\n';
+			*/
+
+			// retrieve variable offset and scope to emit instruction
+			emitRM("ST", ac, dPtr->offset, dPtr->isGlobal?gp:fp, ("store variable " + dPtr->name).c_str()); 
+			break;
+		case ConstK:
+			emitRM("LDC", ac, val, 6, "load constant");
+			break;
+		case IdK:
+			dPtr = (DeclarationNode *)this;
+			emitRM("LD", ac, dPtr->offset, dPtr->isGlobal?gp:fp, ("load variable " + name).c_str());
+			break;
+		case CallK:
+			emitComment("Call Here");
+			break;
+	}
+
+	if (sibling != NULL) {
+		emitComment(NO_COMMENT);	
+		sibling->GenCode();
+	}
 }
 
 void ExpressionNode::PrintTree(ostream &out, int spaces, int siblingNum) const {
@@ -418,6 +624,97 @@ void ExpressionNode::lookupTypes(const string &op, Types &lhs, Types &rhs, Types
 	}	
 }
 
+void StatementNode::GenCode() {
+	int currLoc, skipLoc;
+	
+	switch (subKind) {
+		case IfK:
+			emitComment("IF");
+			
+			// Test Condition
+			if (child[0] != NULL)
+				child[0]->GenCode();
+			emitRM("LDC", ac1, 1, 6, "load constant 1");
+			emitRO("SUB", ac, ac, ac1, "if condition check");
+			skipLoc = emitSkip(1);
+
+			emitComment("THEN");
+			// Then part
+			if (child[1] != NULL)
+				child[1]->GenCode();
+
+			// Else part
+			if (child[2] != NULL) {
+				currLoc = emitSkip(1);
+				emitBackup(skipLoc);
+				emitRMAbs("JLT", ac, currLoc+1, "jump to else if false");
+				emitRestore();
+				skipLoc = currLoc;
+
+				child[2]->GenCode();
+				currLoc = emitSkip(0);
+				emitBackup(skipLoc);
+				emitRMAbs("LDA", pc, currLoc, "jump past else part");
+				emitRestore();
+			}
+			else {
+				currLoc = emitSkip(0);
+				emitBackup(skipLoc);
+				emitRMAbs("JLT", ac, currLoc, "jump past then if false");
+				emitRestore();			
+			}
+			emitComment("END IF");
+			break;
+
+		case CompK:
+			emitComment("BEGIN");
+			if (child[1] != NULL)
+				child[1]->GenCode();
+			emitComment("END");
+			break;
+		case WhileK:
+			emitComment("WHILE");
+			currLoc = emitSkip(0);
+			
+			// Test Condition
+			if (child[0] != NULL)
+				child[0]->GenCode();
+			emitRM("LDC", ac1, 1, 6, "load constant 1");
+			emitRO("SUB", ac, ac, ac1, "while condition check");
+			skipLoc = emitSkip(1);
+
+			emitComment("WHILE BODY");
+			// While Body
+			if (child[1] != NULL)
+				child[1]->GenCode();
+			emitRMAbs("LDA", pc, currLoc, "go to beginning of loop");
+			
+			// Save current location to jump when While cond. is false
+			currLoc = emitSkip(0);
+			emitBackup(skipLoc);
+			emitRMAbs("JLT", ac, currLoc, "break out of loop if false");
+			emitRestore();
+			emitComment("END WHILE");
+			break;
+
+		case ReturnK:
+			emitComment("RETURN");
+			if (child[0] != NULL)
+				child[0]->GenCode();
+
+			emitRM("LDA", rt, 0, ac, "copy result to rt register");
+			emitRM("LD", ac, 666, fp, "load return address");
+			emitRM("LD", fp, 666, fp, "adjust fp");
+			emitRM("LDA", pc, 0, ac, "Return");
+			break;
+	}
+
+	if (sibling != NULL) {
+		emitComment(NO_COMMENT);
+		sibling->GenCode();
+	}
+}
+
 void StatementNode::PrintTree(ostream &out, int spaces, int siblingNum) const {
 	PrintSpaces(out, spaces);
     
@@ -521,10 +818,65 @@ void StatementNode::ScopeAndType(ostream &out, int &numErrors) {
 	return;
 }
 
+void DeclarationNode::GenCode() {
+	DeclarationNode *dPtr;
+	string tempComment;
+
+	// Don't generate code for IO functions
+	if (subKind == FuncK && name != "input" && name != "output" && name != "inputb" && name != "outputb") {
+		// Lookup in symbol table - we'll need to set the "offset" variable
+		dPtr = (DeclarationNode *)this;
+		dPtr->offset = emitSkip(0); // save the current location for calls later
+		emitRM("ST", ac, -1, fp, "store return address"); // return address is always -1 away from current frame
+	
+		// If this function is main, we need to backpatch in the jump from the prolog
+		if (name == "main") {
+			emitBackup(jumpMain);
+			emitRMAbs("LDA", pc, dPtr->offset, "jump to main");
+			emitRestore();
+		}
+
+		tempComment = "Function " + name + " returns " + PrintType(type);
+		emitComment(tempComment.c_str());
+
+		// Function Body
+		if (child[1] != NULL) {
+			child[1]->GenCode();
+		}
+		
+		emitComment(("End Function " + name).c_str());
+	}
+
+	if (sibling != NULL)
+		sibling->GenCode();
+}
+
 void DeclarationNode::PrintTree(ostream &out, int spaces, int siblingNum) const {
 	PrintSpaces(out, spaces);
     PrintNode(out, this);		
 	TreeNode::PrintTree(out, spaces, siblingNum);
+}
+
+void DeclarationNode::PrintMemory(ostream &out) const {
+	switch (subKind) {
+		case FuncK:
+			out << '\n' << name << " Func returns " << PrintType(type) << "[size: " << size << "]\n";
+			break;
+		case VarK:
+			out << (isGlobal?"\n":"") << name << ' ' << PrintType(type) << " Var ";
+			if (isArray)
+				out << "is array of size " << size << ' ';
+			out << "[offset: " << offset << " type: " << (isGlobal?"global":"local") << "]\n";
+			break;
+		case ParamK:
+			out << name << ' ' << PrintType(type) << " Param ";
+			if (isArray)
+				out << "is array ";
+			out << "[offset: " << offset << " type: parameter]\n";
+			
+			break;
+	}
+	TreeNode::PrintMemory(out);
 }
 
 void DeclarationNode::PrintNode(ostream &out, const DeclarationNode *dPtr) {
@@ -535,25 +887,15 @@ void DeclarationNode::PrintNode(ostream &out, const DeclarationNode *dPtr) {
 			break;
 		case VarK:
 			cout << "Var " << dPtr->name << " of type " << dPtr->PrintType(dPtr->type);
-			if (dPtr->isArray) {
-				cout << " is array";
-				if (dPtr->size >= 0)
-					cout << " of size " << dPtr->size;
-				cout << " [line: " << dPtr->lineNumber << "]\n";
-			}
-			else
-				cout << " [line: " << dPtr->lineNumber << "]\n";
+			if (dPtr->isArray)
+				cout << " is array of size " << dPtr->size;
+			cout << " [line: " << dPtr->lineNumber << "]\n";
 			break;
 		case ParamK:
 			cout << "Param " << dPtr->name << " of type " << dPtr->PrintType(dPtr->type);
-			if (dPtr->isArray) {
+			if (dPtr->isArray)
 				cout << " is array";
-				if (dPtr->size >= 0)
-					cout << " of size " << dPtr->size;
-				cout << " [line: " << dPtr->lineNumber << "]\n";
-			}
-			else
-				cout << " [line: " << dPtr->lineNumber << "]\n";
+			cout << " [line: " << dPtr->lineNumber << "]\n";
 			break;
 	}	
 }
@@ -581,12 +923,26 @@ void DeclarationNode::ScopeAndType(ostream &out, int &numErrors) {
 		funcReturnType = type;	// store the function return type in a global		
 		symtab->enter(name.c_str());
 		newScope = false;	// don't start a new scope for the function body (Compound stmt)
+		foff = -2;	// reset the frame offset for this new function
 		if (child[0] != NULL)
 			child[0]->ScopeAndType(out, numErrors);
 		if (child[1] != NULL)
 			child[1]->ScopeAndType(out, numErrors);
+		size = foff;	// save the size of the frame pointer
 		symtab->leave();
 	}	
+	else { // params and variables
+		if (symtab->depth() == 1) { // global scope
+			offset = goff;
+			goff -= size;
+			isGlobal = true;
+		}
+		else {
+			offset = foff;
+			foff -= size;
+			isGlobal = false;
+		}
+	}
 
 	// now traverse any sibling nodes
 	if (sibling != NULL)
