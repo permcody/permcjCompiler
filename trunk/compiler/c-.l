@@ -1,3 +1,9 @@
+/**********************************************************************
+*  Programmer: Cody Permann
+*  Date:   5/13/2004
+*
+*  Description: Flex file containing C- tokens
+/**********************************************************************/
 %{
 #include <cstdlib>
 #include <cstring>

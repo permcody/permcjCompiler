@@ -1,3 +1,10 @@
+/****************************************************************************
+* Programmer: Cody Permann
+* Date: 5/13/2004
+*
+* Description: The main compiler header file
+****************************************************************************/
+
 #ifndef _COMPILER_H_
 #define _COMPILER_H_
 

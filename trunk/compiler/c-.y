@@ -1,3 +1,10 @@
+//***************************************************************************
+// Programmer: Cody Permann
+// Date:  5/13/2004
+//
+// Description: Bison file containing the C- grammar rules
+//***************************************************************************
+
 %{ 
 #include "syntaxtree.h"
 #include "symtab.h"

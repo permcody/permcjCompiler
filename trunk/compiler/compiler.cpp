@@ -1,3 +1,11 @@
+/****************************************************************************
+* Programmer: Cody Permann
+* Date: 5/13/2004
+* 
+* Description: Main Compiler class implementation
+****************************************************************************/
+
+
 #include "compiler.h"
 
 /*void Compiler::SetCompileOptions(bool printSyntaxTree, bool printMemoryLayout,
