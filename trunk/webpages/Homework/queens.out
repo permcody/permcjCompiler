@@ -1,0 +1,40 @@
+Memory Layout
+globalOffset: -76
+
+input Func returns int [size: -2]
+
+output Func returns void [size: -3]
+*dummy* int Param [offset: -2 type: parameter]
+
+inputb Func returns bool [size: -2]
+
+outputb Func returns void [size: -3]
+*dummy* bool Param [offset: -2 type: parameter]
+
+row int Var is array of size 12 [offset: 0 type: global]
+
+col int Var is array of size 12 [offset: -12 type: global]
+
+diagone int Var is array of size 25 [offset: -24 type: global]
+
+diagtwo int Var is array of size 25 [offset: -49 type: global]
+
+n int Var [offset: -74 type: global]
+
+count int Var [offset: -75 type: global]
+
+printboard Func returns void [size: -4]
+col int Param is array [offset: -2 type: parameter]
+i int Var [offset: -3 type: local]
+
+try Func returns int [size: -4]
+c int Param [offset: -2 type: parameter]
+r int Var [offset: -3 type: local]
+
+solve Func returns int [size: -3]
+num int Param [offset: -2 type: parameter]
+
+main Func returns void [size: -3]
+num int Var [offset: -2 type: local]
+Number of errors: 0
+Number of warnings: 0

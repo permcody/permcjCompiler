@@ -1,0 +1,726 @@
+<html>
+<head>
+<title> CS 445 - Introduction to Compilers (Spring 2004)</title>
+</head>
+<body background=../Textures/cs445.jpg>
+
+<h1 align=center>CS 445 - Introduction to Compilers (Spring 2004)</h1>
+
+<center> 
+<table border=5> 
+<tr><td>
+<table>
+<tr><td>
+<img src=../Icons/warnbig.gif></td><td>
+<center>
+<h2>Class News</h2>
+</center>
+<!--
+<img src=../Icons/bolt.gif>
+<img src=../Icons/bomb.gif> 
+<img src=../Icons/compass1.gif>
+<img src=../Icons/dynamite.gif>
+<img src=../Icons/firstaid.gif>
+<img src=../Icons/flask.gif>
+<img src=../Icons/frownnzb.gif>
+<img src=../Icons/hand_r.gif>
+<img src=../Icons/hot.gif>
+<img src=../Icons/idea.gif>
+<img src=../Icons/info2.gif>
+<img src=../Icons/knife1.gif>
+<img src=../Icons/neutralnzg.gif>
+<img src=../Icons/newyellow.gif>
+<img src=../Icons/party.gif>
+<img src=../Icons/pnew_r.gif>
+<img src=../Icons/shootingstar.gif>
+<img src=../Icons/skull.gif>
+<img src=../Icons/smilenzy.gif>
+<img src=../Icons/smiley.gif>
+<img src=../Icons/votesm.gif>
+<img src=../Icons/wand.gif>
+<img src=../Icons/warnbig.gif> 
+--> 
+<img src=../Icons/hot.gif>&nbsp;5/16/04</b>
+<a href=results.txt><b>Contest results are in!</b></a>
+Grades will go out tomorrow for nonvideo.  Video can still
+join the contest.  Awards are by doing as well as those who
+placed in the contest.
+<p>
+<img src=../Icons/hot.gif>&nbsp;5/13/04 12:12PM</b>
+<a href=contest.txt>Current best times and speed!</a>
+<p>
+<img src=../Icons/spy.gif>&nbsp;5/12/04 10:42PM</b>
+<b>Psssst.</b>  It seems we have only four entries <b>so far</b> in the speed/size contest.
+Some people could make a quick killing here by making a small
+improvement to my code generator.
+<p>
+<img src=../Icons/hot.gif>&nbsp;5/9/04</b>
+Here are some of the speed/space tests:
+<ul>
+<li><a href=queens.c->N-queens Problem</a>
+<li><a href=permlist.c->Lexicographic Permutations</a>
+	
+</ul>
+I am open to suggestions.  email your favorite test.
+<p>
+<img src=../Icons/hot.gif>
+<img src=../Icons/idea.gif><b>&nbsp;5/7/04</b>
+It has come up twice now that getopt on Sun and on Linux work slightly
+differently... probably no surprise.  Here is how: getopt on Linux
+will look though <b>all</b> of argv for any dash options.  On Sun it
+looks for the <b>first contiguous set</b> of dash options.  Any
+nondash option like a filename disrupts it the search.    The result is
+that:
+
+<pre>
+c- factor.c- -o factor.tm
+</pre>
+
+may work on Linux but not on Sun.  Not trying to be tricky but just
+writing the tests up I coded all the tests with the -o at the end.  If
+you see your TM code in the test output, or you seen lots of TM usage
+messages, or you find that all your *.tm files are missing this might be the cause.
+<p>
+Not a problem
+a simple enclosing loop about the getopt function
+and an increment of optind (see man page) whenever
+you grab a filename will get past this on Sun.
+<img src=../Icons/newyellow.gif>
+
+<p>
+<img src=../Icons/compass1.gif><b>&nbsp;5/6/04</b>
+In prioritizing work on the codegen work to get
+your code generator to do at least one test program perfectly.
+If you get nearly everything right but do something that
+breaks the code for all possible programs then it
+is hard to see what you have done or how near to correct it
+is.  Rank the test programs I supplied 
+by which you want to get working first.
+Then study the code generated.  You know it is highly patterned code
+because my brain dead code generator looks at the node and then writes
+the code.  Don't forget that for some nodes it can do things like:
+<pre>
+donode(thisNode)
+{
+	write some code for thisNode
+	donode(thisNode->child[0])
+	write some code for thisNode
+	donode(thisNode->child[1]) 
+	write some code for thisNode
+}
+</pre> 
+etc.  But the 20 some examples of code I supplied are a road map for 
+implementing your code generator.
+<ul>
+<li><b>As always turn something in</b>
+<li>If you are having a hard time getting things to work submit it and
+ask me a <b>specific</b> question, give me the time stamp 
+and I will look at your code. 
+<li><b>Try
+to pass at least on of the tests that involves output.</b>
+</ul>
+<img src=../Icons/newyellow.gif>
+<p>
+<img src=../Icons/idea.gif><b>&nbsp;5/6/04</b> 
+To answer a question mailed to me, 
+the prolog I am expecting for the speed/size contest is
+the prolog in the code examples I supplied.
+<img src=../Icons/newyellow.gif>
+<p>
+<img src=../Icons/flask.gif><b>&nbsp;5/5/04</b>
+OK, the test tool is up and running for assignment 5.  The
+short circuit test changed.  Go to it!  I will devise some 
+evil tests for the speed and space competition and get that
+up soon.  The Bonus problem in assignment 5 will be run as a separate
+final test.  Two examples are provided in the problem spec.
+<img src=../Icons/newyellow.gif>
+<p>
+<img src=../Icons/hot.gif>
+<img src=../Icons/wand.gif>
+Since we speeded through the allocation of variable length objects in
+the heap using strings as an example and the how to convert C- into 
+a linker for C-.  There is no need to come to class Thursday.  <b>Thursday 
+class is canceled</b> so you can work on your prep for finals and <b>your compiler
+project</b>.  This was a great class!  Thanks for the great questions from the
+class.  <b>Watch your deadlines</b> and have a good summer.
+<img src=../Icons/wand.gif>
+<img src=../Icons/newyellow.gif>
+<p>
+<img src=../Icons/flask.gif><b>&nbsp;5/2/04</b>
+The <a href=Homework/pasc.html>speed/space contest</a>
+is posted.  The due date is the <b>end of finals week</b>.
+Note that if no one shows up for the contest and you 
+make a small improvement then you win.
+<img src=../Icons/newyellow.gif>
+<p>
+
+<img src=../Icons/flask.gif><b>&nbsp;4/27/04</b>
+I have put the <b>code for TM version 2.4</b> which has
+the <b>u</b> command so you can do <b>tm &lt;stuff.in >stuff.out</b> if
+<b>stuff.in</b> begins with the <b>u</b> command.
+<p>
+<img src=../Icons/bolt.gif><b>&nbsp;4/26/04</b>
+Be thinking about what features you would add to C-.
+I would like to discuss the language sometime in class.
+<p>
+<img src=../Icons/wand.gif><b>&nbsp;4/26/04</b>
+The <a href=Homework/pas5.html><b>assignment 5</b></a>
+is posted!!
+<p>
+<!--
+<img src=../Icons/votesm.gif><b>&nbsp;4/16/04</b>
+<b>Student evaluations</b> are available for you to grade this course.
+<p> 
+<img src=../Icons/flask.gif><b>&nbsp;4/16/04</b> 
+The disk has been filled by student's programs looping on
+errors.  I have put a possible fix for this into the test code.
+I hope it will solve the problem.  It "should" kill your program if
+it generates too much output.  Be sure to use flushing I/O:
+You can flush stdout for
+printf by calling <b>fflush(stdout);</b> after printfs.
+You can flush cout output by using <b>endl</b> or <b>flush</b> in the
+output stream. 
+<p>
+<img src=../Icons/flask.gif><b>&nbsp;4/16/04</b>
+I will ignore the imfamous line 50 error on errors4.c-.
+<p>
+<img src=../Icons/info2.gif><b>&nbsp;4/13/04</b>
+I have added a quicky <b>intro to debugging</b> with gdb in
+the documents below.  When you want to know where
+an error occurred in your code you can use gdb to tell you.
+<p>
+<img src=../Icons/wand.gif><b>&nbsp;4/13/04</b>
+As I mentioned in class on Tuesday I would <b>move the 
+due date of assignment 4</b> back but I would not change the
+<b>due date of assignment 5</b> which I will release by Tuesday.
+I want everyone to succeed in building the compiler.  If 
+you have questions ask.  I will try to set you on the 
+right track.  If you get stuck again then ask again.
+The code gen section will be worth about 300-400 points
+and will be due right before finals so if you want to
+study for finals you need to plan your time.
+<p> 
+<img src=../Icons/wand.gif><b>&nbsp;4/13/04</b> 
+I have <b>adjusted my version of the compiler</b> as requested by
+vote of the class.  I hope that works better for people.
+The adjustments include Neil's request that I uppercase the
+work while in the error messages associated with the error token
+for the while statements.
+<p> 
+<img src=../Icons/wand.gif><b>&nbsp;4/11/04</b> 
+Who said writing compilers was easy... another thing that was
+pointed out was that some error messages supplied by bison
+may print out expected tokens in a different order.  I will
+either put a filter on this so it will match or will instruct
+the grader to ignore those differences since they are hard to control.
+<p>
+<img src=../Icons/hand_r.gif><b>&nbsp;4/11/04</b> 
+It was pointed out that there was a change in the error messages from
+last time.  The reason is something small that I forgot to tell
+you to do to yyerror.  I have included the instructions and even
+code to help you make the small adjustment.  See assignment 4 which
+has been updated with a small section called <b>Nicer Errors</b>.
+Sorry for the this minor change.
+<p>
+<img src=../Icons/flask.gif><b>&nbsp;4/11/04</b>
+<b>Tests for assignment 4</b> have been installed and copies of 
+the test files can be found 
+in the tar on the submission page.
+<p>
+<img src=../Icons/wand.gif><b>&nbsp;4/1/04</b>
+I will be gone from Apr 2-10.  Have a week.  There is no class
+<p>
+<img src=../Icons/hand_r.gif><b>&nbsp;4/1/04</b>
+<a href=Homework/pas4.html><b>assignment 4</b></a> is posted so
+you can get started on it.
+<p>
+<img src=../Icons/info2.gif><b>&nbsp; 3/31/04</b> 
+I have posted the
+<a href=bisonErrorToken.html>
+first shot at information on the error token</a>.
+<p>
+<img src=../Icons/hand_r.gif><b>&nbsp;3/28/04</b>
+Notice on <b>assignment 3</b> that if a procedure is undefined the
+parameter list is not checked.  This was probably not the
+best decision on my part but that is the way code was implemented.
+You should do the same for now.
+<p>
+<img src=../Icons/wand.gif><b>&nbsp;3/27/04</b>
+The <b>submit test script</b> should now be running every 5 minutes.
+<p>
+<img src=../Icons/bomb.gif><b>&nbsp;3/27/04</b>
+I have <b>corrected my spelling</b> of parameter in the test files
+that will be run via the submission page.
+<p>
+<img src=../Icons/hand_r.gif><b>&nbsp;3/27/04</b>
+I have <b>augmented the tests</b> just a bit on the submission page.  I have included
+a test file that has no errors and one that has some
+errors we aren't handling yet but it should still 
+generate some of the correct errors.  Also I have added a test for the -p 
+option.  I won't be testing the -s option but I find it a helpful debugging
+tool.  Finally, one more helpful thing is that I have added tests to
+the examples link off the assignment and all examples include both
+a regular run and a -p option run so you have more information.
+<p>
+<img src=../Icons/hand_r.gif><b>&nbsp;3/23/04</b>
+<b>Hint for getting complete output in the face of an error.</b>
+If your programs get an error this may trash the output 
+buffers before they print making it appear like you had
+not output anything.  You can flush stdout for
+printf by calling <b>fflush(stdout);</b> after printfs.
+You can flush cout output by using <b>endl</b> or <b>flush</b> in the
+output stream.
+<p>
+<img src=../Icons/info2.gif><b>&nbsp; 3/22/04</b>
+I have posted to the documentation section a reference
+for how to read your grade report that I will or have
+mailed to you.
+<p> 
+<img src=../Icons/wand.gif><b>&nbsp;3/16/04</b>
+I have added to homework 3 a <b>C translation of the
+C++ symbol table</b> routine for a single symbol table. 
+Feel free to use this 
+code.
+<p>
+<img src=../Icons/hand_r.gif><b>&nbsp;3/12/04</b>
+CHeck for the updated homework assignment 3.  <b>Believe me
+when I say it is a lot of work.</b> 
+<p> 
+<img src=../Icons/hand_r.gif><b>&nbsp;3/11/04</b>
+The <a href=Homework/mt.html><b>practice midterm</b></a>
+is now posted.
+<p>
+<img src=../Icons/hand_r.gif>
+<b>&nbsp;3/11/04</b> 
+The <b>midterm is scheduled for Thurs Mar 25.</b> 
+<p>
+<img src=../Icons/hand_r.gif><b>&nbsp;3/10/04</b>
+<a href=Homework/pas3.html><b>assignment 3</b></a> is posted so
+you can get started on it.
+<p>
+<img src=../Icons/info2.gif><b>&nbsp; 3/9/04</b>
+I have posted the very readable and helpful <b>bison manuals.</b> 
+I posted both the one for 1.20 and the 1.35 rewrite.
+<p>
+<img src=../Icons/hand_r.gif><b>&nbsp; 3/9/04</b>
+A really small detail, but just so you know.  The test system
+is switching over to gmake (gnu make) instead of make
+because of earlier problems with make on the Sun.
+<p>
+<img src=../Icons/info2.gif><b>&nbsp; 3/8/04</b>
+The most popular question these days is <b>"so when is that 
+test anyway?"</b>.  I will post on the web a sample test before 
+the break.  It will be due after the break.  This will be how
+you study for the real test.  You will have to turn in the sample
+test.  Not sure how that will work yet.  I will probably have you grade
+your own sample tests.  Then the last half of the week after spring
+break we will have the real test.  It will look a whole lot like the
+sample test.  So you just need to understand the concepts in the sample
+test.
+<p>
+<img src=../Icons/hand_r.gif><b>&nbsp; 3/6/04</b>
+Another thing that seems cause people problem is char *'s. 
+In particular strcpy.  While a great routine in its place
+I have yet to see it used successfully on this assignment.
+What you want to do is for this assignment is make a <b>separate</b>
+copy of the token found in yytext <b>for every token</b>.  (don't worry
+about the memory leak at the moment.)
+You need a pointer to this newly allocated space so that you can
+use it for your error messages and for returning to your bison
+code via yylval.  I think a good rule of thumb based on what
+other students have done with strcpy is <b>don't use strcpy</b>.
+It gets you in trouble.
+<b>Use strdup.</b>
+
+<p>
+<img src=../Icons/hand_r.gif><b>&nbsp; 3/6/04</b>
+Several bugs occur in people's programs related to <b>#include</b>
+statements.  First, see the remark below about globals.h.
+Second, be sure  you include your globals.h <b>BEFORE</b> your
+tab.h file in your flex file.  Otherwise when the compiler
+reads your tab.h and finds a type like TreeNode it won't know
+what it is because it has not read the globals.h file yet.  Finally,
+never put executable code in a <b>.h</b file.  It isn't illegal, it 
+is just that if you include it in multiple places you will get 
+duplicate definitions and link time.
+<p>
+<img src=../Icons/hand_r.gif><b>&nbsp; 3/4/04</b>
+The source code for tests for the assignments can be found
+on the submission page.
+<p>
+<img src=../Icons/idea.gif><b>&nbsp; 3/1/04</b>
+<b>Hint:</b> if you make a <b>%union</b> that uses <b>TreeNode</b> and 
+<b>TreeNode</b> is declared in your globals then you
+will need to include your globals.h file in
+your flex file as well as your bison file
+<p>
+<img src=../Icons/flask.gif><b>&nbsp; 3/1/04</b>
+The test scripts are in place for assignment 2.  Let me know if
+they stop working or if you find a bug.  Have fun.
+<p>
+<img src=../Icons/idea.gif><b>&nbsp;2/27/04</b>
+Several people have asked me questions that resolves to
+what happens if nothing is after a production in Bison. 
+The answer is the default action is <b>{ $$=$1; }</b>.
+So the type of the first thing in the production <b>$1</b>better
+match the type of the thing returned <b>$$</b>.  A way <b>not</b> 
+to get this default assignment is to use <b>{&nbsp;}</b> on each production. 
+<p>
+<img src=../Icons/hand_r.gif><b>&nbsp;2/25/04</b>
+I have added information on <b>first and follow sets</b> in the documentation
+section below.
+<p> 
+<img src=../Icons/hand_r.gif><b>&nbsp;2/23/04</b> 
+<a href=Homework/pas2.html>Assignment 2</a> has been updated to a complete 250pt assignment.
+Do not put off working on this complex assignment.
+<p>
+<img src=../Icons/hand_r.gif><b>&nbsp;2/22/04</b>
+Test data for the grading assignment 1 is found on
+the homework submission page. 
+<p> 
+<img src=../Icons/hand_r.gif><b>&nbsp;2/15/04</b>
+<a href=Homework/pas2.html><b>assignment 2</b></a> is posted so
+you can get started on it.
+<p>
+<img src=../Icons/idea.gif><b>&nbsp;2/13/04</b>
+If you first <b>submit your code</b> to the homework submit page then
+send me email about your problem I can bring up the results of 
+the code and execution that occurred and better comment on why
+your code is failing.
+<p>
+<img src=../Icons/idea.gif><b>&nbsp;2/13/04</b>
+The first test in the tests for the homework is
+a file given on the <b>command line</b> and not from
+stdin.  The other two are from stdin.
+<p>
+<img src=../Icons/bomb.gif><b>&nbsp;2/13/04</b> 
+If you <b>submit your homework</b> to a name other 
+than your last name it won't know where to email your
+results.  So if you submit your homework
+and you don't get a reply in 30 min check that the
+name is your last name.
+<p>
+<img src=../Icons/flask.gif><b>&nbsp;2/9/04</b>
+<a href=submitTar.html><b>homework submission page</b></a> is posted.
+It is experimental <img src=../Icons/skull.gif> so be kind and don't
+run things with infinite loops or other nasties.  Submit a tar file for
+testing.  The last submission before the deadline is your final submission. 
+Please report any problems you are having so I can fix them.  Thanks.
+<p>
+<img src=../Icons/hand_r.gif><b>&nbsp;2/4/04</b>
+<a href=Homework/pas1.html><b>assignment 1</b></a> is posted.
+<p>
+<img src=../Icons/wand.gif><b>&nbsp;2/1/04</b>
+<b>Make primer</b> has been added.
+<p>
+<img src=../Icons/wand.gif><b>&nbsp;1/26/04</b>
+<b>Class discussion group</b> has been added in the service links.
+<p>
+<img src=../Icons/hand_r.gif><b>&nbsp;1/22/04</b>
+<b>Flex and Bison primers</b> have been posted in the service links
+as well as descriptions of our target machine <b>TM 2.3</b>.
+<p>
+<img src=../Icons/hand_r.gif><b>&nbsp;1/15/04</b>
+The <b>grammars</b> for Tiny and C- have been posted in the service links.
+<p>
+<img src=../Icons/hand_r.gif><b>&nbsp;1/14/04</b>
+Please <b>read the class policy</b> statement below.  See you in class.
+<p> 
+<img src=../Icons/hand_r.gif><b>&nbsp;1/14/04</b> 
+<b>Welcome</b> to CS445.<br>
+-->
+<p>
+</td><td><img src=../Icons/warnbig.gif>
+</td></tr>
+</table>
+</td></tr>
+</table> 
+</center>
+
+<hr>
+
+<h2>Class Description</h2>
+<p>
+
+An introduction to compiler design and construction.  This is a
+hands-on construction course in which each student will work
+independently to construct a compiler that actually works.
+<p> 
+<table>
+<tr><td>
+<b>Text:</b><a href=http://www.cs.sjsu.edu/faculty/louden/cmptext/> 
+Compiler Construction: Principles and Practice</a> by<br> 
+Kenneth Louden, ISBN: 0534939724, Published by Brooks and Cole
+</td>
+<td>
+<a href=http://www.cs.sjsu.edu/faculty/louden/cmptext/>
+<img src=louden.jpg> 
+</a> 
+</td></tr>
+</table>
+<p>
+<b>CRN:</b>41013,53781,53782<br>
+<b>Time:</b> 9:30-11:20 TTh <br>
+<b>Location:</b> Engineering Physics 203<br> 
+ 
+<!-- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -->
+<h2>Class Goals</h2>
+
+<ol>
+
+<li> Understand the basic theory of languages and techniques for
+simple language translation. 
+
+<li> Understand the features of compilers and interpreters.
+
+<li> Understand the basic components and layered design of
+a compiler and the rational for their use.
+
+<li> Each student will be responsible
+for independently building a simple compiler for a virtual machine and
+augment it with new features.  The instructor will help the 
+student to achieve this goal over a series of assignments, but it 
+is up to the student to keep up with the assignments and complete
+each on time.
+
+</ol>
+
+<!-- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -->
+<h2>CS445 Class Schedule by Week</h2>
+<p>
+<table border=1>
+ 
+<tr><th width=4%>Wk#</th>
+<th width=8%> Date</th>
+<th> Topics/Links</th>
+<th width=25%> Assignments</th>
+<th width=25%> Comments</th>
+</tr>
+
+<tr><td>1</td><td>Jan 12</td><!-- date-->
+<td>Introduction to the class,
+what we plan on doing,
+how the class works,
+where to find stuff.
+How is a compiler organized.
+</td>
+<td>&nbsp;</td>
+<td><b>No Class on Tuesday (School hasn't started)</b> </td>
+</tr>
+
+<tr><td>2</td><td>Jan 19</td><!-- date-->
+<td>Scanners and how they
+are defined, FSA and their use 
+in defining scanners, Intro to flex.</td> 
+<td>Read Chapter 1</td>
+<td><b>No Class on Monday (Martin Luther King Day)(Yes I know this class never meets on Monday, this is reminder in general)</b> </td>
+</tr>
+
+<tr><td>3</td><td>Jan 26</td><!-- date-->
+<td>more on scanners, UNIX tools for homework
+submission, syntactic analysis</td>
+<td>Read Chapter 2</td> 
+<td>&nbsp;</td>
+</tr>
+
+<tr><td>4</td><td>Feb 2</td><!-- date-->
+<td>Context Free Grammar review,
+Intro to LL(1) parsing, grammar conditionsing
+such as removing left recursion</td>
+<td>Read Chapter 3,
+<a href=Homework/pas1.html>Assignment 1</a>
+</td>
+<td>&nbsp;</td> 
+</tr>
+
+<tr><td>5</td><td>Feb 9</td><!-- date--> 
+<td>First and Follow sets, formal LL(1) 
+development</td>
+<td>Read Chapter 4</td>
+<td>&nbsp;</td>
+</tr>
+ 
+<tr><td>6</td><td>Feb 16</td><!-- date--> 
+<td>various LR parsings and getting bison to
+build your syntax tree</td>
+<td>Read Chapter 5</td>
+<td><b>No Class on Monday (Presidents Day)</b> </td>
+</tr>
+ 
+<tr><td>7</td><td>Feb 23</td><!-- date--> 
+<td>More on LR parsing and syntax trees</td>
+<td><a href=Homework/pas2.html>Assignment 2</a></td>
+<td>&nbsp;</td>
+</tr>
+
+<tr><td>8</td><td>Mar 1</td><!-- date-->
+<td>Finish up LR parsing and on to attribute grammars and 
+how to finish out our syntax tree</td>
+<td>Read Chapter 6</td>
+<td>&nbsp;</td>
+</tr>
+
+<tr><td>9</td><td>Mar 8</td><!-- date-->
+<td>Maybe a <b>couple of tests</b> this week or the
+week after spring break.  We'll vote in class.</td>
+<td><a href=Homework/pas3.html>Assignment 3</a></td> 
+<td>Test?</td> 
+</tr>
+
+<tr><td>10</td><td>Mar 15</td><!-- date-->
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td><b>No Class This Week (Spring Break!)</b></td>
+</tr>
+
+<tr><td>11</td><td>Mar 22</td><!-- date-->
+<td>discuss assignment 3, test prep, test </td> 
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+</tr>
+
+<tr><td>12</td><td>Mar 29</td><!-- date-->
+<td>Using the error token in Bison,
+start looking at the Tiny Machine
+(<a href=tmDescription.txt>TM 2.4 reference card</a>)
+</td>
+<td><a href=Homework/pas4.html>Assignment 4</a></td>
+<td>&nbsp;</td>
+</tr>
+
+<tr><td>13</td><td>Apr 5</td><!-- date-->
+<td>&nbsp;</td>
+<td>Work on assignment 4</td>
+<td>NO CLASS</td>
+</tr>
+
+<tr><td>14</td><td>Apr 12</td><!-- date-->
+<td>Memory allocation and code generation</td> 
+<td>Read Chapter 7</td> 
+<td>&nbsp;</td>
+</tr>
+
+<tr><td>15</td><td>Apr 19</td><!-- date-->
+<td>Code generation</td>
+<td><a href=Homework/pas5.html>assignment 5</a></td>
+<td>&nbsp;</td>
+</tr> 
+
+<tr><td>16</td><td>Apr 26</td><!-- date-->
+<td>Optimizations in general,
+local optimizations, code selection,
+register allocation
+</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+</tr>
+
+<tr><td>17</td><td>May 3</td><!-- date--> 
+<td>How to add more features to C- such
+as strings, prototypes, and for statements,
+how to build linkers and loaders</td> 
+<td>code generation assignment due this 
+coming weekend!!!</td>
+<td>No Exam Week</td>
+</td>
+</tr>
+ 
+<tr><td>XX</td><td>May 10</td><!-- date--> 
+<td><font size+1><b>NO FINAL</b></font>
+(Congratulations on writng your own working compiler!)</td>
+<td><a href=Homework/pasc.html>speed/space contest</a></td>
+<td><b>Final Exam Week</b></td>
+</td>
+</tr> 
+ 
+</td>
+</tr>
+
+</table>
+
+<h2> Service Links </h2>
+ 
+<h3> Services </h3>
+<ul>
+<li><a href=../WWWBoard/index.html>
+Class discussion group</a>
+<li><a href=submitTar.html>Homework submission page</a>
+</ul>
+
+<h3> Documentation</h3>
+<ul> 
+<li>The <a href=gcd.txt>gcd program</a> as discussed on the tape. 
+<li><a href=policies.html>Policies</a>
+<li><a href=gradeFields.html>Description of your emailed grade report</a>
+<li>Using the <a href=bisonErrorToken.html>error token in Bison</a>
+<li>
+The
+<a href=http://www.cs.sjsu.edu/faculty/louden/cmptext/>
+web page for our text</a>
+<li>A list of <a href=parserAlgorithms.txt>Parser Algorithms</a>
+<li>
+<a href=firstfollow.txt>Building LL parser using first and follow sets</a> 
+<li>
+<a href=flex.html>A Flex Primer</a>
+<li>
+<a href=gdb.html>A gdb (Gnu Debugger) Primer</a>
+<img src=../Icons/newyellow.gif>
+<li><a href=bison.html>A Bison Primer</a>
+<li><a href=bison2002.pdf>The Bison Manual (2002 version of the book)</a> for version 1.35
+<li><a href=bison1992.pdf>The Bison Manual (1992 version of the book)</a> for version 1.20
+<li>
+<a href=make.html>A Make Primer</a>
+<li>The <a href=tmDescription.txt>TM 2.4 reference card</a>
+<li> The <a href=tinyGrammar.pdf>grammar for the Tiny language</a>
+<li> A possilbe <a href=c-Grammar.pdf>grammar for the C- language</a>
+</ul>
+<h3> Code</h3>
+<ul>
+<li><a href=parserCodeReading.txt>Parser Code Reading</a>
+<li>A tar of the <a href=tiny.tar>code for Tiny</a>
+<li>
+<a href=tm.txt>TM 2.4</a> the tiny machine version 2.4. Save this file
+using "save target as" or "save link target as" or similar browser command. 
+See the comments in the file header for compilation instructions.  <b>Use 
+this version</b> of the virtual machine and not the one supplied by Louden.
+This has way more features.
+<img src=../Icons/newyellow.gif>
+</ul>
+
+<!-- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -->
+<h2>Cool Links</h2>
+ 
+These links are provided to entertaining and informative.  You
+don't need to study them unless it is suggested that you do so.
+These links are not guaranteed to accurate, contain information that
+is safe to download, or not offend your morals, good sense or good taste,
+or to give sound financial advice.  Some small parts may pose a choking
+hazzard for children<b>...</b>
+
+<ul>
+
+<li> <a href=http://www.cs.princeton.edu/software/lcc/>LCC</a> a
+retargetable free C compiler with lots of goodies. 
+<img src=../Icons/newyellow.gif>
+
+<li>A <a 
+href=http://people.ku.edu/~nkinners/LangList/Extras/langlist.htm> list 
+of over 2500 computer languages</a>
+
+<li><a href=http://www.cliki.net/Zebu>Zebu</a> A parser generator for
+generating Common Lisp code
+ 
+<li><a href=http://www.cs.nmsu.edu/~jeffery/vcsc/>Unicron: an 
+experimental virtual CS community</a>
+
+</ul>
+
+<footer>
+<hr><table width=100% border=0><tr> 
+<td align=left><a href=../index.html>Robert Heckendorn</a></td> 
+<td align=center><a href=..>Up One Level</a>
+<td align=right>Last updated:&nbsp;<datestamp>May 6, 2004  10:09</datestamp></td>
+</tr></table>
+</footer>
+</body>
+</html>
