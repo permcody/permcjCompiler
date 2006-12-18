@@ -26,7 +26,7 @@ void yyerror(const char *msg)
 	}
 	else {
 		++numErrors;
-		cerr << "ERROR lineno(" << currentLineNo << "): " << msg << " Current Token is " << currentToken << endl;
+		cerr << "ERROR lineno(" << currentLineNo << "): " << msg << " but got: " << currentToken << endl;
 	}
 }
 
@@ -45,7 +45,7 @@ string & copyString(char *source)
 	FlexStruct *fPtr;
 }
 
-%token <lineno> IF RETURN WHILE TRUE FALSE ERROR INT VOID BOOL '{' '='
+%token <lineno> IF RETURN WHILE TRUE FALSE INT VOID BOOL '{' '='
 %token <fPtr> ID NUM
 
 %left <lineno> '<' '>' LEQ GEQ EQ NEQ
@@ -120,7 +120,12 @@ var_declaration		: type_specifier ID ';'
 							dNode->isArray = true;
 							dNode->size = $4->number;				// save the array size
 							$$ = (TreeNode *)dNode;
-						}							
+						}
+					| error ';'		// ERROR handling
+						{	$$=NULL; 
+							cout << "**ERROR var_declaration\n"; 
+							yyerrok;
+						}
 					;
 					
 type_specifier		: INT	{ $$ = TreeNode::Int; }	
@@ -136,6 +141,16 @@ fun_declaration		: type_specifier ID '(' params ')' compound_stmt
 							dNode->child[0] = $4;				// params are the first child of the function declaration
 							dNode->child[1] = $6;				// statements are the second child of the function declaration							
 							$$ = (TreeNode *)dNode;	
+						}
+					| error '(' params ')' compound_stmt  // ERROR handling
+						{	$$=NULL; 
+							cout << "**ERROR fun_declaration 1\n"; 
+							yyerrok;
+						}
+					| type_specifier ID '(' error ')' compound_stmt	// ERROR handling
+						{	$$=NULL; 
+							cout << "**ERROR fun_declaration 2\n"; 
+							yyerrok;
 						}
 					;
 					
@@ -181,6 +196,11 @@ compound_stmt		: '{' local_declarations statement_list '}'
 							sNode->child[1] = $3;				// statment_list goes into the second child of compound_stmt
 							$$ = (TreeNode *)sNode;
 						}
+					| '{' error '}'						// ERROR handling
+						{	$$=NULL;
+							cout << "**ERROR compound\n";
+							yyerrok;
+						}
 					;
 					
 local_declarations	: local_declarations var_declaration 
@@ -218,6 +238,11 @@ statement			: expression_stmt { $$ = $1; }
 					
 expression_stmt		: expression ';' { $$ = $1; }
 					| ';' { $$ = NULL; }
+					| error ';'			// ERROR handling
+						{	$$=NULL;
+							cout << "**ERROR expression_stmt\n";
+							yyerrok;
+						}
 					;
 					
 selection_stmt		: IF '(' expression ')' statement %prec LOWER_THAN_ELSE
@@ -235,6 +260,33 @@ selection_stmt		: IF '(' expression ')' statement %prec LOWER_THAN_ELSE
 							sNode->child[2] = $7;
 							$$ = (TreeNode *)sNode;
 						}
+					| IF '(' error ')' statement %prec LOWER_THAN_ELSE		// ERROR handling
+						{	$$=NULL;
+							cout << "**ERROR unmatched IF 1\n"; 
+							yyerrok;
+						}
+					| IF '(' error ')' statement ELSE statement				// ERROR handling
+						{	$$=NULL;
+							// Look for unmatched vs matched
+							StatementNode *sNode = (StatementNode *)$7;
+							if (sNode->child[2] == NULL) {
+								cout << "**ERROR unmatched IF 2\n";
+								sNode->PrintTree(cout, 0, 0);
+							}
+							else
+								cout << "**ERROR matched IF 1\n";
+							yyerrok;
+						}
+					| IF '(' expression ')' error ELSE statement			// ERROR handling
+						{	$$=NULL;
+							// Look for unmatched vs matched
+							StatementNode *sNode = (StatementNode *)$7;
+							if (sNode->child[2] == NULL)
+								cout << "**ERROR unmatched IF 3\n";
+							else
+								cout << "**ERROR matched IF 2\n";
+							yyerrok;
+						}
 					;  
 					
 iteration_stmt		: WHILE '(' expression ')' statement
@@ -243,6 +295,15 @@ iteration_stmt		: WHILE '(' expression ')' statement
 							sNode->child[0] = $3;
 							sNode->child[1] = $5;
 							$$ = (TreeNode *)sNode;
+						}
+					| WHILE '(' error ')' statement							// ERROR handling
+                        {	$$=NULL;
+							StatementNode *sNode = (StatementNode *)$5;
+							if (sNode->child[2] == NULL)
+									cout << "**ERROR unmatched WHILE 1\n";
+							else
+									cout << "**ERROR matched WHILE 1\n";
+							yyerrok;
 						}
 					;
 					
@@ -256,6 +317,11 @@ return_stmt			: RETURN ';'
 							sNode->lineNumber = $1;			// save the linenumber from 'RETURN'
 							sNode->child[0] = $2;
 							$$ = (TreeNode *)sNode;
+						}
+					| RETURN error ';'		// ERROR handling
+						{	$$=NULL;
+							cout << "**ERROR return\n"; 
+							yyerrok;
 						}
 					;
 					
@@ -306,6 +372,11 @@ factor				: '(' expression ')'	{ $$ = $2; }
 					| var
 					| call
 					| constant
+					| '(' error ')'							// ERROR handling
+						{	$$=NULL;
+							cout << "**ERROR paren exp\n";
+							yyerrok;
+						}
 					;
 					
 constant			: NUM 
@@ -340,6 +411,11 @@ call				: ID '(' args ')'
 							eNode->child[0] = $3;
 							$$ = (TreeNode *)eNode;
 						}
+					| ID '(' error ')'			// ERROR handling
+						{	$$=NULL;
+							cout << "**ERROR call\n";
+							yyerrok;
+						}
 					;
 					
 args				: arg_list { $$ = $1; }
@@ -357,6 +433,23 @@ arg_list			: arg_list ',' expression
 							else $$ = $3;					// This is the first expression matched so far
 						}
 					| expression { $$ = $1; }
+					| error						// ERROR handling
+						{	$$=NULL; 
+							cout << "**ERROR arglist 1\n";
+						}
+					| arg_list error			// ERROR handling
+						{	$$=NULL; 
+							cout << "**ERROR arglist 2\n";
+						}
+					| arg_list error expression	// ERROR handling
+						{	$$=NULL; 
+							cout << "**ERROR arglist 3\n"; 
+							yyerrok;
+						}
+					| arg_list ',' error		// ERROR handling
+						{	$$=NULL;
+							cout << "**ERROR arglist 4\n";
+						}
 					;
 
 %%
@@ -419,22 +512,24 @@ int main(int argc, char *argv[]) {
 		}			
 	}
 
-	// ********************* PARSER (Bison) *******************************
+	// ********************* LEXER (Flex) AND PARSER (Bison) **************
 	// run the parser (parser calls the lexer internally)
 	yyparse();
 	// print the Syntax tree if command line option '-p' is set	
 	if (printSyntaxTree) savedTree->PrintTree(cout); 
-	// ********************* PARSER (Bison) *******************************
+	// ********************* LEXER (Flex) AND PARSER (Bison) **************
 		
-	// ********************* SEMANTIC ANALYZER ****************************
-	// create the symbol table
-	TreeNode::symtab = new SymTab(PrintNode);
-	// turn on the debug for the symbol table if option '-s' is set
-	if (symbolTableTracing) TreeNode::symtab->debug(DEBUG_TABLE);
-	// run the semantic analyzer
-	savedTree->ScopeAndType(cout, numErrors);
+	if (!numErrors) {
+		// ********************* SEMANTIC ANALYZER ****************************
+		// create the symbol table
+		TreeNode::symtab = new SymTab(PrintNode);
+		// turn on the debug for the symbol table if option '-s' is set
+		if (symbolTableTracing) TreeNode::symtab->debug(DEBUG_TABLE);
+		// run the semantic analyzer
+		savedTree->ScopeAndType(cout, numErrors);		
+		// ********************* SEMANTIC ANALYZER ****************************
+	}
 	cout << "Number of errors: " << numErrors << "\nNumber of warnings: " << numWarnings << endl;
-	// ********************* SEMANTIC ANALYZER ****************************
 
 	// close the open input file if necessary
 	if (fileOpen) fclose(yyin);
