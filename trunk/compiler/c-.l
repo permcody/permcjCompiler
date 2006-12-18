@@ -10,6 +10,8 @@ unsigned int currentLineNo = 1;
 char currentToken[255] = "\0";
 
 void SaveToken(bool saveLineno);
+
+extern void yyerror(const char *msg);
 %}
 
 ID	[A-Za-z]+
@@ -51,7 +53,7 @@ int					{ SaveToken(true); return INT; }
 [ \t]+		 		;
 \/\/.*				;
 [-%\]<>;=[,{}()+*/!] { SaveToken(true); return yytext[0]; }
-.					 { SaveToken(true); return ERROR; }
+.					 { SaveToken(true); yyerror("Flex Error");  /*return ERROR;*/ }
 %%
 
 void SaveToken(bool saveLineno)

@@ -10,6 +10,8 @@ extern int yylex();
 
 extern unsigned int currentLineNo;
 extern char currentToken[255];
+int numErrors=0;	// number of errors found by the symtactic and semantic analyzers
+int numWarnings=0;	// number of warnings found by the lexer
 
 TreeNode *savedTree;
 
@@ -18,7 +20,14 @@ TreeNode *newOpExpNode(char *op, TreeNode *child0, TreeNode *child1, long lineno
 // flex requires that you supply this function
 void yyerror(const char *msg)
 {
-      cerr << "ERROR lineno(" << currentLineNo << "):" << msg << "  I got: " << currentToken << endl;
+	if (strcmp(msg, "Flex Error") == 0) {
+		++numWarnings;
+		cerr << "WARNING lineno(" << currentLineNo << "): Invalid input character: " << currentToken << ".  Character ignored. " << endl;
+	}
+	else {
+		++numErrors;
+		cerr << "ERROR lineno(" << currentLineNo << "): " << msg << " Current Token is " << currentToken << endl;
+	}
 }
 
 string & copyString(char *source) 
@@ -372,8 +381,7 @@ int main(int argc, char *argv[]) {
 	bool printSyntaxTree = false;
 	bool symbolTableTracing = false;
 	char c;
-	int numErrors=0;	// number of errors found by the semantic analyzer
-
+	
 	progname = argv[0];
 	
 	yydebug = 0;
@@ -425,7 +433,7 @@ int main(int argc, char *argv[]) {
 	if (symbolTableTracing) TreeNode::symtab->debug(DEBUG_TABLE);
 	// run the semantic analyzer
 	savedTree->ScopeAndType(cout, numErrors);
-	cout << "Number of errors: " << numErrors << endl;
+	cout << "Number of errors: " << numErrors << "\nNumber of warnings: " << numWarnings << endl;
 	// ********************* SEMANTIC ANALYZER ****************************
 
 	// close the open input file if necessary

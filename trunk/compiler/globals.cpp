@@ -107,6 +107,15 @@ void TreeNode::PrintError(ostream &out, int errorNum, int lineno,
 		case 18:
 			out << "Wrong number of parameters for function " << s1 << " defined on line " << n1;
 			break;
+		case 19:
+			out << s1 << " cannot be of type void";
+			break;
+		case 20:
+			out << s1 << " is a simple variable and cannot be called";
+			break;
+		case 21:
+			out << "Cannot use function " << s1 << " as a simple variable";
+			break;
 	}
 	out << '.' << endl;
 }
@@ -254,6 +263,11 @@ void ExpressionNode::ScopeAndType(ostream &out, int &numErrors) {
 			if (dPtr != NULL) {
 				// populate this ID node with the type from the symbol table
 				this->type = dPtr->type;
+				if (dPtr->subKind == FuncK) {
+					++numErrors;
+					// Cannot use functions like simple variables
+					PrintError(out, 21, lineNumber, name, "", "", 0, 0);
+				}
 			} 
 			else if (dPtr == NULL) {
 				++numErrors;
@@ -286,7 +300,12 @@ void ExpressionNode::ScopeAndType(ostream &out, int &numErrors) {
 				PrintError(out, 15, lineNumber, name, "", "", 0, 0);				
 				this->type = Error;	// set the type to error to avoid cascading errors
 			}
-			else {
+			else if (dPtr->subKind != FuncK) {
+				++numErrors;
+				// variables cannot be called like functions
+				PrintError(out, 20, lineNumber, name, "", "", 0, 0);
+			}
+			else {	// Process the properly declared functions
 				this->type = dPtr->type; // the type of this node is the return type of the function
 				paramPtr = (DeclarationNode *)dPtr->child[0];	// set the parameter pointer to the function declaration parameters
 				argPtr = (ExpressionNode *)this->child[0];	// set the argument pointer to the call arguments
@@ -521,7 +540,15 @@ void DeclarationNode::ScopeAndType(ostream &out, int &numErrors) {
 	}
 	else
 		symtab->insert(name.c_str(), this);	// insert the declartation if no errors
-	if (subKind == FuncK) {
+	
+	if (subKind != FuncK) {	// Variable and Parameter declarations
+		if (type == Void) {
+			++numErrors;
+			// Params and Variables cannot be type void
+			PrintError(out, 19, lineNumber, name, "", "", 0, 0); 
+		}
+	}
+	else {	// Function Declarations
 		funcReturnType = type;	// store the function return type in a global		
 		symtab->enter(name.c_str());
 		newScope = false;	// don't start a new scope for the function body (Compound stmt)
