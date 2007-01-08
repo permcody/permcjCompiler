@@ -37,13 +37,15 @@ void Compiler::Compile() {
 		if (tSymTab) TreeNode::symtab->debug(DEBUG_TABLE);
 		// run the semantic analyzer
 		syntaxTree->ScopeAndType(*out, numErrors);		
-	
+	}
 	// ********************* SEMANTIC ANALYZER ****************************
+	
 
-		// print the Memory layout if command line option '-m' is set
-		if (pMem) syntaxTree->PrintMem(cout);
+	// print the Memory layout if command line option '-m' is set
+	if (pMem) syntaxTree->PrintMem(cout);
 	
 	// ********************** CODE GENERATION *****************************
+	if (!numErrors) {
 		syntaxTree->CodeGeneration(*emitter);
 	}
 	// ********************** CODE GENERATION *****************************
