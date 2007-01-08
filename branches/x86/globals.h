@@ -38,8 +38,10 @@ public:
 	void PrintMem() const { this->PrintMem(cout); }	
 	void PrintMem(ostream &out) const;
 	void CodeGeneration(CodeEmitter &e);
+	void CodeGeneration_x86(CodeEmitter &e);
 	void virtual ScopeAndType(ostream &out, int &numErrors) = 0; // pure virtual function
 	void virtual GenCode(CodeEmitter &e, bool travSib);
+	void virtual GenCode_x86(CodeEmitter &e);
 	bool getIsArray() const;
 	TreeNode(NodeKind sKind);
 	//~TreeNode();
@@ -85,6 +87,7 @@ public:
 	static void PrintNode(ostream &out, const DeclarationNode *dPtr);
 	void virtual ScopeAndType(ostream &out, int &numErrors);
 	void virtual GenCode(CodeEmitter &e, bool travSib);
+	void virtual GenCode_x86(CodeEmitter &e);
 };
 
 class ExpressionNode : public TreeNode {
@@ -101,6 +104,7 @@ public:
 	void virtual PrintTree(ostream &out, int spaces, int siblingNum) const;
 	void virtual ScopeAndType(ostream &out, int &numErrors);
 	void virtual GenCode(CodeEmitter &e, bool travSib);
+	void virtual GenCode_x86(CodeEmitter &e);
 	void lookupTypes(const string &op, Types &lhs, Types &rhs, Types &returnType);	
 };
 
@@ -112,6 +116,7 @@ public:
 	void virtual PrintTree(ostream &out, int spaces, int siblingNum) const;
 	void virtual ScopeAndType(ostream &out, int &numErrors);
 	void virtual GenCode(CodeEmitter &e, bool travSib);
+	void virtual GenCode_x86(CodeEmitter &e);
 };
 
 

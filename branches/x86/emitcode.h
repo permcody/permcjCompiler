@@ -3,6 +3,7 @@
 
 #include <iostream>
 #include <string>
+#include <sstream>
 
 using namespace std;
 
@@ -25,6 +26,12 @@ using namespace std;
 #define ac2  5
 #define ac3  6
 
+
+//
+// X86 Constants
+//
+
+#define WORDSIZE 4
 
 //
 //  No comment please...
@@ -57,6 +64,16 @@ public:
 	int emitSkip(int howMany);
 	void emitBackup(int loc);
 	void emitRestore(void);
+	
+	void emit_x86Comment(const string &c);
+	void emit_x86(const string &op);
+	void emit_x86R1(const string &op, const string &reg, const string &c);
+	void emit_x86R2(const string &op, const string &reg1, const string &reg2, const string &c);
+	void emit_x86CR(const string &op, int im, const string &reg, const string &c);
+	void emit_x86MR(const string &op, int offset, const string &regMem, const string &reg, const string &c);
+	void emit_x86RM(const string &op, const string &reg, int offset, const string &regMem, const string &c);
+	void emit_x86Label(const string &label);
+	void emit_x86Directive(const string &directive);  
 
 private:
 	ostream *code; // The stream to output to

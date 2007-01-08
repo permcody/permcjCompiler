@@ -23,6 +23,14 @@ void TreeNode::GenCode(CodeEmitter &e, bool travSib) {
 		sibling->GenCode(e, true);
 }
 
+void TreeNode::GenCode_x86(CodeEmitter &e) {
+	for (short i=0; i<MAXCHILDREN; i++)
+		if (child[i] != NULL)
+			child[i]->GenCode_x86(e);
+	if (sibling != NULL)
+		sibling->GenCode_x86(e);
+}
+
 void TreeNode::CodeGeneration(CodeEmitter &e) {
 	
 	GenProlog(jumpMain, e);
@@ -30,6 +38,15 @@ void TreeNode::CodeGeneration(CodeEmitter &e) {
 
 	// Traverse the tree
 	GenCode(e, true);
+}
+
+void TreeNode::CodeGeneration_x86(CodeEmitter &e) {
+
+	// Generate a basic GNU Assembler file
+	e.emit_x86Directive(".text");
+	e.emit_x86Directive(".globl main");
+	
+	GenCode_x86(e);
 }
 
 void TreeNode::GenProlog(int &jumpMain, CodeEmitter &e) const {
@@ -272,6 +289,185 @@ void TreeNode::PrintError(ostream &out, int errorNum, int lineno,
 	out << '.' << endl;
 }
 
+void ExpressionNode::GenCode_x86(CodeEmitter &e) {
+	DeclarationNode *dPtr;
+	ExpressionNode *argPtr;
+	int localToff, boolSkipLoc, currentLoc;
+	bool isUnary = true;
+	
+	switch (subKind) {
+		case OpK:
+			// process left child
+			if (child[0] != NULL)
+				child[0]->GenCode_x86(e);
+
+			if (child[1] != NULL) {
+				isUnary = false;
+			
+				// save left side
+				localToff = toff--;
+				e.emit_x86R1("pushl", "eax", "save left side");
+								
+				// process right child
+				child[1]->GenCode_x86(e);
+
+				// load left back into the accumulator
+				toff = localToff;
+				e.emit_x86R1("popl", "edx", "load left side into our second accumulator");				
+			}
+				
+			// process operators
+			// arithmetic operators
+			if (op == "+") {
+				e.emit_x86R2("addl", "eax", "edx", "op +");
+				e.emit_x86R2("movl", "edx", "eax", "move operation result to main accumulator");				
+			} else if (op == "-" && !isUnary) {
+				e.emit_x86R2("subl", "eax", "edx", "op -");
+				e.emit_x86R2("movl", "edx", "eax", "move operation result to main accumulator");
+			} else if (op == "*") {
+				e.emit_x86R2("mull", "eax", "edx", "op *");
+				e.emit_x86R2("movl", "edx", "eax", "move operation result to main accumulator");
+			} else if (op == "/") {
+				e.emit_x86R2("divl", "eax", "edx", "op /");
+				e.emit_x86R2("movl", "edx", "eax", "move operation result to main accumulator");
+			} else if (op == "%") {
+				e.emit_x86R2("FIXME", "", "", "begin op %");				
+			} else if (op == "&&") {
+				e.emit_x86R2("and", "eax", "edx", "logical AND");
+				e.emit_x86R1("JE", "<some label>", "Jump if AND was true"); 
+			} else if (op == "||") {
+				e.emit_x86R2("or", "eax", "edx", "logical OR");
+				e.emit_x86R1("JE", "<some label>", "Jump if OR was true");
+			} else if (op == "!") {
+				e.emit_x86R1("not", "eax", "logical NOT");				
+			} else if (op == "-" and isUnary) {
+				e.emit_x86R1("neg", "eax", "unary - (negation)");				
+			}
+			else { // comparison operators
+				e.emit_x86R2("FIXME", "", "", "prepare for comparison op");
+				
+				/*if (op == "==") 
+					e.emitRM("JEQ", ac, 2, pc, "op ==");
+				else if (op == "!=")
+					e.emitRM("JNE", ac, 2, pc, "op !=");
+				else if (op == "<")
+					e.emitRM("JLT", ac, 2, pc, "op <");					
+				else if (op == "<=")
+					e.emitRM("JLE", ac, 2, pc, "op <=");				
+				else if (op == ">")
+					e.emitRM("JGT", ac, 2, pc, "op >");
+				else if (op == ">=")
+					e.emitRM("JGE", ac, 2, pc, "op >=");
+
+				e.emitRM("LDC", ac, 0, ac3, "load false into ac");
+				e.emitRM("LDA", pc, 1, pc, "jump past true case");
+				e.emitRM("LDC", ac, 1, ac3, "load true into ac");
+				*/
+			}
+			break;	
+		case AssignK:
+			// process RHS of assignment
+			if (child[1] != NULL)
+				child[1]->GenCode_x86(e);
+
+			// variable will be in the left child
+			dPtr = ((ExpressionNode *)this->child[0])->dPtr;
+
+			// find out if this is an array or not
+			if (dPtr->isArray) {
+				// save RHS side
+				/* localToff = toff; */
+				e.emit_x86R1("FIXME", "", "Array Assignment");
+
+				/*if (this->child[0]->child[0] != NULL)
+					this->child[0]->child[0]->GenCode_x86(e); 
+					// array index will be in ac
+				e.emitRM("LD", ac2, localToff, fp, "Load RHS value");
+				// value will be in ac2 
+				if (dPtr->theScope == Parameter)
+					e.emitRM("LD", ac1, dPtr->offset, (dPtr->theScope == TreeNode::Global)?gp:fp, "array base");
+				else
+					e.emitRM("LDA", ac1, dPtr->offset, (dPtr->theScope == TreeNode::Global)?gp:fp, "array base");
+				// array base will be in ac1
+				e.emitRO("SUB", ac, ac1, ac, "index off of the base");
+				e.emitRM("ST", ac2, 0, ac, "store indexed variable " + dPtr->name);
+				e.emitRM("LDA", ac, 0, ac2, "adjust ac");
+				*/
+				toff = localToff;
+			}
+			else {
+				// retrieve variable offset and scope to emit instruction
+				e.emit_x86RM("movl", "eax", dPtr->offset, (dPtr->theScope == TreeNode::Global)?"ebx":"ebp", "store variable " + dPtr->name); 
+			}	
+			break;
+		case ConstK:
+			e.emit_x86CR("movl", val, "eax", "load constant");
+			break;
+		case IdK:
+			if (this->dPtr->isArray) {
+				// is this array indexed?
+				e.emit_x86R1("FIXME", "", "RHand Array Identifier");
+				/*if (child[0] == NULL) {  // must be a parameter
+					if (this->dPtr->theScope == TreeNode::Parameter)
+						e.emitRM("LD", ac, this->dPtr->offset, (this->dPtr->theScope == TreeNode::Global)?gp:fp, "Load address of base of array " + this->name);
+					else
+						e.emitRM("LDA", ac, this->dPtr->offset, (this->dPtr->theScope == TreeNode::Global)?gp:fp, "Load address of base of array " + this->name);
+				}
+				else { 
+					child[0]->GenCode(e, true);
+					// index will be in ac
+					if (this->dPtr->theScope == TreeNode::Parameter)
+						e.emitRM("LD", ac1, this->dPtr->offset, (this->dPtr->theScope == TreeNode::Global)?gp:fp, "Load address of base of array " + this->name);
+					else
+						e.emitRM("LDA", ac1, this->dPtr->offset, (this->dPtr->theScope == TreeNode::Global)?gp:fp, "Load address of base of array " + this->name);
+
+					e.emitRO("SUB", ac, ac1, ac, "index off of the base");
+					e.emitRM("LD", ac, 0, ac, "load the value");
+				}*/
+			}
+			else {
+				e.emit_x86MR("movl", this->dPtr->offset, (this->dPtr->theScope == TreeNode::Global)?"ebx":"ebp", "eax", "load variable " + name);
+			}
+			break;
+		case CallK:
+			dPtr = (DeclarationNode *)symtab->lookup(name.c_str());
+			localToff = toff;
+			e.emitRM("ST", fp, toff--, fp, "Store old fp in ghost frame");
+
+			// leave room for return param
+			--toff;
+
+			// process function parameters
+			argPtr = (ExpressionNode *)this->child[0];	// set the parameter pointer to the function declaration parameters
+			//localToff = toff;
+			while (argPtr != NULL) {
+				//localToff--;
+				//toff--;
+				argPtr->GenCode_x86(e);
+				// store expression result
+				e.emitRM("ST", ac, toff-- /*localToff*/, fp, "Save parameter");
+				argPtr = (ExpressionNode *)argPtr->sibling;
+			}
+
+			// restore toff
+			toff = localToff;
+
+			// prepare for jump
+			e.emitRM("LDA", fp, localToff--, fp, "Load address of new frame");
+			e.emitRM("LDA", ac, 1, pc, "Put return address in ac");
+			e.emitRMAbs("LDA", pc, dPtr->offset, "Call " + dPtr->name);
+			
+			// save return value
+			e.emitRM("LDA", ac, 0, rt, "Save the result in ac");
+			break;			
+	}
+	
+	if (sibling != NULL) {
+		sibling->GenCode_x86(e);
+	}
+	
+}
+
 void ExpressionNode::GenCode(CodeEmitter &e, bool travSib) {
 	DeclarationNode *dPtr;
 	ExpressionNode *argPtr;
@@ -440,7 +636,7 @@ void ExpressionNode::GenCode(CodeEmitter &e, bool travSib) {
 						e.emitRM("LDA", ac, this->dPtr->offset, (this->dPtr->theScope == TreeNode::Global)?gp:fp, "Load address of base of array " + this->name);
 				}
 				else { 
-					child[0]->GenCode(e, true);
+					child[0]->GenCode_x86(e);
 					// index will be in ac
 					if (this->dPtr->theScope == TreeNode::Parameter)
 						e.emitRM("LD", ac1, this->dPtr->offset, (this->dPtr->theScope == TreeNode::Global)?gp:fp, "Load address of base of array " + this->name);
@@ -789,6 +985,19 @@ void ExpressionNode::lookupTypes(const string &op, Types &lhs, Types &rhs, Types
 	}	
 }
 
+void StatementNode::GenCode_x86(CodeEmitter &e) {
+	//cerr << "GenCode_x86: StatementNode\n";
+	switch (subKind) {
+		default:
+			if (child[0] != NULL)
+				child[0]->GenCode_x86(e);
+			if (child[1] != NULL)
+				child[1]->GenCode_x86(e);
+			if (sibling != NULL)
+				sibling->GenCode_x86(e);
+	}
+}
+
 void StatementNode::GenCode(CodeEmitter &e, bool travSib) {
 	int currLoc, skipLoc;
 	
@@ -981,6 +1190,54 @@ void StatementNode::ScopeAndType(ostream &out, int &numErrors) {
 	if (sibling != NULL)
 		sibling->ScopeAndType(out, numErrors);
 	return;
+}
+
+void DeclarationNode::GenCode_x86(CodeEmitter &e) {
+	DeclarationNode *dPtr;
+	string tempComment;
+
+	// Don't generate code for IO functions
+	if (subKind == FuncK && name != "input" && name != "output" && name != "inputb" && name != "outputb") {
+		// Lookup in symbol table - we'll need to set the "offset" variable
+		dPtr = (DeclarationNode *)this;
+		//dPtr->offset = e.emitSkip(0); // save the current location for calls later
+		//e.emitRM("ST", ac, -1, fp, "store return address"); // return address is always -1 away from current frame
+			
+		tempComment = "Function " + name + " returns " + PrintType(type);
+		e.emit_x86Comment(tempComment.c_str());
+		e.emit_x86Label(name);
+
+		// Load up the foff variable with the function size
+		foff = size;
+		// Reset temporary stack pointer
+		toff = foff;
+
+		// Standard C Opening
+		e.emit_x86Comment("Standard C Opening");
+		e.emit_x86R1("pushl", "ebp", "");
+		e.emit_x86R2("movl", "esp", "ebp", "");
+		e.emit_x86R1("pushl", "ebx", "");
+		e.emit_x86R1("pushl", "esi", "");
+		e.emit_x86R1("pushl", "edi", "");
+
+		// Function Body
+		if (child[1] != NULL) {
+			child[1]->GenCode_x86(e);
+		}
+
+		// Standard C Closing
+		e.emit_x86Comment("Add standard C closing in case there is no return statement");
+		e.emit_x86R1("popl", "edi", "");
+		e.emit_x86R1("popl", "esi", "");
+		e.emit_x86R1("popl", "ebx", "");
+		e.emit_x86R2("movl", "ebp", "esp", "");
+		e.emit_x86R1("popl", "ebp", "");
+		e.emit_x86("ret");
+		e.emit_x86Comment(("End Function " + name).c_str());			
+	}
+
+	if (sibling != NULL)
+		sibling->GenCode_x86(e);
 }
 
 void DeclarationNode::GenCode(CodeEmitter &e, bool travSib) {

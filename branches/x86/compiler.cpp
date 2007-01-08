@@ -1,4 +1,5 @@
 #include "compiler.h"
+#define X86 1
 
 /*void Compiler::SetCompileOptions(bool printSyntaxTree, bool printMemoryLayout,
 								 bool traceSymbolTable, bool printParserDebug, string objectFile) {
@@ -46,7 +47,11 @@ void Compiler::Compile() {
 	
 	// ********************** CODE GENERATION *****************************
 	if (!numErrors) {
+#ifdef X86
+		syntaxTree->CodeGeneration_x86(*emitter);
+#else
 		syntaxTree->CodeGeneration(*emitter);
+#endif
 	}
 	// ********************** CODE GENERATION *****************************
 
