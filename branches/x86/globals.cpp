@@ -15,7 +15,7 @@ bool TreeNode::newScope = false;
 SymTab *TreeNode::symtab = NULL;
 int TreeNode::goff = 0;
 int TreeNode::foff = IFRAMEOFFSET;
-int TreeNode::poff = PARAMOFFSET; // used by X86 only (parameters are up from the frame pointer (ebp)
+int TreeNode::poff = PARAMOFFSET; // used by X86 only (parameters are up from the frame pointer (bp)
 int TreeNode::toff = 0;
 int TreeNode::jumpMain = -1;
 // ********************** static initialization ********************************
@@ -337,42 +337,42 @@ void ExpressionNode::GenCode_x86(CodeEmitter &e) {
 			
 				// save left side
 				localToff = toff--;
-				e.emit_x86R1("pushl", "eax", "save left side");
+				e.emit_x86R1("push", ax, "save left side");
 								
 				// process right child
 				child[1]->GenCode_x86(e);
 
 				// load left back into the accumulator
 				toff = localToff;
-				e.emit_x86R1("popl", "edx", "load left side into our second accumulator");				
+				e.emit_x86R1("pop", dx, "load left side into our second accumulator");				
 			}
 				
 			// process operators
 			// arithmetic operators
 			if (op == "+") {
-				e.emit_x86R2("addl", "eax", "edx", "op +");
-				e.emit_x86R2("movl", "edx", "eax", "move operation result to main accumulator");				
+				e.emit_x86R2("add", ax, dx, "op +");
+				e.emit_x86R2("mov", dx, ax, "move operation result to main accumulator");				
 			} else if (op == "-" && !isUnary) {
-				e.emit_x86R2("subl", "eax", "edx", "op -");
-				e.emit_x86R2("movl", "edx", "eax", "move operation result to main accumulator");
+				e.emit_x86R2("sub", ax, dx, "op -");
+				e.emit_x86R2("mov", dx, ax, "move operation result to main accumulator");
 			} else if (op == "*") {
-				e.emit_x86R2("imull", "eax", "edx", "op *");
-				e.emit_x86R2("movl", "edx", "eax", "move operation result to main accumulator");
+				e.emit_x86R2("imul", ax, dx, "op *");
+				e.emit_x86R2("mov", dx, ax, "move operation result to main accumulator");
 			} else if (op == "/") {
-				e.emit_x86R2("idivl", "eax", "edx", "op /");
-				e.emit_x86R2("movl", "edx", "eax", "move operation result to main accumulator");
+				e.emit_x86R2("idiv", ax, dx, "op /");
+				e.emit_x86R2("mov", dx, ax, "move operation result to main accumulator");
 			} else if (op == "%") {
 				e.emit_x86R2("FIXME", "", "", "begin op %");				
 			} else if (op == "&&") {
-				e.emit_x86R2("and", "eax", "edx", "logical AND");
+				e.emit_x86R2("and", ax, dx, "logical AND");
 				e.emit_x86R1("JE", "<some label>", "Jump if AND was true"); 
 			} else if (op == "||") {
-				e.emit_x86R2("or", "eax", "edx", "logical OR");
+				e.emit_x86R2("or", ax, dx, "logical OR");
 				e.emit_x86R1("JE", "<some label>", "Jump if OR was true");
 			} else if (op == "!") {
-				e.emit_x86R1("not", "eax", "logical NOT");				
+				e.emit_x86R1("not", ax, "logical NOT");				
 			} else if (op == "-" and isUnary) {
-				e.emit_x86R1("neg", "eax", "unary - (negation)");				
+				e.emit_x86R1("neg", ax, "unary - (negation)");				
 			}
 			else { // comparison operators
 				e.emit_x86R2("FIXME", "", "", "prepare for comparison op");
@@ -428,11 +428,11 @@ void ExpressionNode::GenCode_x86(CodeEmitter &e) {
 			}
 			else {
 				// retrieve variable offset and scope to emit instruction
-				e.emit_x86RM("movl", "eax", dPtr->offset, (dPtr->theScope == TreeNode::Global)?"ebx":"ebp", "store variable " + dPtr->name); 
+				e.emit_x86RM("mov", ax, dPtr->offset, (dPtr->theScope == TreeNode::Global)?bx:bp, "store variable " + dPtr->name); 
 			}	
 			break;
 		case ConstK:
-			e.emit_x86CR("movl", val, "eax", "load constant");
+			e.emit_x86CR("mov", val, ax, "load constant");
 			break;
 		case IdK:
 			if (this->dPtr->isArray) {
@@ -457,7 +457,7 @@ void ExpressionNode::GenCode_x86(CodeEmitter &e) {
 				}*/
 			}
 			else {
-				e.emit_x86MR("movl", this->dPtr->offset, (this->dPtr->theScope == TreeNode::Global)?"ebx":"ebp", "eax", "load variable " + name);
+				e.emit_x86MR("mov", this->dPtr->offset, (this->dPtr->theScope == TreeNode::Global)?bx:bp, ax, "load variable " + name);
 			}
 			break;
 		case CallK:
@@ -477,7 +477,7 @@ void ExpressionNode::GenCode_x86(CodeEmitter &e) {
 				//toff--;
 				argPtr->GenCode_x86(e);
 				// store expression result
-				e.emit_x86R1("pushl", "eax", "Save parameter");				
+				e.emit_x86R1("push", ax, "Save parameter");				
 				argPtr = (ExpressionNode *)argPtr->sibling;
 				paramCount++;
 			}
@@ -488,7 +488,7 @@ void ExpressionNode::GenCode_x86(CodeEmitter &e) {
 			e.emit_x86Call(dPtr->name, "execute function");
 			
 			// clean up the stack
-			e.emit_x86CR("add", 4*paramCount, "esp", "clean up the stack frame");
+			e.emit_x86CR("add", WORDSIZE*paramCount, sp, "clean up the stack frame");
 			break;			
 	}
 	
@@ -1239,8 +1239,8 @@ void DeclarationNode::GenCode_x86(CodeEmitter &e) {
 
 		// Standard C Opening
 		e.emit_x86Comment("Standard C Opening");
-		e.emit_x86R1("pushl", "ebp", "");
-		e.emit_x86R2("movl", "esp", "ebp", "");
+		e.emit_x86R1("push", bp, "");
+		e.emit_x86R2("mov", sp, bp, "");
 		/* The following registers are unused for now - we will leave space on the stack and save them on demand 
 		e.emit_x86R1("pushl", "ebx", "");
 		e.emit_x86R1("pushl", "esi", "");
@@ -1255,14 +1255,14 @@ void DeclarationNode::GenCode_x86(CodeEmitter &e) {
 		// Reset temporary stack pointer
 		toff = foff;
 
-		e.emit_x86CR("addl", size*4, "esp", "Adjust top of stack for local variables"); 
+		e.emit_x86CR("add", size*WORDSIZE, sp, "Adjust top of stack for local variables"); 
 
 		// Function Body
 		if (child[1] != NULL) {
 			child[1]->GenCode_x86(e);
 		}
 		
-		e.emit_x86CR("subl", size*4, "esp", "Adjust top of stack to destroy local variables");
+		e.emit_x86CR("sub", size*WORDSIZE, sp, "Adjust top of stack to destroy local variables");
 
 		// Standard C Closing
 		e.emit_x86Comment("Add standard C closing in case there is no return statement");
@@ -1271,8 +1271,8 @@ void DeclarationNode::GenCode_x86(CodeEmitter &e) {
 		e.emit_x86R1("popl", "esi", "");
 		e.emit_x86R1("popl", "ebx", "");
 		*/
-		e.emit_x86R2("movl", "ebp", "esp", "");
-		e.emit_x86R1("popl", "ebp", "");
+		e.emit_x86R2("mov", bp, sp, "");
+		e.emit_x86R1("pop", bp, "");
 		e.emit_x86("ret");
 		e.emit_x86Comment(("End Function " + name).c_str());			
 	}

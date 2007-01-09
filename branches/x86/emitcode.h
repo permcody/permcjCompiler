@@ -26,12 +26,28 @@ using namespace std;
 #define ac2  5
 #define ac3  6
 
-
 //
 // X86 Constants
 //
 
+//#define BITS64 1
+
+#ifdef BITS64 
+#define WORDSIZE 8
+#define ax "rax"
+#define sp "rsp"
+#define bp "rbp"
+#define dx "rdx"
+#define bx "rbx"
+#else
 #define WORDSIZE 4
+#define ax "eax"
+#define sp "esp"
+#define bp "ebp"
+#define dx "edx"
+#define bx "ebx"
+#endif
+
 
 //
 //  No comment please...
