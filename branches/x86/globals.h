@@ -53,6 +53,7 @@ public:
 	static int goff;	// global offset
 	static int foff;	// frame offset
 	static int toff;	// temporary offset
+	static int poff;	// param offset
 	
 protected:
 	void virtual PrintTree(ostream &out, int spaces, int siblingNum) const;

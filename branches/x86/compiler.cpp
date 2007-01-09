@@ -1,5 +1,4 @@
 #include "compiler.h"
-#define X86 1
 
 /*void Compiler::SetCompileOptions(bool printSyntaxTree, bool printMemoryLayout,
 								 bool traceSymbolTable, bool printParserDebug, string objectFile) {

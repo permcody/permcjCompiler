@@ -73,7 +73,8 @@ public:
 	void emit_x86MR(const string &op, int offset, const string &regMem, const string &reg, const string &c);
 	void emit_x86RM(const string &op, const string &reg, int offset, const string &regMem, const string &c);
 	void emit_x86Label(const string &label);
-	void emit_x86Directive(const string &directive);  
+	void emit_x86Directive(const string &directive);
+	void emit_x86Call(const string &functionName, const string &c);  
 
 private:
 	ostream *code; // The stream to output to

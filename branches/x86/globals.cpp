@@ -1,14 +1,24 @@
 #include "globals.h"
 #include "emitcode.h"
+#include "compiler.h"
 
-// static initialization
+#ifdef X86
+#define IFRAMEOFFSET -4 // 0 = EBP, -1 = EBX, -2 = ESI, -3 = EDI
+#else
+#define IFRAMEOFFSET -2 // 0 and -1 are for the previous frame address and return address respectively
+#endif
+
+#define PARAMOFFSET 2 // 0 = EBP, 1 = EIP
+// ********************** static initialization ********************************
 TreeNode::Types TreeNode::funcReturnType = TreeNode::Undefined; // global for function return type checking
 bool TreeNode::newScope = false;
 SymTab *TreeNode::symtab = NULL;
 int TreeNode::goff = 0;
-int TreeNode::foff = -2; // 0 and -1 are for the previous frame address and return address respectively
+int TreeNode::foff = IFRAMEOFFSET;
+int TreeNode::poff = PARAMOFFSET; // used by X86 only (parameters are up from the frame pointer (ebp)
 int TreeNode::toff = 0;
 int TreeNode::jumpMain = -1;
+// ********************** static initialization ********************************
 
 TreeNode::TreeNode(NodeKind sKind) : sibling(NULL), lineNumber(0), kind(sKind) {
 	for (short i=0; i<MAXCHILDREN; i++)
@@ -106,6 +116,25 @@ void TreeNode::GenIOFunctions(CodeEmitter &e) const {
 TreeNode *TreeNode::AddIOFunctions() {
 	DeclarationNode *tPtr, *dNode;
 
+#ifdef X86
+	// Add Declaration for int putchar(int c)
+	dNode = new DeclarationNode(TreeNode::FuncK);
+	dNode->type = Int;
+	dNode->name = "putchar";
+	dNode->lineNumber = -1;  //unused
+	dNode->offset = -1;  //unused
+	dNode->sibling = this;
+	tPtr = dNode;
+	// integer parameter
+	dNode = new DeclarationNode(TreeNode::ParamK);
+	dNode->type = Int;
+	dNode->name = "*dummy*";
+    dNode->lineNumber = -1;
+	dNode->size = 1;
+	tPtr->child[0] = (TreeNode *)dNode;
+
+#else
+
 	// Add Declaration for "void outputb(bool)"
 	dNode = new DeclarationNode(TreeNode::FuncK);
 	dNode->type = Void;		
@@ -155,6 +184,8 @@ TreeNode *TreeNode::AddIOFunctions() {
 	dNode->offset = 6;
 	dNode->sibling = (TreeNode *)tPtr;
 	tPtr = dNode;
+	
+#endif
 		
 	return (TreeNode *)tPtr;	
 }
@@ -325,10 +356,10 @@ void ExpressionNode::GenCode_x86(CodeEmitter &e) {
 				e.emit_x86R2("subl", "eax", "edx", "op -");
 				e.emit_x86R2("movl", "edx", "eax", "move operation result to main accumulator");
 			} else if (op == "*") {
-				e.emit_x86R2("mull", "eax", "edx", "op *");
+				e.emit_x86R2("imull", "eax", "edx", "op *");
 				e.emit_x86R2("movl", "edx", "eax", "move operation result to main accumulator");
 			} else if (op == "/") {
-				e.emit_x86R2("divl", "eax", "edx", "op /");
+				e.emit_x86R2("idivl", "eax", "edx", "op /");
 				e.emit_x86R2("movl", "edx", "eax", "move operation result to main accumulator");
 			} else if (op == "%") {
 				e.emit_x86R2("FIXME", "", "", "begin op %");				
@@ -430,13 +461,14 @@ void ExpressionNode::GenCode_x86(CodeEmitter &e) {
 			}
 			break;
 		case CallK:
+			// C calling convetions (slightly simplified)
+			// parameters are pushed on the stack in reverse order (TODO: Reverse order)
+			// parameters are removed from the stack after the call is complete
+			// return values are returned in (eax)
+				
 			dPtr = (DeclarationNode *)symtab->lookup(name.c_str());
-			localToff = toff;
-			e.emitRM("ST", fp, toff--, fp, "Store old fp in ghost frame");
-
-			// leave room for return param
-			--toff;
-
+			int paramCount = 0;
+						
 			// process function parameters
 			argPtr = (ExpressionNode *)this->child[0];	// set the parameter pointer to the function declaration parameters
 			//localToff = toff;
@@ -445,20 +477,18 @@ void ExpressionNode::GenCode_x86(CodeEmitter &e) {
 				//toff--;
 				argPtr->GenCode_x86(e);
 				// store expression result
-				e.emitRM("ST", ac, toff-- /*localToff*/, fp, "Save parameter");
+				e.emit_x86R1("pushl", "eax", "Save parameter");				
 				argPtr = (ExpressionNode *)argPtr->sibling;
+				paramCount++;
 			}
 
 			// restore toff
 			toff = localToff;
 
-			// prepare for jump
-			e.emitRM("LDA", fp, localToff--, fp, "Load address of new frame");
-			e.emitRM("LDA", ac, 1, pc, "Put return address in ac");
-			e.emitRMAbs("LDA", pc, dPtr->offset, "Call " + dPtr->name);
+			e.emit_x86Call(dPtr->name, "execute function");
 			
-			// save return value
-			e.emitRM("LDA", ac, 0, rt, "Save the result in ac");
+			// clean up the stack
+			e.emit_x86CR("add", 4*paramCount, "esp", "clean up the stack frame");
 			break;			
 	}
 	
@@ -1197,7 +1227,7 @@ void DeclarationNode::GenCode_x86(CodeEmitter &e) {
 	string tempComment;
 
 	// Don't generate code for IO functions
-	if (subKind == FuncK && name != "input" && name != "output" && name != "inputb" && name != "outputb") {
+	if (subKind == FuncK && name != "putchar") {
 		// Lookup in symbol table - we'll need to set the "offset" variable
 		dPtr = (DeclarationNode *)this;
 		//dPtr->offset = e.emitSkip(0); // save the current location for calls later
@@ -1207,29 +1237,40 @@ void DeclarationNode::GenCode_x86(CodeEmitter &e) {
 		e.emit_x86Comment(tempComment.c_str());
 		e.emit_x86Label(name);
 
+		// Standard C Opening
+		e.emit_x86Comment("Standard C Opening");
+		e.emit_x86R1("pushl", "ebp", "");
+		e.emit_x86R2("movl", "esp", "ebp", "");
+		/* The following registers are unused for now - we will leave space on the stack and save them on demand 
+		e.emit_x86R1("pushl", "ebx", "");
+		e.emit_x86R1("pushl", "esi", "");
+		e.emit_x86R1("pushl", "edi", "");
+		*/
+
+		// Local variables are stored on the stack frame just below the saved registers.  We need to make room for them
+		// by adjusting the stack pointer accordingly
+
 		// Load up the foff variable with the function size
 		foff = size;
 		// Reset temporary stack pointer
 		toff = foff;
 
-		// Standard C Opening
-		e.emit_x86Comment("Standard C Opening");
-		e.emit_x86R1("pushl", "ebp", "");
-		e.emit_x86R2("movl", "esp", "ebp", "");
-		e.emit_x86R1("pushl", "ebx", "");
-		e.emit_x86R1("pushl", "esi", "");
-		e.emit_x86R1("pushl", "edi", "");
+		e.emit_x86CR("addl", size*4, "esp", "Adjust top of stack for local variables"); 
 
 		// Function Body
 		if (child[1] != NULL) {
 			child[1]->GenCode_x86(e);
 		}
+		
+		e.emit_x86CR("subl", size*4, "esp", "Adjust top of stack to destroy local variables");
 
 		// Standard C Closing
 		e.emit_x86Comment("Add standard C closing in case there is no return statement");
+		/* The following registers are unused for now - we will leave space on the stack and save them on demand 
 		e.emit_x86R1("popl", "edi", "");
 		e.emit_x86R1("popl", "esi", "");
 		e.emit_x86R1("popl", "ebx", "");
+		*/
 		e.emit_x86R2("movl", "ebp", "esp", "");
 		e.emit_x86R1("popl", "ebp", "");
 		e.emit_x86("ret");
@@ -1356,12 +1397,13 @@ void DeclarationNode::ScopeAndType(ostream &out, int &numErrors) {
 		funcReturnType = type;	// store the function return type in a global		
 		symtab->enter(name.c_str());
 		newScope = false;	// don't start a new scope for the function body (Compound stmt)
-		foff = -2;	// reset the frame offset for this new function
+		foff = IFRAMEOFFSET;	 // reset the frame offset for this new function
+		poff = PARAMOFFSET; // reset the param offset for this new function
 		if (child[0] != NULL)
 			child[0]->ScopeAndType(out, numErrors);
 		if (child[1] != NULL)
 			child[1]->ScopeAndType(out, numErrors);
-		size = foff;	// save the size of the frame pointer
+		size = foff+1;	// save the size of the frame pointer
 		symtab->leave();
 	}	
 	else { // params and variables
@@ -1370,6 +1412,18 @@ void DeclarationNode::ScopeAndType(ostream &out, int &numErrors) {
 			goff -= size;
 			theScope = TreeNode::Global;
 		}
+#ifdef X86
+		else if (subKind == ParamK) {
+			offset = poff;
+			poff += size;
+			theScope = TreeNode::Parameter;
+		}
+		else { // variable
+			offset = foff;
+			foff -= size;
+			theScope = TreeNode::Local;
+		}
+#else
 		else {
 			offset = foff;
 			foff -= size;
@@ -1378,6 +1432,7 @@ void DeclarationNode::ScopeAndType(ostream &out, int &numErrors) {
 			else
 				theScope = TreeNode::Local;
 		}
+#endif
 	}
 
 	// now traverse any sibling nodes

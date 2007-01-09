@@ -1,6 +1,9 @@
 #ifndef _COMPILER_H_
 #define _COMPILER_H_
 
+// Define this Value to turn on the x86 Code Generation
+#define X86 1
+
 #include "globals.h"
 #include "symtab.h"
 

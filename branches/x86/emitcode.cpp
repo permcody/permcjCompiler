@@ -214,6 +214,14 @@ void CodeEmitter::emit_x86CR(const string &op, int im, const string &reg, const 
 			<< "# " << c << "\n";
 }
 
+void CodeEmitter::emit_x86Call(const string &function, const string &c)
+{
+	*code 	<< "\t" 
+			<< setw(8) << left << "call"
+		 	<< setw(16) << left << function 
+		 	<< "# " << c << "\n";    
+}
+
 void CodeEmitter::emit_x86(const string &op)
 {
 	*code << "\t" << op << "\n";
