@@ -1,0 +1,18 @@
+ERROR lineno(5): Symbol b is not defined.
+ERROR lineno(11): Symbol b is not defined.
+ERROR lineno(17): Symbol b is not defined.
+ERROR lineno(18): Symbol c is not defined.
+ERROR lineno(22): Symbol b is not defined.
+ERROR lineno(23): Symbol c is not defined.
+ERROR lineno(33): Symbol z is already defined at line 32.
+ERROR lineno(34): Symbol x is not defined.
+ERROR lineno(38): Symbol v is not defined.
+ERROR lineno(39): Symbol u is not defined.
+ERROR lineno(39): Symbol cow is not defined.
+ERROR lineno(40): Symbol abraxsis is not defined.
+ERROR lineno(41): Symbol a is not defined.
+ERROR lineno(46): Symbol g is already defined at line 1.
+ERROR lineno(48): Symbol g is already defined at line 1.
+ERROR lineno(50): Symbol x is not defined.
+Number of errors: 16
+Number of warnings: 0

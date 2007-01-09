@@ -1,0 +1,15 @@
+// C-F06
+void main(void)
+{
+    int i; int j;
+
+    i=3331;
+    j=641;
+    if (i>j) i=666;
+    if (j==i) i=666;
+    else j=777;
+
+    output(i);
+    output(j);
+    outnl();
+}

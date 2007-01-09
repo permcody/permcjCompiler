@@ -1,0 +1,36 @@
+ERROR(11): Too few parameters passed for function 'kate' defined on line 1.
+ERROR(12): Too few parameters passed for function 'kate' defined on line 1.
+ERROR(13): Too few parameters passed for function 'kate' defined on line 1.
+ERROR(15): Too many parameters passed for function 'kate' defined on line 1.
+ERROR(16): Too many parameters passed for function 'kate' defined on line 1.
+ERROR(18): Expecting type int in parameter 1 of call 'kate' defined on line 1.
+ERROR(18): Expecting type bool in parameter 2 of call 'kate' defined on line 1.
+ERROR(18): Not expecting array in parameter 2 of call 'kate' defined on line 1.
+ERROR(18): Expecting type int in parameter 3 of call 'kate' defined on line 1.
+ERROR(18): Expecting type bool in parameter 4 of call 'kate' defined on line 1.
+ERROR(18): Expecting array in parameter 4 of call 'kate' defined on line 1.
+ERROR(19): Not expecting array in parameter 1 of call 'kate' defined on line 1.
+ERROR(19): Not expecting array in parameter 2 of call 'kate' defined on line 1.
+ERROR(19): Expecting array in parameter 3 of call 'kate' defined on line 1.
+ERROR(19): Expecting array in parameter 4 of call 'kate' defined on line 1.
+ERROR(20): Expecting type int in parameter 1 of call 'kate' defined on line 1.
+ERROR(20): Not expecting array in parameter 1 of call 'kate' defined on line 1.
+ERROR(20): Expecting type bool in parameter 2 of call 'kate' defined on line 1.
+ERROR(20): Expecting type int in parameter 3 of call 'kate' defined on line 1.
+ERROR(20): Expecting array in parameter 3 of call 'kate' defined on line 1.
+ERROR(20): Expecting type bool in parameter 4 of call 'kate' defined on line 1.
+ERROR(23): '+' requires things of type int but rhs is of type bool.
+ERROR(30): Expecting a return type of int but got none.
+ERROR(33): Symbol 'abbey' is already defined at line 28.
+ERROR(35): Expecting a return type of int but got none.
+ERROR(40): Expecting return type of int but got type bool.
+ERROR(45): Expecting return type of bool but got type int.
+ERROR(50): Expecting a return type of bool but got none.
+ERROR(57): Cannot return an array.
+ERROR(62): Expecting no return value, but got one.
+ERROR(67): Expecting no return value, but got one.
+ERROR(73): Expecting no return value, but got one.
+ERROR(73): Cannot return an array.
+ERROR(LINKER): Procedure main is not defined.
+Number of warnings: 0
+Number of errors: 34

@@ -1,0 +1,15 @@
+// C-F06
+void main(void)
+{
+    int i;
+
+    i=10;
+    while (i>0) {
+	output(i);
+	i = i - 1;
+    }
+    outnl();
+
+    while (i<10) i=i+1;
+    output(i);
+}

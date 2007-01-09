@@ -1,0 +1,33 @@
+// C-F06
+// study how the stack like coding of expressios works.
+//
+void main(void)
+{
+	int frodo;
+	int bilbo;
+	int sam;
+	int merry;
+	int pippin;
+
+	bilbo = 1;
+        frodo = 10;
+        sam = 100;
+        merry = 1000;
+        pippin = 10000;
+
+	bilbo = bilbo;
+        output(bilbo);
+        outnl();
+
+	bilbo = bilbo + 1;
+        output(bilbo);
+        outnl();
+
+	bilbo = frodo + bilbo * (sam + merry*pippin);
+        output(bilbo);
+        outnl();
+
+	bilbo = (merry*pippin + sam) * bilbo + frodo;
+        output(bilbo);
+        outnl();
+}

@@ -1,0 +1,74 @@
+int kate(int is, bool bs, int ia[], bool ba[])
+{
+	return 666;
+}
+
+int matty(void)
+{
+    int inta[2];
+    bool boola[3];
+
+    kate(101);
+    kate(101, true);
+    kate(101, true, inta);
+    kate(101, true, inta, boola);
+    kate(101, true, inta, boola, 107);
+    kate(101, true, inta, boola, 107, 109);
+
+    kate(true, inta, boola, 101);
+    kate(inta, boola, 101, true);
+    kate(boola, 101, true, inta);
+    kate(101, true, inta, boola);
+
+    kate(101+true, true, inta, boola);
+
+    return 42;
+}
+
+int abbey(void)
+{
+	return;
+}
+
+int abbey(void)
+{
+	return;
+}
+
+int zena(void)
+{
+	return true;
+}
+
+bool zeus(void)
+{
+	return 666;
+}
+
+bool blackdog(void)
+{
+	return;
+}
+
+int zog(void)
+{
+	int z[2];
+
+	return z;
+}
+
+void quaoar(void)
+{
+	return 666;
+}
+
+void ixion(void)
+{
+	return true;
+}
+
+void varuna(void)
+{
+	bool z[10];
+	return z;
+}
