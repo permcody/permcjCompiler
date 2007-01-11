@@ -95,6 +95,7 @@ public:
 	void emit_x86R2(const string &op, const string &reg1, const string &reg2, const string &c);
 	void emit_x86CR(const string &op, int im, const string &reg, const string &c);
 	void emit_x86RC(const string &op, const string &reg, int im, const string &c);
+	void emit_x86LR(const string &op, const string &label, const string &reg, const string &c);
 	void emit_x86C(const string &op, const string &im, const string &c);
 	void emit_x86J(const string &op, const string &label, const string &c);
 	void emit_x86MR(const string &op, int offset, const string &regMem, const string &reg, const string &c);

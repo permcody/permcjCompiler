@@ -54,10 +54,17 @@ void TreeNode::CodeGeneration(CodeEmitter &e) {
 void TreeNode::CodeGeneration_x86(CodeEmitter &e) {
 	// Generate a basic GNU Assembler file
 
-	// Template printing setup (hack to use printf for printing basic integers)
+	// Uninitialized data section (setup a buffer area for scanf input)
+	e.emit_x86Directive(".bss");
+	e.emit_x86Label("bufInt");
+	e.emit_x86Directive("\t.long\n");	
+
+	// Setup a format string for the output function (printf) 
 	e.emit_x86Directive(".data");
 	e.emit_x86Label("printfInt");
 	e.emit_x86Directive("\t.string \"\%d\\n\"\n");
+	
+	// Setup a format string for the input function (scanf)
 	e.emit_x86Label("scanfInt");
 	e.emit_x86Directive("\t.string \"\%d\"\n");
 	
@@ -510,17 +517,21 @@ void ExpressionNode::GenCode_x86(CodeEmitter &e) {
 				e.emit_x86Call("printf", "execute function");
 				paramCount++;
 			}
-			else if (dPtr->name == "input") {				
+			else if (dPtr->name == "input") {		
+				e.emit_x86C("push", "bufInt", "Save the buffer address for scanf");		
 				e.emit_x86C("push", "scanfInt", "Save integer format string for scanf");
 				e.emit_x86Call("scanf", "execute function");
-				paramCount++;
+				// move the contents of the buffer back into the accumulator
+				e.emit_x86LR("mov", "bufInt", ax, "move the contents of the buffer to the accumulator");
+				paramCount+=2;
 			}
 			else
 				e.emit_x86Call(dPtr->name, "execute function");
 							
 			// clean up the stack
 			e.emit_x86CR("add", WORDSIZE*paramCount, sp, "clean up the stack frame");
-			break;			
+			break;		
+			
 	}
 	
 	if (sibling != NULL) {
