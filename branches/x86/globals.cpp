@@ -34,12 +34,12 @@ void TreeNode::GenCode(CodeEmitter &e, bool travSib) {
 		sibling->GenCode(e, true);
 }
 
-void TreeNode::GenCode_x86(CodeEmitter &e) {
+void TreeNode::GenCode_x86(CodeEmitter &e, bool travSib) {
 	for (short i=0; i<MAXCHILDREN; i++)
 		if (child[i] != NULL)
-			child[i]->GenCode_x86(e);
+			child[i]->GenCode_x86(e, true);
 	if (sibling != NULL)
-		sibling->GenCode_x86(e);
+		sibling->GenCode_x86(e, true);
 }
 
 void TreeNode::CodeGeneration(CodeEmitter &e) {
@@ -71,7 +71,7 @@ void TreeNode::CodeGeneration_x86(CodeEmitter &e) {
 	e.emit_x86Directive(".text");
 	e.emit_x86Directive(".globl main");
 	
-	GenCode_x86(e);
+	GenCode_x86(e, true);
 }
 
 void TreeNode::GenProlog(int &jumpMain, CodeEmitter &e) const {
@@ -345,7 +345,7 @@ void TreeNode::PrintError(ostream &out, int errorNum, int lineno,
 	out << '.' << endl;
 }
 
-void ExpressionNode::GenCode_x86(CodeEmitter &e) {
+void ExpressionNode::GenCode_x86(CodeEmitter &e, bool travSib) {
 	DeclarationNode *dPtr;
 	ExpressionNode *argPtr;
 	int localToff, boolSkipLoc, currentLoc;
@@ -355,7 +355,7 @@ void ExpressionNode::GenCode_x86(CodeEmitter &e) {
 		case OpK:
 			// process left child
 			if (child[0] != NULL)
-				child[0]->GenCode_x86(e);
+				child[0]->GenCode_x86(e, true);
 
 			if (child[1] != NULL) {
 				isUnary = false;
@@ -365,7 +365,7 @@ void ExpressionNode::GenCode_x86(CodeEmitter &e) {
 				e.emit_x86R1("push", ax, "save left side");
 								
 				// process right child
-				child[1]->GenCode_x86(e);
+				child[1]->GenCode_x86(e, true);
 
 				// load left back into the accumulator
 				toff = localToff;
@@ -392,11 +392,11 @@ void ExpressionNode::GenCode_x86(CodeEmitter &e) {
 				e.emit_x86R1("idiv", cx, "");
 				e.emit_x86R2("mov", dx, ax, "complete op %");			
 			} else if (op == "&&") {
-				e.emit_x86R2("and", ax, dx, "logical AND");
-				e.emit_x86R1("JE", "<some label>", "Jump if AND was true"); 
+				e.emit_x86R2("and", dx, ax, "logical AND");
+				//e.emit_x86R1("JE", "<some label>", "Jump if AND was true"); 
 			} else if (op == "||") {
-				e.emit_x86R2("or", ax, dx, "logical OR");
-				e.emit_x86R1("JE", "<some label>", "Jump if OR was true");
+				e.emit_x86R2("or", dx, ax, "logical OR");
+				//e.emit_x86R1("JE", "<some label>", "Jump if OR was true");
 			} else if (op == "!") 
 				e.emit_x86R1("not", ax, "logical NOT");				
 			else if (op == "-" and isUnary)
@@ -430,7 +430,7 @@ void ExpressionNode::GenCode_x86(CodeEmitter &e) {
 		case AssignK:
 			// process RHS of assignment
 			if (child[1] != NULL)
-				child[1]->GenCode_x86(e);
+				child[1]->GenCode_x86(e, true);
 
 			// variable will be in the left child
 			dPtr = ((ExpressionNode *)this->child[0])->dPtr;
@@ -442,12 +442,12 @@ void ExpressionNode::GenCode_x86(CodeEmitter &e) {
 				e.emit_x86R1("push", ax, "Store RHS of assignment");			
 
 				if (this->child[0]->child[0] != NULL)
-					this->child[0]->child[0]->GenCode_x86(e); 
+					this->child[0]->child[0]->GenCode_x86(e, true); 
 					// array index will be in ac
 				e.emit_x86R1("pop", dx, "Load RHS value into dx");
 				// value will be in ac2 
 				if (dPtr->theScope == Parameter)
-					e.emit_x86MR("lea", dPtr->offset, (dPtr->theScope == TreeNode::Global)?cx:bp, cx, "load array base address");
+					e.emit_x86MR("mov", dPtr->offset, (dPtr->theScope == TreeNode::Global)?cx:bp, cx, "load array base address");
 				else
 					e.emit_x86MR("lea", dPtr->offset, (dPtr->theScope == TreeNode::Global)?cx:bp, cx, "load array base address");
 				// array base will be in ac1
@@ -467,15 +467,15 @@ void ExpressionNode::GenCode_x86(CodeEmitter &e) {
 				// is this array indexed?
 				if (child[0] == NULL) {  // must be a parameter
 					if (this->dPtr->theScope == TreeNode::Parameter)
-						e.emit_x86MR("lea", this->dPtr->offset, (this->dPtr->theScope == TreeNode::Global)?cx:bp, cx, "load base address of array " + this->name);
+						e.emit_x86MR("mov", this->dPtr->offset, (this->dPtr->theScope == TreeNode::Global)?cx:bp, ax, "load base address of array " + this->name);
 					else
-						e.emit_x86MR("lea", this->dPtr->offset, (this->dPtr->theScope == TreeNode::Global)?cx:bp, cx, "load base address of array " + this->name);
+						e.emit_x86MR("lea", this->dPtr->offset, (this->dPtr->theScope == TreeNode::Global)?cx:bp, ax, "load base address of array " + this->name);
 				}
 				else { 
-					child[0]->GenCode_x86(e);
+					child[0]->GenCode_x86(e, true);
 					// index will be in ac
 					if (this->dPtr->theScope == TreeNode::Parameter)
-						e.emit_x86MR("lea", this->dPtr->offset, (this->dPtr->theScope == TreeNode::Global)?cx:bp, cx, "load base address of array " + this->name);
+						e.emit_x86MR("mov", this->dPtr->offset, (this->dPtr->theScope == TreeNode::Global)?cx:bp, cx, "load base address of array " + this->name);
 					else
 						e.emit_x86MR("lea", this->dPtr->offset, (this->dPtr->theScope == TreeNode::Global)?cx:bp, cx, "load base address of array " + this->name);
 					
@@ -488,9 +488,11 @@ void ExpressionNode::GenCode_x86(CodeEmitter &e) {
 			break;
 		case CallK:
 			// C calling convetions (slightly simplified)
-			// parameters are pushed on the stack in reverse order (TODO: Reverse order)
+			// parameters are pushed on the stack in reverse order
 			// parameters are removed from the stack after the call is complete
 			// return values are returned in (eax)
+			
+			vector<ExpressionNode *> args;  // used to "reverse" the current sibling pointer scheme
 				
 			dPtr = (DeclarationNode *)symtab->lookup(name.c_str());
 			int paramCount = 0;
@@ -499,12 +501,18 @@ void ExpressionNode::GenCode_x86(CodeEmitter &e) {
 			argPtr = (ExpressionNode *)this->child[0];	// set the parameter pointer to the function declaration parameters
 			//localToff = toff;
 			while (argPtr != NULL) {
+				args.push_back(argPtr);
+				argPtr = (ExpressionNode *)argPtr->sibling;
+			}
+			
+			// Now iterate through the vector backwards to get the reverse order
+			vector<ExpressionNode *>::reverse_iterator revIter;
+			for (revIter = args.rbegin(); revIter != args.rend(); revIter++) {				
 				//localToff--;
 				//toff--;
-				argPtr->GenCode_x86(e);
+				(*revIter)->GenCode_x86(e, false);
 				// store expression result
 				e.emit_x86R1("push", ax, "Save parameter");				
-				argPtr = (ExpressionNode *)argPtr->sibling;
 				paramCount++;
 			}
 
@@ -534,8 +542,8 @@ void ExpressionNode::GenCode_x86(CodeEmitter &e) {
 			
 	}
 	
-	if (sibling != NULL) {
-		sibling->GenCode_x86(e);
+	if (sibling != NULL && travSib) {			
+		sibling->GenCode_x86(e, true);
 	}
 	
 }
@@ -708,7 +716,7 @@ void ExpressionNode::GenCode(CodeEmitter &e, bool travSib) {
 						e.emitRM("LDA", ac, this->dPtr->offset, (this->dPtr->theScope == TreeNode::Global)?gp:fp, "Load address of base of array " + this->name);
 				}
 				else { 
-					child[0]->GenCode_x86(e);
+					child[0]->GenCode_x86(e, true);
 					// index will be in ac
 					if (this->dPtr->theScope == TreeNode::Parameter)
 						e.emitRM("LD", ac1, this->dPtr->offset, (this->dPtr->theScope == TreeNode::Global)?gp:fp, "Load address of base of array " + this->name);
@@ -840,7 +848,7 @@ void ExpressionNode::ScopeAndType(ostream &out, int &numErrors) {
 			lookupTypes(op, lhs_decl, rhs_decl, returnType);	// populate the last three variable from the function
 
 			//DEBUG 
-			/*if (lineNumber == 26) {
+			/*if (lineNumber == 25) {
 				cerr << "op: " << op << "\nlhs_decl: " << PrintType(lhs_decl) << " lhs_type: " 
 					<< PrintType(lhs_type) << "\nrhs_decl: " << PrintType(rhs_decl)
 					<< " rhs_type: " << PrintType(rhs_type) << "\nlhs_isArray: " 
@@ -1057,7 +1065,7 @@ void ExpressionNode::lookupTypes(const string &op, Types &lhs, Types &rhs, Types
 	}	
 }
 
-void StatementNode::GenCode_x86(CodeEmitter &e) {
+void StatementNode::GenCode_x86(CodeEmitter &e, bool travSib) {
 	ostringstream oss;
 	int currLabel = labelnum;
 	int skipLoc, currLoc;
@@ -1069,28 +1077,29 @@ void StatementNode::GenCode_x86(CodeEmitter &e) {
 			oss << labelnum++;
 			// Test Condition
 			if (child[0] != NULL)
-				child[0]->GenCode_x86(e);
+				child[0]->GenCode_x86(e, true);
 						
-			e.emit_x86CR("cmp", 1, ax, "if condition check");
+			e.emit_x86CR("cmp", 0, ax, "if condition check");
 			e.emit_x86J("je", "IF_" + oss.str() + "_E", "jump past the then part");
 			//skipLoc = e.emitSkip(1);
 
 			//e.emitComment("THEN");
 			// Then part
 			if (child[1] != NULL) {
-				child[1]->GenCode_x86(e);
+				child[1]->GenCode_x86(e, true);
 				e.emit_x86J("jmp", "IF_" + oss.str() + "_D", "jump to the end of the if statement (done)");
-			}
+			}			
 			// Else part
+			e.emit_x86Label("IF_" + oss.str() + "_E");
 			if (child[2] != NULL) {
-				e.emit_x86Label("IF_" + oss.str() + "_E");
+				
 				//currLoc = e.emitSkip(1);
 				//e.emitBackup(skipLoc);
 				//e.emitRMAbs("JLT", ac, currLoc+1, "jump to else if false");
 				//e.emitRestore();
 				//skipLoc = currLoc;
 
-				child[2]->GenCode_x86(e);
+				child[2]->GenCode_x86(e, true);
 				//currLoc = e.emitSkip(0);
 				//e.emitBackup(skipLoc);
 				//e.emitRMAbs("LDA", pc, currLoc, "jump past else part");
@@ -1108,7 +1117,7 @@ void StatementNode::GenCode_x86(CodeEmitter &e) {
 		case CompK:
 			e.emit_x86Comment("BEGIN SCOPE");
 			if (child[1] != NULL)
-				child[1]->GenCode_x86(e);
+				child[1]->GenCode_x86(e, true);
 			e.emit_x86Comment("END SCOPE");
 			break;
 		case WhileK:
@@ -1118,16 +1127,16 @@ void StatementNode::GenCode_x86(CodeEmitter &e) {
 			
 			// Test Condition
 			if (child[0] != NULL)
-				child[0]->GenCode_x86(e);
-			e.emit_x86CR("cmp", 1, ax, "while condition check");
-			e.emit_x86J("jne", "WHILE_" + oss.str() + "_E", "break out of loop if false");
+				child[0]->GenCode_x86(e, true);
+			e.emit_x86CR("cmp", 0, ax, "while condition check");
+			e.emit_x86J("je", "WHILE_" + oss.str() + "_E", "break out of loop if false");
 			
 			//skipLoc = e.emitSkip(1);
 
 			e.emit_x86Comment("WHILE BODY");
 			// While Body
 			if (child[1] != NULL)
-				child[1]->GenCode_x86(e);
+				child[1]->GenCode_x86(e, true);
 			e.emit_x86J("jmp", "WHILE_" + oss.str() + "_B", "return to the top of the while loop");
 						
 			// Save current location to jump when While cond. is false
@@ -1141,7 +1150,7 @@ void StatementNode::GenCode_x86(CodeEmitter &e) {
 		case ReturnK:
 			e.emit_x86Comment("RETURN");
 			if (child[0] != NULL)
-				child[0]->GenCode_x86(e);
+				child[0]->GenCode_x86(e, true);
 
 			//e.emitRM("LDA", rt, 0, ac, "copy result to rt register");
 			//e.emitRM("LD", ac, -1, fp, "load return address"); // Return address is one off from frame pointer
@@ -1152,7 +1161,7 @@ void StatementNode::GenCode_x86(CodeEmitter &e) {
 
 	if (sibling != NULL) {
 		e.emit_x86Comment(NO_COMMENT);
-		sibling->GenCode_x86(e);
+		sibling->GenCode_x86(e, true);
 	}
 }
 
@@ -1350,7 +1359,7 @@ void StatementNode::ScopeAndType(ostream &out, int &numErrors) {
 	return;
 }
 
-void DeclarationNode::GenCode_x86(CodeEmitter &e) {
+void DeclarationNode::GenCode_x86(CodeEmitter &e, bool travSib) {
 	DeclarationNode *dPtr;
 	string tempComment;
 
@@ -1387,7 +1396,7 @@ void DeclarationNode::GenCode_x86(CodeEmitter &e) {
 
 		// Function Body
 		if (child[1] != NULL) {
-			child[1]->GenCode_x86(e);
+			child[1]->GenCode_x86(e, true);
 		}
 		
 		e.emit_x86CR("sub", size*WORDSIZE, sp, "Adjust top of stack to destroy local variables");
@@ -1409,7 +1418,7 @@ void DeclarationNode::GenCode_x86(CodeEmitter &e) {
 	}
 
 	if (sibling != NULL)
-		sibling->GenCode_x86(e);
+		sibling->GenCode_x86(e, true);
 }
 
 void DeclarationNode::GenCode(CodeEmitter &e, bool travSib) {
