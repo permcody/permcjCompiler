@@ -4,6 +4,7 @@
 #include <iostream>
 #include <string>
 #include <sstream>
+#include <vector>
 
 using namespace std;
 
@@ -35,17 +36,23 @@ using namespace std;
 #ifdef BITS64 
 #define WORDSIZE 8
 #define ax "rax"
-#define sp "rsp"
-#define bp "rbp"
-#define dx "rdx"
 #define bx "rbx"
+#define cx "rcx"
+#define dx "rdx"
+#define bp "rbp"
+#define sp "rsp"
+#define si "rsi"
+#define di "rdi"
 #else
 #define WORDSIZE 4
 #define ax "eax"
-#define sp "esp"
-#define bp "ebp"
-#define dx "edx"
 #define bx "ebx"
+#define cx "ecx"
+#define dx "edx"
+#define bp "ebp"
+#define sp "esp"
+#define si "esi"
+#define di "edi"
 #endif
 
 
@@ -80,20 +87,27 @@ public:
 	int emitSkip(int howMany);
 	void emitBackup(int loc);
 	void emitRestore(void);
-	
+		
+	void emitEndFunction();
 	void emit_x86Comment(const string &c);
 	void emit_x86(const string &op);
 	void emit_x86R1(const string &op, const string &reg, const string &c);
 	void emit_x86R2(const string &op, const string &reg1, const string &reg2, const string &c);
 	void emit_x86CR(const string &op, int im, const string &reg, const string &c);
+	void emit_x86RC(const string &op, const string &reg, int im, const string &c);
+	void emit_x86C(const string &op, const string &im, const string &c);
+	void emit_x86J(const string &op, const string &label, const string &c);
 	void emit_x86MR(const string &op, int offset, const string &regMem, const string &reg, const string &c);
 	void emit_x86RM(const string &op, const string &reg, int offset, const string &regMem, const string &c);
+	void emit_x86M2R(const string &op, const string &regBase, const string &regIndex, const string &reg, const string &c);
+	void emit_x86RM2(const string &op, const string &reg, const string &regBase, const string &regIndex, const string &c);
 	void emit_x86Label(const string &label);
 	void emit_x86Directive(const string &directive);
 	void emit_x86Call(const string &functionName, const string &c);  
 
 private:
 	ostream *code; // The stream to output to
+	vector<string> codeContainer;	// The string stream used for backpatch operations
 	int emitLoc; //  TM location number for current instruction emission
 	int highEmitLoc; 
 	bool traceCode;

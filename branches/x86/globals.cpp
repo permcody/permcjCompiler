@@ -18,6 +18,7 @@ int TreeNode::foff = IFRAMEOFFSET;
 int TreeNode::poff = PARAMOFFSET; // used by X86 only (parameters are up from the frame pointer (bp)
 int TreeNode::toff = 0;
 int TreeNode::jumpMain = -1;
+int TreeNode::labelnum = 0;
 // ********************** static initialization ********************************
 
 TreeNode::TreeNode(NodeKind sKind) : sibling(NULL), lineNumber(0), kind(sKind) {
@@ -51,8 +52,15 @@ void TreeNode::CodeGeneration(CodeEmitter &e) {
 }
 
 void TreeNode::CodeGeneration_x86(CodeEmitter &e) {
-
 	// Generate a basic GNU Assembler file
+
+	// Template printing setup (hack to use printf for printing basic integers)
+	e.emit_x86Directive(".data");
+	e.emit_x86Label("printfInt");
+	e.emit_x86Directive("\t.string \"\%d\\n\"\n");
+	e.emit_x86Label("scanfInt");
+	e.emit_x86Directive("\t.string \"\%d\"\n");
+	
 	e.emit_x86Directive(".text");
 	e.emit_x86Directive(".globl main");
 	
@@ -117,10 +125,10 @@ TreeNode *TreeNode::AddIOFunctions() {
 	DeclarationNode *tPtr, *dNode;
 
 #ifdef X86
-	// Add Declaration for int putchar(int c)
+	// Add Declaration for int print(int c)
 	dNode = new DeclarationNode(TreeNode::FuncK);
-	dNode->type = Int;
-	dNode->name = "putchar";
+	dNode->type = Void;
+	dNode->name = "output";
 	dNode->lineNumber = -1;  //unused
 	dNode->offset = -1;  //unused
 	dNode->sibling = this;
@@ -132,6 +140,16 @@ TreeNode *TreeNode::AddIOFunctions() {
     dNode->lineNumber = -1;
 	dNode->size = 1;
 	tPtr->child[0] = (TreeNode *)dNode;
+		
+	// Add Declaration for int input()
+	dNode = new DeclarationNode(TreeNode::FuncK);
+	dNode->type = Int;
+	dNode->name = "input";
+	dNode->lineNumber = -1;  //unused
+	dNode->offset = -1;  //unused
+	dNode->sibling = this;
+	dNode->sibling = (TreeNode *)tPtr;
+	tPtr = dNode;
 
 #else
 
@@ -344,56 +362,62 @@ void ExpressionNode::GenCode_x86(CodeEmitter &e) {
 
 				// load left back into the accumulator
 				toff = localToff;
-				e.emit_x86R1("pop", dx, "load left side into our second accumulator");				
+				
+				e.emit_x86R2("mov", ax, dx, "mov the right side operand into the dx register");
+				e.emit_x86R1("pop", ax, "load left side into our main accumulator");				
 			}
 				
 			// process operators
 			// arithmetic operators
-			if (op == "+") {
-				e.emit_x86R2("add", ax, dx, "op +");
-				e.emit_x86R2("mov", dx, ax, "move operation result to main accumulator");				
-			} else if (op == "-" && !isUnary) {
-				e.emit_x86R2("sub", ax, dx, "op -");
-				e.emit_x86R2("mov", dx, ax, "move operation result to main accumulator");
-			} else if (op == "*") {
-				e.emit_x86R2("imul", ax, dx, "op *");
-				e.emit_x86R2("mov", dx, ax, "move operation result to main accumulator");
-			} else if (op == "/") {
-				e.emit_x86R2("idiv", ax, dx, "op /");
-				e.emit_x86R2("mov", dx, ax, "move operation result to main accumulator");
+			if (op == "+") 
+				e.emit_x86R2("add", dx, ax, "op +");								
+			else if (op == "-" && !isUnary) 
+				e.emit_x86R2("sub", dx, ax, "op -");				
+			else if (op == "*") 
+				e.emit_x86R1("imul", dx, "op *");				
+			else if (op == "/") {
+				e.emit_x86R2("mov", dx, cx, "setup for op /");
+				e.emit_x86R2("xor", dx, dx, "");
+				e.emit_x86R1("idiv", cx, "complete op /");				
 			} else if (op == "%") {
-				e.emit_x86R2("FIXME", "", "", "begin op %");				
+				e.emit_x86R2("mov", dx, cx, "setup for op %");
+				e.emit_x86R2("xor", dx, dx, "");
+				e.emit_x86R1("idiv", cx, "");
+				e.emit_x86R2("mov", dx, ax, "complete op %");			
 			} else if (op == "&&") {
 				e.emit_x86R2("and", ax, dx, "logical AND");
 				e.emit_x86R1("JE", "<some label>", "Jump if AND was true"); 
 			} else if (op == "||") {
 				e.emit_x86R2("or", ax, dx, "logical OR");
 				e.emit_x86R1("JE", "<some label>", "Jump if OR was true");
-			} else if (op == "!") {
+			} else if (op == "!") 
 				e.emit_x86R1("not", ax, "logical NOT");				
-			} else if (op == "-" and isUnary) {
+			else if (op == "-" and isUnary)
 				e.emit_x86R1("neg", ax, "unary - (negation)");				
-			}
 			else { // comparison operators
-				e.emit_x86R2("FIXME", "", "", "prepare for comparison op");
+				e.emit_x86R2("cmp", dx, ax, "prepare for comparison op");
 				
-				/*if (op == "==") 
-					e.emitRM("JEQ", ac, 2, pc, "op ==");
+				ostringstream oss;
+				oss << labelnum++;
+				if (op == "==") 
+					e.emit_x86J("je", "CMP_" + oss.str() + "_T", "op ==");
 				else if (op == "!=")
-					e.emitRM("JNE", ac, 2, pc, "op !=");
+					e.emit_x86J("jne", "CMP_" + oss.str() + "_T", "op !=");
 				else if (op == "<")
-					e.emitRM("JLT", ac, 2, pc, "op <");					
+					e.emit_x86J("jl", "CMP_" + oss.str() + "_T", "op <");					
 				else if (op == "<=")
-					e.emitRM("JLE", ac, 2, pc, "op <=");				
+					e.emit_x86J("jle", "CMP_" + oss.str() + "_T", "op <=");				
 				else if (op == ">")
-					e.emitRM("JGT", ac, 2, pc, "op >");
+					e.emit_x86J("jg", "CMP_" + oss.str() + "_T", "op >");
 				else if (op == ">=")
-					e.emitRM("JGE", ac, 2, pc, "op >=");
-
-				e.emitRM("LDC", ac, 0, ac3, "load false into ac");
-				e.emitRM("LDA", pc, 1, pc, "jump past true case");
-				e.emitRM("LDC", ac, 1, ac3, "load true into ac");
-				*/
+					e.emit_x86J("jge", "CMP_" + oss.str() + "_T", "op >=");
+				
+				e.emit_x86R2("xor", ax, ax, "false case for comparison");
+				e.emit_x86J("jmp", "CMP_" + oss.str() + "_F", "jump past true case");
+				e.emit_x86Label("CMP_" + oss.str() + "_T"); 
+				e.emit_x86CR("mov", 1, ax, "load true into ac");
+				e.emit_x86Label("CMP_" + oss.str() + "_F");
+								
 			}
 			break;	
 		case AssignK:
@@ -407,28 +431,25 @@ void ExpressionNode::GenCode_x86(CodeEmitter &e) {
 			// find out if this is an array or not
 			if (dPtr->isArray) {
 				// save RHS side
-				/* localToff = toff; */
-				e.emit_x86R1("FIXME", "", "Array Assignment");
+				//localToff = toff;
+				e.emit_x86R1("push", ax, "Store RHS of assignment");			
 
-				/*if (this->child[0]->child[0] != NULL)
+				if (this->child[0]->child[0] != NULL)
 					this->child[0]->child[0]->GenCode_x86(e); 
 					// array index will be in ac
-				e.emitRM("LD", ac2, localToff, fp, "Load RHS value");
+				e.emit_x86R1("pop", dx, "Load RHS value into dx");
 				// value will be in ac2 
 				if (dPtr->theScope == Parameter)
-					e.emitRM("LD", ac1, dPtr->offset, (dPtr->theScope == TreeNode::Global)?gp:fp, "array base");
+					e.emit_x86MR("lea", dPtr->offset, (dPtr->theScope == TreeNode::Global)?cx:bp, cx, "load array base address");
 				else
-					e.emitRM("LDA", ac1, dPtr->offset, (dPtr->theScope == TreeNode::Global)?gp:fp, "array base");
+					e.emit_x86MR("lea", dPtr->offset, (dPtr->theScope == TreeNode::Global)?cx:bp, cx, "load array base address");
 				// array base will be in ac1
-				e.emitRO("SUB", ac, ac1, ac, "index off of the base");
-				e.emitRM("ST", ac2, 0, ac, "store indexed variable " + dPtr->name);
-				e.emitRM("LDA", ac, 0, ac2, "adjust ac");
-				*/
-				toff = localToff;
+				e.emit_x86RM2("mov", dx, cx, ax, "index off of the base and store the value");
+				//toff = localToff;
 			}
 			else {
 				// retrieve variable offset and scope to emit instruction
-				e.emit_x86RM("mov", ax, dPtr->offset, (dPtr->theScope == TreeNode::Global)?bx:bp, "store variable " + dPtr->name); 
+				e.emit_x86RM("mov", ax, dPtr->offset, (dPtr->theScope == TreeNode::Global)?cx:bp, "store variable " + dPtr->name); 
 			}	
 			break;
 		case ConstK:
@@ -437,27 +458,25 @@ void ExpressionNode::GenCode_x86(CodeEmitter &e) {
 		case IdK:
 			if (this->dPtr->isArray) {
 				// is this array indexed?
-				e.emit_x86R1("FIXME", "", "RHand Array Identifier");
-				/*if (child[0] == NULL) {  // must be a parameter
+				if (child[0] == NULL) {  // must be a parameter
 					if (this->dPtr->theScope == TreeNode::Parameter)
-						e.emitRM("LD", ac, this->dPtr->offset, (this->dPtr->theScope == TreeNode::Global)?gp:fp, "Load address of base of array " + this->name);
+						e.emit_x86MR("lea", this->dPtr->offset, (this->dPtr->theScope == TreeNode::Global)?cx:bp, cx, "load base address of array " + this->name);
 					else
-						e.emitRM("LDA", ac, this->dPtr->offset, (this->dPtr->theScope == TreeNode::Global)?gp:fp, "Load address of base of array " + this->name);
+						e.emit_x86MR("lea", this->dPtr->offset, (this->dPtr->theScope == TreeNode::Global)?cx:bp, cx, "load base address of array " + this->name);
 				}
 				else { 
-					child[0]->GenCode(e, true);
+					child[0]->GenCode_x86(e);
 					// index will be in ac
 					if (this->dPtr->theScope == TreeNode::Parameter)
-						e.emitRM("LD", ac1, this->dPtr->offset, (this->dPtr->theScope == TreeNode::Global)?gp:fp, "Load address of base of array " + this->name);
+						e.emit_x86MR("lea", this->dPtr->offset, (this->dPtr->theScope == TreeNode::Global)?cx:bp, cx, "load base address of array " + this->name);
 					else
-						e.emitRM("LDA", ac1, this->dPtr->offset, (this->dPtr->theScope == TreeNode::Global)?gp:fp, "Load address of base of array " + this->name);
-
-					e.emitRO("SUB", ac, ac1, ac, "index off of the base");
-					e.emitRM("LD", ac, 0, ac, "load the value");
-				}*/
+						e.emit_x86MR("lea", this->dPtr->offset, (this->dPtr->theScope == TreeNode::Global)?cx:bp, cx, "load base address of array " + this->name);
+					
+					e.emit_x86M2R("mov", cx, ax, ax, "index off of the base and load the value");					
+				}
 			}
 			else {
-				e.emit_x86MR("mov", this->dPtr->offset, (this->dPtr->theScope == TreeNode::Global)?bx:bp, ax, "load variable " + name);
+				e.emit_x86MR("mov", this->dPtr->offset, (this->dPtr->theScope == TreeNode::Global)?cx:bp, ax, "load variable " + name);
 			}
 			break;
 		case CallK:
@@ -485,8 +504,20 @@ void ExpressionNode::GenCode_x86(CodeEmitter &e) {
 			// restore toff
 			toff = localToff;
 
-			e.emit_x86Call(dPtr->name, "execute function");
-			
+			// Hack to print integers using the standard C printf function
+			if (dPtr->name == "output") {
+				e.emit_x86C("push", "printfInt", "Save integer format string for printf");
+				e.emit_x86Call("printf", "execute function");
+				paramCount++;
+			}
+			else if (dPtr->name == "input") {				
+				e.emit_x86C("push", "scanfInt", "Save integer format string for scanf");
+				e.emit_x86Call("scanf", "execute function");
+				paramCount++;
+			}
+			else
+				e.emit_x86Call(dPtr->name, "execute function");
+							
 			// clean up the stack
 			e.emit_x86CR("add", WORDSIZE*paramCount, sp, "clean up the stack frame");
 			break;			
@@ -1016,15 +1047,101 @@ void ExpressionNode::lookupTypes(const string &op, Types &lhs, Types &rhs, Types
 }
 
 void StatementNode::GenCode_x86(CodeEmitter &e) {
-	//cerr << "GenCode_x86: StatementNode\n";
+	ostringstream oss;
+	int currLabel = labelnum;
+	int skipLoc, currLoc;
+	
 	switch (subKind) {
-		default:
+		case IfK:
+			e.emit_x86Comment("IF");
+			
+			oss << labelnum++;
+			// Test Condition
 			if (child[0] != NULL)
 				child[0]->GenCode_x86(e);
+						
+			e.emit_x86CR("cmp", 1, ax, "if condition check");
+			e.emit_x86J("je", "IF_" + oss.str() + "_E", "jump past the then part");
+			//skipLoc = e.emitSkip(1);
+
+			//e.emitComment("THEN");
+			// Then part
+			if (child[1] != NULL) {
+				child[1]->GenCode_x86(e);
+				e.emit_x86J("jmp", "IF_" + oss.str() + "_D", "jump to the end of the if statement (done)");
+			}
+			// Else part
+			if (child[2] != NULL) {
+				e.emit_x86Label("IF_" + oss.str() + "_E");
+				//currLoc = e.emitSkip(1);
+				//e.emitBackup(skipLoc);
+				//e.emitRMAbs("JLT", ac, currLoc+1, "jump to else if false");
+				//e.emitRestore();
+				//skipLoc = currLoc;
+
+				child[2]->GenCode_x86(e);
+				//currLoc = e.emitSkip(0);
+				//e.emitBackup(skipLoc);
+				//e.emitRMAbs("LDA", pc, currLoc, "jump past else part");
+				//e.emitRestore();				
+			}
+			//else {
+			//	currLoc = e.emitSkip(0);
+			//	e.emitBackup(skipLoc);
+			//	e.emitRMAbs("JLT", ac, currLoc, "jump past then if false");
+			//	e.emitRestore();			
+			//}
+			e.emit_x86Label("IF_" + oss.str() + "_D");
+			break;
+
+		case CompK:
+			e.emit_x86Comment("BEGIN SCOPE");
 			if (child[1] != NULL)
 				child[1]->GenCode_x86(e);
-			if (sibling != NULL)
-				sibling->GenCode_x86(e);
+			e.emit_x86Comment("END SCOPE");
+			break;
+		case WhileK:
+			oss << labelnum++;
+			e.emit_x86Label("WHILE_" + oss.str() + "_B");
+			//currLoc = e.emitSkip(0);
+			
+			// Test Condition
+			if (child[0] != NULL)
+				child[0]->GenCode_x86(e);
+			e.emit_x86CR("cmp", 1, ax, "while condition check");
+			e.emit_x86J("jne", "WHILE_" + oss.str() + "_E", "break out of loop if false");
+			
+			//skipLoc = e.emitSkip(1);
+
+			e.emit_x86Comment("WHILE BODY");
+			// While Body
+			if (child[1] != NULL)
+				child[1]->GenCode_x86(e);
+			e.emit_x86J("jmp", "WHILE_" + oss.str() + "_B", "return to the top of the while loop");
+						
+			// Save current location to jump when While cond. is false
+			//currLoc = e.emitSkip(0);
+			//e.emitBackup(skipLoc);
+			//e.emitRMAbs("JLT", ac, currLoc, "break out of loop if false");
+			//e.emitRestore();
+			e.emit_x86Label("WHILE_" + oss.str() + "_E");
+			break;
+
+		case ReturnK:
+			e.emit_x86Comment("RETURN");
+			if (child[0] != NULL)
+				child[0]->GenCode_x86(e);
+
+			//e.emitRM("LDA", rt, 0, ac, "copy result to rt register");
+			//e.emitRM("LD", ac, -1, fp, "load return address"); // Return address is one off from frame pointer
+			//e.emitRM("LD", fp, 0, fp, "adjust fp");
+			//e.emitRM("LDA", pc, 0, ac, "Return");
+			break;
+	}
+
+	if (sibling != NULL) {
+		e.emit_x86Comment(NO_COMMENT);
+		sibling->GenCode_x86(e);
 	}
 }
 
@@ -1227,7 +1344,7 @@ void DeclarationNode::GenCode_x86(CodeEmitter &e) {
 	string tempComment;
 
 	// Don't generate code for IO functions
-	if (subKind == FuncK && name != "putchar") {
+	if (subKind == FuncK && name != "input" && name != "output") {
 		// Lookup in symbol table - we'll need to set the "offset" variable
 		dPtr = (DeclarationNode *)this;
 		//dPtr->offset = e.emitSkip(0); // save the current location for calls later
@@ -1236,7 +1353,7 @@ void DeclarationNode::GenCode_x86(CodeEmitter &e) {
 		tempComment = "Function " + name + " returns " + PrintType(type);
 		e.emit_x86Comment(tempComment.c_str());
 		e.emit_x86Label(name);
-
+		
 		// Standard C Opening
 		e.emit_x86Comment("Standard C Opening");
 		e.emit_x86R1("push", bp, "");
@@ -1274,7 +1391,10 @@ void DeclarationNode::GenCode_x86(CodeEmitter &e) {
 		e.emit_x86R2("mov", bp, sp, "");
 		e.emit_x86R1("pop", bp, "");
 		e.emit_x86("ret");
-		e.emit_x86Comment(("End Function " + name).c_str());			
+		e.emit_x86Comment(("End Function " + name).c_str());		
+		
+		// Signal the code emitter that we are at the end of the funtion
+		e.emitEndFunction();
 	}
 
 	if (sibling != NULL)

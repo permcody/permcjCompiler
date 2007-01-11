@@ -54,6 +54,7 @@ public:
 	static int foff;	// frame offset
 	static int toff;	// temporary offset
 	static int poff;	// param offset
+	static int labelnum;  // global label numbers (x86 only)
 	
 protected:
 	void virtual PrintTree(ostream &out, int spaces, int siblingNum) const;

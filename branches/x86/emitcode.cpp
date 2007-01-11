@@ -153,7 +153,6 @@ void CodeEmitter::emitBackup(int loc)
     emitLoc = loc;
 }
 
-
 // emitRestore restores the current 
 // code position to the highest previously
 // unemitted position
@@ -163,82 +162,174 @@ void CodeEmitter::emitRestore(void)
     emitLoc = highEmitLoc;
 }
 
+void CodeEmitter::emitEndFunction()
+{
+	vector<string>::iterator iter;
+	
+	for (iter = codeContainer.begin( ); iter != codeContainer.end( ); iter++)
+		*code << *iter;
+	codeContainer.clear();	
+}
 
 void CodeEmitter::emit_x86R1(const string &op, const string &reg, const string &c)
 {
-	*code 	<< "\t" 
+	ostringstream oss;
+	
+	oss	 	<< "\t" 
 			<< setw(8) << left << op
-		 	<< setw(16) << left << "%" + reg 
-		 	<< "# " << c << "\n";    
+		 	<< setw(22) << left << "%" + reg 
+		 	<< (c==""?"":"# ") << c << "\n";
+	codeContainer.push_back(oss.str());    
 }
 
 void CodeEmitter::emit_x86R2(const string &op, const string &reg1, const string &reg2, const string &c) 
 {
-	*code 	<< "\t" 
+	ostringstream oss;
+	
+	oss	 	<< "\t" 
 			<< setw(8) << left << op 
-			<< setw(16) << left << "%" + reg1 + ", " + "%" + reg2 
-			<< "# " << c << "\n";    
+			<< setw(22) << left << "%" + reg1 + ", " + "%" + reg2 
+			<< (c==""?"":"# ") << c << "\n";
+	codeContainer.push_back(oss.str());   
 }
 
 void CodeEmitter::emit_x86RM(const string &op, const string &reg, int offset, const string &regMem, const string &c)
 {
-	ostringstream oss;
-	oss << offset*WORDSIZE;
+	ostringstream oss, oss1;
+	oss1 << offset*WORDSIZE;
 			
-	*code 	<< "\t" 
+	oss	 	<< "\t" 
 			<< setw(8) << left << op
-			<< setw(16) << left << "%" + reg + ", " + oss.str() + "(" + "%" + regMem + ")" 
-			<< "# " << c << "\n"; 
+			<< setw(22) << left << "%" + reg + ", " + oss1.str() + "(" + "%" + regMem + ")" 
+			<< (c==""?"":"# ") << c << "\n"; 
+	codeContainer.push_back(oss.str());
 }
+
+void CodeEmitter::emit_x86M2R(const string &op, const string &regBase, const string &regIndex, const string &reg, const string &c)
+{
+	ostringstream oss, oss1;
+	oss1 << WORDSIZE;	
+		
+	oss		<< "\t"
+			<< setw(8) << left << op
+			<< setw(22) << left << "(%" + regBase + "," + "%" + regIndex + "," + oss1.str() + ")" + ", " + "%" + reg
+			<< (c==""?"":"# ") << c << "\n";
+	codeContainer.push_back(oss.str());
+} 
+
+void CodeEmitter::emit_x86RM2(const string &op, const string &reg, const string &regBase, const string &regIndex, const string &c)
+{
+	ostringstream oss, oss1;
+	oss1 << WORDSIZE;	
+	
+	oss		<< "\t"
+			<< setw(8) << left << op
+			<< setw(22) << left << "%" + reg + ", " + "(" + "%" + regBase + "," + "%" + regIndex + "," + oss1.str() + ")"
+			<< (c==""?"":"# ") << c << "\n";
+	codeContainer.push_back(oss.str());
+} 
 
 void CodeEmitter::emit_x86MR(const string &op, int offset, const string &regMem, const string &reg, const string &c)
 {
-	ostringstream oss;
-	oss << offset*WORDSIZE;
-	
-	*code	<< "\t"
+	ostringstream oss, oss1;
+	oss1 << offset*WORDSIZE;
+			
+	oss	 	<< "\t"
 			<< setw(8) << left << op 
-			<< setw(16) << left << oss.str() + "(" + "%" + regMem + ")" + ", " + "%" + reg 
-			<< "# " << c << "\n"; 
+			<< setw(22) << left << oss1.str() + "(" + "%" + regMem + ")" + ", " + "%" + reg 
+			<< (c==""?"":"# ") << c << "\n"; 
+	codeContainer.push_back(oss.str());
 }
 
 
 void CodeEmitter::emit_x86CR(const string &op, int im, const string &reg, const string &c)
 {
-	ostringstream oss;
-	oss << im;
-	
-	*code 	<< "\t" 
+	ostringstream oss, oss1;
+	oss1 << im;
+			
+	oss	 	<< "\t" 
 			<< setw(8) << left << op
-			<< setw(16) << left << "$" + oss.str() + ", " + "%" + reg 
-			<< "# " << c << "\n";
+			<< setw(22) << left << "$" + oss1.str() + ", " + "%" + reg 
+			<< (c==""?"":"# ") << c << "\n";
+	codeContainer.push_back(oss.str());
 }
+
+void CodeEmitter::emit_x86RC(const string &op, const string &reg, int im, const string &c)
+{
+	ostringstream oss, oss1;
+	oss1 << im;
+			
+	oss	 	<< "\t" 
+			<< setw(8) << left << op
+			<< setw(22) << left << "%" + reg + ", " + "$" + oss1.str() 
+			<< (c==""?"":"# ") << c << "\n";
+	codeContainer.push_back(oss.str());	
+}
+
+void CodeEmitter::emit_x86C(const string &op, const string &im, const string &c)
+{
+	ostringstream oss;
+	
+	oss	 	<< "\t" 
+			<< setw(8) << left << op
+			<< setw(22) << left << "$" + im  
+			<< (c==""?"":"# ") << c << "\n";
+	codeContainer.push_back(oss.str());
+}	
+
+void CodeEmitter::emit_x86J(const string &op, const string &label, const string &c)
+{
+	ostringstream oss;
+	
+	oss	 	<< "\t" 
+			<< setw(8) << left << op
+			<< setw(22) << left << label  
+			<< (c==""?"":"# ") << c << "\n";
+	codeContainer.push_back(oss.str());
+}	
 
 void CodeEmitter::emit_x86Call(const string &function, const string &c)
 {
-	*code 	<< "\t" 
+	ostringstream oss;
+	
+	oss	 	<< "\t" 
 			<< setw(8) << left << "call"
-		 	<< setw(16) << left << function 
-		 	<< "# " << c << "\n";    
+		 	<< setw(22) << left << function 
+		 	<< (c==""?"":"# ") << c << "\n";
+	codeContainer.push_back(oss.str());    
 }
 
 void CodeEmitter::emit_x86(const string &op)
 {
-	*code << "\t" << op << "\n";
+	ostringstream oss;
+	
+	oss 	<< "\t" << op << "\n";
+	codeContainer.push_back(oss.str());
 }
 
 void CodeEmitter::emit_x86Comment(const string &c)
 {
-    if (traceCode) *code << "\t# " << c << '\n';
+	ostringstream oss;
+			 	
+    if (traceCode) { 
+    		oss << "\t" << (c==""?"":"# ") << c << '\n';
+    		codeContainer.push_back(oss.str());
+    }
 }
 
 void CodeEmitter::emit_x86Label(const string &label)
 {
-	*code << label << ":\n";
+	ostringstream oss;
+	
+	oss	<< label << ":\n";
+	codeContainer.push_back(oss.str());
 }
 
 void CodeEmitter::emit_x86Directive(const string &directive)
 {
-	*code << directive << "\n";
+	ostringstream oss;
+	
+	oss	<< directive << "\n";
+	codeContainer.push_back(oss.str());
 }
 
