@@ -19,6 +19,7 @@ int TreeNode::poff = PARAMOFFSET; // used by X86 only (parameters are up from th
 int TreeNode::toff = 0;
 int TreeNode::jumpMain = -1;
 int TreeNode::labelnum = 0;
+vector<TreeNode *> TreeNode::globals_emitvec;
 // ********************** static initialization ********************************
 
 TreeNode::TreeNode(NodeKind sKind) : sibling(NULL), lineNumber(0), kind(sKind) {
@@ -54,10 +55,11 @@ void TreeNode::CodeGeneration(CodeEmitter &e) {
 void TreeNode::CodeGeneration_x86(CodeEmitter &e) {
 	// Generate a basic GNU Assembler file
 
-	// Uninitialized data section (setup a buffer area for scanf input)
-	e.emit_x86Directive(".bss");
-	e.emit_x86Label("bufInt");
-	e.emit_x86Directive("\t.long\n");	
+	e.emit_x86Directive(".text");
+	e.emit_x86Directive(".globl main");
+	e.emitEndFunction();
+
+	GenCode_x86(e, true);
 
 	// Setup a format string for the output function (printf) 
 	e.emit_x86Directive(".data");
@@ -67,11 +69,32 @@ void TreeNode::CodeGeneration_x86(CodeEmitter &e) {
 	// Setup a format string for the input function (scanf)
 	e.emit_x86Label("scanfInt");
 	e.emit_x86Directive("\t.string \"\%d\"\n");
+
+	// Uninitialized data section (setup a buffer area for scanf input)
+	e.emit_x86Directive(".bss");
+	//e.emit_x86Label("bufInt");
 	
-	e.emit_x86Directive(".text");
-	e.emit_x86Directive(".globl main");
+	ostringstream oss1;
+	oss1 << ".lcomm bufInt, " << WORDSIZE << "\n";
+	e.emit_x86Directive(oss1.str());
 	
-	GenCode_x86(e, true);
+	// Generate the labels for the global variables
+	e.emit_x86Comment("Globals");
+	
+	vector<TreeNode *>::iterator iter;
+	DeclarationNode *dPtr;
+	
+	
+	for (iter = globals_emitvec.begin(); iter != globals_emitvec.end(); iter++) {
+		dPtr = (DeclarationNode *)*iter;
+		ostringstream oss;
+		
+		oss << ".lcomm " << dPtr->name << ", " <<  dPtr->size*WORDSIZE << "\n";
+		e.emit_x86Directive(oss.str());
+		//e.emit_x86Label(dPtr->name);
+		//e.emit_x86Directive("\t.long");			
+	}	
+	e.emitEndFunction();	
 }
 
 void TreeNode::GenProlog(int &jumpMain, CodeEmitter &e) const {
@@ -132,7 +155,7 @@ TreeNode *TreeNode::AddIOFunctions() {
 	DeclarationNode *tPtr, *dNode;
 
 #ifdef X86
-	// Add Declaration for int print(int c)
+	// Add Declaration for void output(int)
 	dNode = new DeclarationNode(TreeNode::FuncK);
 	dNode->type = Void;
 	dNode->name = "output";
@@ -154,9 +177,33 @@ TreeNode *TreeNode::AddIOFunctions() {
 	dNode->name = "input";
 	dNode->lineNumber = -1;  //unused
 	dNode->offset = -1;  //unused
-	dNode->sibling = this;
 	dNode->sibling = (TreeNode *)tPtr;
 	tPtr = dNode;
+	
+	// Add Declaration for void outputb(bool)
+	dNode = new DeclarationNode(TreeNode::FuncK);
+	dNode->type = Void;
+	dNode->name = "outputb";
+	dNode->lineNumber = -1;  //unused
+	dNode->offset = -1;  //unused
+	dNode->sibling = (TreeNode *)tPtr;
+	tPtr = dNode;
+	// integer parameter
+	dNode = new DeclarationNode(TreeNode::ParamK);
+	dNode->type = Bool;
+	dNode->name = "*dummy*";
+    dNode->lineNumber = -1;
+	dNode->size = 1;
+	tPtr->child[0] = (TreeNode *)dNode;
+	
+	// Add Declaration for void bool inputb()
+	dNode = new DeclarationNode(TreeNode::FuncK);
+	dNode->type = Bool;
+	dNode->name = "inputb";
+	dNode->lineNumber = -1;  //unused
+	dNode->offset = -1;  //unused
+	dNode->sibling = (TreeNode *)tPtr;
+	tPtr = dNode;	
 
 #else
 
@@ -397,11 +444,13 @@ void ExpressionNode::GenCode_x86(CodeEmitter &e, bool travSib) {
 			} else if (op == "||") {
 				e.emit_x86R2("or", dx, ax, "logical OR");
 				//e.emit_x86R1("JE", "<some label>", "Jump if OR was true");
-			} else if (op == "!") 
-				e.emit_x86R1("not", ax, "logical NOT");				
-			else if (op == "-" and isUnary)
+			} else if (op == "-" && isUnary)
 				e.emit_x86R1("neg", ax, "unary - (negation)");				
 			else { // comparison operators
+				if (op == "!") {
+					// clear dx for comparison
+					e.emit_x86R2("xor", dx, dx, "clear dx for comparison");
+				}
 				e.emit_x86R2("cmp", dx, ax, "prepare for comparison op");
 				
 				ostringstream oss;
@@ -418,6 +467,9 @@ void ExpressionNode::GenCode_x86(CodeEmitter &e, bool travSib) {
 					e.emit_x86J("jg", "CMP_" + oss.str() + "_T", "op >");
 				else if (op == ">=")
 					e.emit_x86J("jge", "CMP_" + oss.str() + "_T", "op >=");
+				else if (op == "!")
+					e.emit_x86J("jz", "CMP_" + oss.str() + "_T", "op !");
+					
 				
 				e.emit_x86R2("xor", ax, ax, "false case for comparison");
 				e.emit_x86J("jmp", "CMP_" + oss.str() + "_F", "jump past true case");
@@ -520,12 +572,12 @@ void ExpressionNode::GenCode_x86(CodeEmitter &e, bool travSib) {
 			toff = localToff;
 
 			// Hack to print integers using the standard C printf function
-			if (dPtr->name == "output") {
+			if (dPtr->name == "output" || dPtr->name == "outputb") {
 				e.emit_x86C("push", "printfInt", "Save integer format string for printf");
 				e.emit_x86Call("printf", "execute function");
 				paramCount++;
 			}
-			else if (dPtr->name == "input") {		
+			else if (dPtr->name == "input" || dPtr->name == "inputb") {		
 				e.emit_x86C("push", "bufInt", "Save the buffer address for scanf");		
 				e.emit_x86C("push", "scanfInt", "Save integer format string for scanf");
 				e.emit_x86Call("scanf", "execute function");
@@ -533,6 +585,7 @@ void ExpressionNode::GenCode_x86(CodeEmitter &e, bool travSib) {
 				e.emit_x86LR("mov", "bufInt", ax, "move the contents of the buffer to the accumulator");
 				paramCount+=2;
 			}
+			
 			else
 				e.emit_x86Call(dPtr->name, "execute function");
 							
@@ -1363,8 +1416,14 @@ void DeclarationNode::GenCode_x86(CodeEmitter &e, bool travSib) {
 	DeclarationNode *dPtr;
 	string tempComment;
 
+	if (subKind == ParamK || subKind == VarK) {
+		// Keep track of all of the global variables and deal with them later
+		dPtr = (DeclarationNode *)this;
+		if (dPtr->theScope == TreeNode::Global)		
+			globals_emitvec.push_back(dPtr);		
+	} 
 	// Don't generate code for IO functions
-	if (subKind == FuncK && name != "input" && name != "output") {
+	else if (subKind == FuncK && name != "input" && name != "output" && name != "inputb" && name != "outputb") {
 		// Lookup in symbol table - we'll need to set the "offset" variable
 		dPtr = (DeclarationNode *)this;
 		//dPtr->offset = e.emitSkip(0); // save the current location for calls later

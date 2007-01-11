@@ -6,6 +6,7 @@
 #include <fstream>
 #include <string>
 #include <cstdlib>  // used for getopt
+#include <vector>
 #include "symtab.h"
 #include "emitcode.h"
 using namespace std;
@@ -55,6 +56,7 @@ public:
 	static int toff;	// temporary offset
 	static int poff;	// param offset
 	static int labelnum;  // global label numbers (x86 only)
+	static vector<TreeNode *> globals_emitvec; // global variable holder (x86 only)
 	
 protected:
 	void virtual PrintTree(ostream &out, int spaces, int siblingNum) const;
@@ -79,7 +81,7 @@ public:
 	int offset;
 	ScopeTypes theScope;
 	//bool isGlobal;
-	Types returnType;
+	Types returnType;	
 
 	DeclarationNode(DeclKind dKind) 
 		: TreeNode(DeclK), subKind(dKind), type(Undefined), size(0), isArray(false), 
@@ -120,7 +122,6 @@ public:
 	void virtual GenCode(CodeEmitter &e, bool travSib);
 	void virtual GenCode_x86(CodeEmitter &e, bool travSib);
 };
-
 
 
 #endif

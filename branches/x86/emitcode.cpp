@@ -323,7 +323,7 @@ void CodeEmitter::emit_x86Comment(const string &c)
 	ostringstream oss;
 			 	
     if (traceCode) { 
-    		oss << "\t" << (c==""?"":"# ") << c << '\n';
+    		oss << (c==""?"":"# ") << c << '\n';
     		codeContainer.push_back(oss.str());
     }
 }
