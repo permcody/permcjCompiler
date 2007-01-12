@@ -508,7 +508,10 @@ void ExpressionNode::GenCode_x86(CodeEmitter &e, bool travSib) {
 			}
 			else {
 				// retrieve variable offset and scope to emit instruction
-				e.emit_x86RM("mov", ax, dPtr->offset, (dPtr->theScope == TreeNode::Global)?cx:bp, "store variable " + dPtr->name); 
+				if (dPtr->theScope == TreeNode::Global) 
+					e.emit_x86RL("mov", ax, dPtr->name, "store global variable " + name);
+				else				
+					e.emit_x86RM("mov", ax, dPtr->offset, bp, "store variable " + dPtr->name); 
 			}	
 			break;
 		case ConstK:
@@ -535,7 +538,10 @@ void ExpressionNode::GenCode_x86(CodeEmitter &e, bool travSib) {
 				}
 			}
 			else {
-				e.emit_x86MR("mov", this->dPtr->offset, (this->dPtr->theScope == TreeNode::Global)?cx:bp, ax, "load variable " + name);
+				if (this->dPtr->theScope == TreeNode::Global)
+					e.emit_x86LR("mov", this->dPtr->name, ax, "load global variable " + name);
+				else
+					e.emit_x86MR("mov", this->dPtr->offset, bp, ax, "load variable " + name);
 			}
 			break;
 		case CallK:

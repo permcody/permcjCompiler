@@ -288,6 +288,17 @@ void CodeEmitter::emit_x86LR(const string &op, const string &label, const string
 	codeContainer.push_back(oss.str());	
 }
 
+void CodeEmitter::emit_x86RL(const string &op, const string &reg, const string &label, const string &c)
+{
+	ostringstream oss;
+	
+	oss		<< "\t"
+			<< setw(8) << left << op
+			<< setw(22) << left << "%" + reg + ", " + label
+			<< (c==""?"":"# ") << c << "\n";
+	codeContainer.push_back(oss.str());	
+}
+
 void CodeEmitter::emit_x86J(const string &op, const string &label, const string &c)
 {
 	ostringstream oss;
