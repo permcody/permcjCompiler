@@ -66,6 +66,10 @@ void TreeNode::CodeGeneration_x86(CodeEmitter &e) {
 	e.emit_x86Label("printfInt");
 	e.emit_x86Directive("\t.string \"\%d\\n\"\n");
 	
+	// Setup a format string for the outnl function (printf)
+	e.emit_x86Label("printfnl");
+	e.emit_x86Directive("\t.string \"\\n\"\n");
+	
 	// Setup a format string for the input function (scanf)
 	e.emit_x86Label("scanfInt");
 	e.emit_x86Directive("\t.string \"\%d\"\n");
@@ -204,6 +208,15 @@ TreeNode *TreeNode::AddIOFunctions() {
 	dNode->offset = -1;  //unused
 	dNode->sibling = (TreeNode *)tPtr;
 	tPtr = dNode;	
+	
+	// Add Declaration for void outnl()
+	dNode = new DeclarationNode(TreeNode::FuncK);
+	dNode->type = Void;
+	dNode->name = "outnl";
+	dNode->lineNumber = -1;  //unused
+	dNode->offset = -1;  //unused
+	dNode->sibling = (TreeNode *)tPtr;
+	tPtr = dNode;
 
 #else
 
@@ -500,8 +513,12 @@ void ExpressionNode::GenCode_x86(CodeEmitter &e, bool travSib) {
 				// value will be in ac2 
 				if (dPtr->theScope == Parameter)
 					e.emit_x86MR("mov", dPtr->offset, (dPtr->theScope == TreeNode::Global)?cx:bp, cx, "load array base address");
-				else
-					e.emit_x86MR("lea", dPtr->offset, (dPtr->theScope == TreeNode::Global)?cx:bp, cx, "load array base address");
+				else {
+					if (dPtr->theScope == TreeNode::Global)
+						e.emit_x86LR("lea", dPtr->name, cx, "load base address of global variable");
+					else
+						e.emit_x86MR("lea", dPtr->offset, bp, cx, "load base address of array " + dPtr->name);
+				}
 				// array base will be in ac1
 				e.emit_x86RM2("mov", dx, cx, ax, "index off of the base and store the value");
 				//toff = localToff;
@@ -509,7 +526,7 @@ void ExpressionNode::GenCode_x86(CodeEmitter &e, bool travSib) {
 			else {
 				// retrieve variable offset and scope to emit instruction
 				if (dPtr->theScope == TreeNode::Global) 
-					e.emit_x86RL("mov", ax, dPtr->name, "store global variable " + name);
+					e.emit_x86RL("mov", ax, dPtr->name, "store global variable " + dPtr->name);
 				else				
 					e.emit_x86RM("mov", ax, dPtr->offset, bp, "store variable " + dPtr->name); 
 			}	
@@ -522,17 +539,20 @@ void ExpressionNode::GenCode_x86(CodeEmitter &e, bool travSib) {
 				// is this array indexed?
 				if (child[0] == NULL) {  // must be a parameter
 					if (this->dPtr->theScope == TreeNode::Parameter)
-						e.emit_x86MR("mov", this->dPtr->offset, (this->dPtr->theScope == TreeNode::Global)?cx:bp, ax, "load base address of array " + this->name);
+						e.emit_x86MR("mov", this->dPtr->offset, (this->dPtr->theScope == TreeNode::Global)?cx:bp, ax, "1: load base address of array " + this->name);
 					else
-						e.emit_x86MR("lea", this->dPtr->offset, (this->dPtr->theScope == TreeNode::Global)?cx:bp, ax, "load base address of array " + this->name);
+						e.emit_x86MR("lea", this->dPtr->offset, (this->dPtr->theScope == TreeNode::Global)?cx:bp, ax, "2: load base address of array " + this->name);
 				}
 				else { 
 					child[0]->GenCode_x86(e, true);
 					// index will be in ac
 					if (this->dPtr->theScope == TreeNode::Parameter)
-						e.emit_x86MR("mov", this->dPtr->offset, (this->dPtr->theScope == TreeNode::Global)?cx:bp, cx, "load base address of array " + this->name);
+						e.emit_x86MR("mov", this->dPtr->offset, (this->dPtr->theScope == TreeNode::Global)?cx:bp, cx, "3: load base address of array " + this->name);
 					else
-						e.emit_x86MR("lea", this->dPtr->offset, (this->dPtr->theScope == TreeNode::Global)?cx:bp, cx, "load base address of array " + this->name);
+						if (this->dPtr->theScope == TreeNode::Global) 
+							e.emit_x86LR("lea", this->dPtr->name, cx, "load base address of global variable");
+						else
+							e.emit_x86MR("lea", this->dPtr->offset, bp, cx, "load base address of array " + this->name);
 					
 					e.emit_x86M2R("mov", cx, ax, ax, "index off of the base and load the value");					
 				}
@@ -580,6 +600,11 @@ void ExpressionNode::GenCode_x86(CodeEmitter &e, bool travSib) {
 			// Hack to print integers using the standard C printf function
 			if (dPtr->name == "output" || dPtr->name == "outputb") {
 				e.emit_x86C("push", "printfInt", "Save integer format string for printf");
+				e.emit_x86Call("printf", "execute function");
+				paramCount++;
+			}
+			else if (dPtr->name == "outnl") {
+				e.emit_x86C("push", "printfnl", "Save nl format string for printf");
 				e.emit_x86Call("printf", "execute function");
 				paramCount++;
 			}
@@ -1429,7 +1454,7 @@ void DeclarationNode::GenCode_x86(CodeEmitter &e, bool travSib) {
 			globals_emitvec.push_back(dPtr);		
 	} 
 	// Don't generate code for IO functions
-	else if (subKind == FuncK && name != "input" && name != "output" && name != "inputb" && name != "outputb") {
+	else if (subKind == FuncK && name != "input" && name != "output" && name != "inputb" && name != "outputb" && name != "outnl") {
 		// Lookup in symbol table - we'll need to set the "offset" variable
 		dPtr = (DeclarationNode *)this;
 		//dPtr->offset = e.emitSkip(0); // save the current location for calls later
