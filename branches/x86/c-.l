@@ -1,3 +1,9 @@
+/*	$Author$
+	$Date$
+	$Rev$
+*/
+	
+
 %{
 #include <cstdlib>
 #include <cstring>

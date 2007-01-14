@@ -1,3 +1,8 @@
+/*	$Author$
+	$Date$
+	$Rev$
+*/
+
 //
 //  TM Code emitting utilities
 //  implementation for the TINY compiler

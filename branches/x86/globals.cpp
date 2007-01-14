@@ -1,3 +1,8 @@
+/*	$Author$
+	$Date$
+	$Rev$
+*/
+
 #include "globals.h"
 #include "emitcode.h"
 #include "compiler.h"

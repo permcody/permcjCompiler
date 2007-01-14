@@ -1,3 +1,8 @@
+/*	$Author$
+	$Date$
+	$Rev$
+*/
+
 #ifndef EMIT_CODE_H__
 #define EMIT_CODE_H__
 

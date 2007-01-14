@@ -1,3 +1,7 @@
+#	$Author$
+#	$Date$
+#	$Rev$
+
 BIN  = c-
 TARNAME = cpermann
 CC   = g++

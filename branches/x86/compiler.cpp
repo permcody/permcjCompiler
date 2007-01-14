@@ -1,3 +1,8 @@
+/*	$Author$
+	$Date$
+	$Rev$
+*/
+
 #include "compiler.h"
 
 /*void Compiler::SetCompileOptions(bool printSyntaxTree, bool printMemoryLayout,

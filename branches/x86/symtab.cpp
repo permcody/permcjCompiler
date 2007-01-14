@@ -1,3 +1,8 @@
+/*	$Author$
+	$Date$
+	$Rev$
+*/
+
 #include "symtab.h"
 int SymTab::initMaxTable_=100;
 
