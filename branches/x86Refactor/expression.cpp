@@ -3,7 +3,41 @@
 	$Rev$
 */
 
-#include "globals.h"
+#include "expression.h"
+
+void ExpressionNode::lookupTypes(const string &op, Types &lhs, Types &rhs, Types &returnType) {
+	// This function is essentially the lookup table for types for the various operators
+	if (op == "+" || op == "-" || op == "*" || op == "/" || op == "%") {	// ignore rhs for Unary op "-"
+		lhs = Int;	
+		rhs = Int; 
+		returnType = Int; 	
+	}
+	else if (op == "<" || op == ">" || op == "<=" || op == ">=") {
+		lhs = Int;
+		rhs = Int;
+		returnType = Bool;
+	}
+	else if (op == "!=" || op == "==") {
+		lhs = Undefined;
+		rhs = Undefined; // lhs and rhs can be anything as long as they match
+		returnType = Bool;
+	}
+	else if (op == "||" || op == "&&" || op == "!=" || op == "!") {	// ignore rhs for Unary op "!"
+		lhs = Bool;
+		rhs = Bool;
+		returnType = Bool;
+	}
+	else if (op == "=") { // Assignments
+		lhs = Undefined;
+		rhs = Undefined;
+		returnType = Undefined;
+	}
+	else {
+		lhs = Error;
+		rhs = Error;
+		returnType = Error;	
+	}	
+}
 
 void AssignExpNode::GenCode_x86(CodeEmitter &e, bool travSib) {
 	DeclarationNode *dPtr;

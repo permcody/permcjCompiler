@@ -23,6 +23,10 @@ public:
 	long lineno;
 };
 
+class ExpressionNode;
+class StatementNode;
+class DeclarationNode;
+
 class TreeNode {
 public:	
 	enum NodeKind {StmtK, ExprK, DeclK};
@@ -43,10 +47,8 @@ public:
 	void PrintTree(ostream &out)const { this->PrintTree(out, 0, 0); }
 	void PrintMem() const { this->PrintMem(cout); }	
 	void PrintMem(ostream &out) const;
-	void CodeGeneration(CodeEmitter &e);
 	void CodeGeneration_x86(CodeEmitter &e);
 	void virtual ScopeAndType(ostream &out, int &numErrors) = 0; // pure virtual function
-	void virtual GenCode(CodeEmitter &e, bool travSib);
 	void virtual GenCode_x86(CodeEmitter &e, bool travSib) = 0;
 	bool getIsArray() const;
 	TreeNode(NodeKind sKind);
@@ -95,86 +97,7 @@ public:
 	void virtual PrintMemory(ostream &out) const;
 	static void PrintNode(ostream &out, const DeclarationNode *dPtr);
 	void virtual ScopeAndType(ostream &out, int &numErrors);
-	void virtual GenCode(CodeEmitter &e, bool travSib);
 	void virtual GenCode_x86(CodeEmitter &e, bool travSib);
-};
-
-class ExpressionNode : public TreeNode {
-public:
-	ExprKind subKind;
-	Types type;
-	string name;
-	string op;
-	int val;
-	DeclarationNode *dPtr;
-
-	ExpressionNode(ExprKind eKind) 
-		: TreeNode(ExprK), subKind(eKind), type(Undefined), val(0), dPtr(NULL) {}
-	void virtual PrintTree(ostream &out, int spaces, int siblingNum) const = 0;
-	void virtual ScopeAndType(ostream &out, int &numErrors) = 0;
-	void virtual GenCode(CodeEmitter &e, bool travSib);
-	void virtual GenCode_x86(CodeEmitter &e, bool travSib) = 0;
-	void lookupTypes(const string &op, Types &lhs, Types &rhs, Types &returnType);	
-};
-
-class StatementNode : public TreeNode {
-public:
-	StmtKind subKind;
-	
-	StatementNode(StmtKind sKind) : TreeNode(StmtK), subKind(sKind) {}
-	void virtual PrintTree(ostream &out, int spaces, int siblingNum) const;
-	void virtual ScopeAndType(ostream &out, int &numErrors);
-	void virtual GenCode(CodeEmitter &e, bool travSib);
-	void virtual GenCode_x86(CodeEmitter &e, bool travSib);
-};
-
-/********************************************************************************************************
- ************************************** Expression Node SubTypes ****************************************
- ********************************************************************************************************/
-
-class IdExpNode : public ExpressionNode {
-public:
-	IdExpNode() : ExpressionNode(IdK) {}
-
-	void virtual GenCode_x86(CodeEmitter &e, bool travSib);
-	void virtual PrintTree(ostream &out, int spaces, int siblingNum) const;
-	void virtual ScopeAndType(ostream &out, int &numErrors);
-};
-
-class AssignExpNode : public ExpressionNode {
-public:
-	AssignExpNode() : ExpressionNode(AssignK) {}
-
-	void virtual GenCode_x86(CodeEmitter &e, bool travSib);
-	void virtual PrintTree(ostream &out, int spaces, int siblingNum) const;
-	void virtual ScopeAndType(ostream &out, int &numErrors);
-};
-
-class OpExpNode : public ExpressionNode {
-public:
-	OpExpNode() : ExpressionNode(OpK) {}
-
-	void virtual GenCode_x86(CodeEmitter &e, bool travSib);
-	void virtual PrintTree(ostream &out, int spaces, int siblingNum) const;
-	void virtual ScopeAndType(ostream &out, int &numErrors);
-};
-
-class CallExpNode : public ExpressionNode {
-public:
-	CallExpNode() : ExpressionNode(CallK) {}
-
-	void virtual GenCode_x86(CodeEmitter &e, bool travSib);
-	void virtual PrintTree(ostream &out, int spaces, int siblingNum) const;
-	void virtual ScopeAndType(ostream &out, int &numErrors);
-};
-
-class ConstExpNode : public ExpressionNode {
-public:
-	ConstExpNode() : ExpressionNode(ConstK) {}
-
-	void virtual GenCode_x86(CodeEmitter &e, bool travSib);
-	void virtual PrintTree(ostream &out, int spaces, int siblingNum) const;
-	void virtual ScopeAndType(ostream &out, int &numErrors);
 };
 
 #endif

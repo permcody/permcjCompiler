@@ -5,6 +5,8 @@
 
 %{ 
 #include "globals.h"
+#include "expression.h"
+#include "statement.h"
 #include "symtab.h"
 #include "compiler.h"
 
@@ -210,11 +212,11 @@ param				: type_specifier ID
 					;
 					
 compound_stmt		: '{' local_declarations statement_list '}' 
-						{	StatementNode *sNode = new StatementNode(TreeNode::CompK);
-							sNode->lineNumber = $1;				// save the lineNumber from '{'
-							sNode->child[0] = $2;				// local_declarations go into the first child of compound_stmt
-							sNode->child[1] = $3;				// statment_list goes into the second child of compound_stmt
-							$$ = (TreeNode *)sNode;
+						{	CompStateNode *cNode = new CompStateNode();
+							cNode->lineNumber = $1;				// save the lineNumber from '{'
+							cNode->child[0] = $2;				// local_declarations go into the first child of compound_stmt
+							cNode->child[1] = $3;				// statment_list goes into the second child of compound_stmt
+							$$ = (TreeNode *)cNode;
 						}
 					| '{' error '}'						// ERROR handling
 						{	$$=NULL;
@@ -268,12 +270,12 @@ expression_stmt		: expression ';' { $$ = $1; }
 					;
 					
 matched				: IF '(' expression ')' matched ELSE matched
-						{	StatementNode *sNode = new StatementNode(TreeNode::IfK);
-							sNode->lineNumber = $1;			// save the linenumber from 'IF'
-							sNode->child[0] = $3;
-							sNode->child[1] = $5;
-							sNode->child[2] = $7;
-							$$ = (TreeNode *)sNode;
+						{	IfStateNode *iNode = new IfStateNode();
+							iNode->lineNumber = $1;			// save the linenumber from 'IF'
+							iNode->child[0] = $3;
+							iNode->child[1] = $5;
+							iNode->child[2] = $7;
+							$$ = (TreeNode *)iNode;
 						}
 					| IF '(' error ')' matched ELSE matched	// ERROR handling
 						{	$$=NULL;
@@ -286,15 +288,15 @@ matched				: IF '(' expression ')' matched ELSE matched
 							yyerrok;
 						}
 					| WHILE '(' expression ')' matched
-						{	StatementNode *sNode = new StatementNode(TreeNode::WhileK);
-							sNode->lineNumber = $1;			// save the linenumber from 'WHILE'
-							sNode->child[0] = $3;
-							sNode->child[1] = $5;
-							$$ = (TreeNode *)sNode;
+						{	WhileStateNode *wNode = new WhileStateNode();
+							wNode->lineNumber = $1;			// save the linenumber from 'WHILE'
+							wNode->child[0] = $3;
+							wNode->child[1] = $5;
+							$$ = (TreeNode *)wNode;
 						}
 					| WHILE '(' error ')' matched			// ERROR handling
                         {	$$=NULL;
-							StatementNode *sNode = (StatementNode *)$5;
+							//StatementNode *sNode = (StatementNode *)$5;
 							//cout << "**ERROR matched WHILE 1\n";
 							yyerrok;
 						}	
@@ -302,19 +304,19 @@ matched				: IF '(' expression ')' matched ELSE matched
 					;
 					
 unmatched			: IF '(' expression ')' statement
-						{	StatementNode *sNode = new StatementNode(TreeNode::IfK);
-							sNode->lineNumber = $1;			// save the linenumber from 'IF'
-							sNode->child[0] = $3;
-							sNode->child[1] = $5;						
-							$$ = (TreeNode *)sNode;
+						{	IfStateNode *iNode = new IfStateNode();
+							iNode->lineNumber = $1;			// save the linenumber from 'IF'
+							iNode->child[0] = $3;
+							iNode->child[1] = $5;						
+							$$ = (TreeNode *)iNode;
 						}
 					| IF '(' expression ')' matched ELSE unmatched
-						{	StatementNode *sNode = new StatementNode(TreeNode::IfK);
-							sNode->lineNumber = $1;			// save the linenumber from 'IF'
-							sNode->child[0] = $3;
-							sNode->child[1] = $5;
-							sNode->child[2] = $7;
-							$$ = (TreeNode *)sNode;
+						{	IfStateNode *iNode = new IfStateNode();
+							iNode->lineNumber = $1;			// save the linenumber from 'IF'
+							iNode->child[0] = $3;
+							iNode->child[1] = $5;
+							iNode->child[2] = $7;
+							$$ = (TreeNode *)iNode;
 						}
 					| IF '(' error ')' statement					// ERROR handling
 						{	$$=NULL;
@@ -332,11 +334,11 @@ unmatched			: IF '(' expression ')' statement
 							yyerrok;
 						}
 					| WHILE '(' expression ')' unmatched
-						{	StatementNode *sNode = new StatementNode(TreeNode::WhileK);
-							sNode->lineNumber = $1;			// save the linenumber from 'WHILE'
-							sNode->child[0] = $3;
-							sNode->child[1] = $5;
-							$$ = (TreeNode *)sNode;
+						{	WhileStateNode *wNode = new WhileStateNode();
+							wNode->lineNumber = $1;			// save the linenumber from 'WHILE'
+							wNode->child[0] = $3;
+							wNode->child[1] = $5;
+							$$ = (TreeNode *)wNode;
 						}
 					| WHILE '(' error ')' unmatched					// ERROR handling
                         {	$$=NULL;
@@ -346,15 +348,15 @@ unmatched			: IF '(' expression ')' statement
 					;  
 					
 return_stmt			: RETURN ';' 
-						{	StatementNode *sNode = new StatementNode(TreeNode::ReturnK);
-							sNode->lineNumber = $1;
-							$$ = (TreeNode *)sNode; 
+						{	ReturnStateNode *rNode = new ReturnStateNode();
+							rNode->lineNumber = $1;
+							$$ = (TreeNode *)rNode; 
 						}						
 					| RETURN expression ';'
-						{	StatementNode *sNode = new StatementNode(TreeNode::ReturnK);
-							sNode->lineNumber = $1;			// save the linenumber from 'RETURN'
-							sNode->child[0] = $2;
-							$$ = (TreeNode *)sNode;
+						{	ReturnStateNode *rNode = new ReturnStateNode();
+							rNode->lineNumber = $1;			// save the linenumber from 'RETURN'
+							rNode->child[0] = $2;
+							$$ = (TreeNode *)rNode;
 						}
 					| RETURN error ';'		// ERROR handling
 						{	$$=NULL;
