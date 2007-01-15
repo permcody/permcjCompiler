@@ -364,24 +364,24 @@ return_stmt			: RETURN ';'
 					;
 					
 expression			: var '=' expression
-						{	ExpressionNode *eNode = new ExpressionNode(TreeNode::AssignK);
-							eNode->lineNumber = $2;			// save the linenumber from '='
-							eNode->child[0] = $1;
-							eNode->child[1] = $3;
-							$$ = (TreeNode *)eNode;
+						{	AssignExpNode *aNode = new AssignExpNode();
+							aNode->lineNumber = $2;			// save the linenumber from '='
+							aNode->child[0] = $1;
+							aNode->child[1] = $3;
+							$$ = (TreeNode *)aNode;
 						}
 					| simple_expression		// default							
 					;
 					
 var					: ID
-						{	//ExpressionNode *eNode = new ExpressionNode(TreeNode::IdK);
+						{	
 							IdExpNode *iNode = new IdExpNode();
 							iNode->name = $1->identifier;
 							iNode->lineNumber = $1->lineno;	// save the linenumber from 'ID'
 							$$ = (TreeNode *)iNode;
 						}
 					| ID '[' expression ']'
-						{	//ExpressionNode *eNode = new ExpressionNode(TreeNode::IdK);
+						{	
 							IdExpNode *iNode = new IdExpNode();
 							iNode->name = $1->identifier;
 							iNode->lineNumber = $1->lineno;	// save the linenumber from 'ID'
@@ -420,34 +420,34 @@ factor				: '(' expression ')'	{ $$ = $2; }
 					;
 					
 constant			: NUM 
-						{	ExpressionNode *eNode = new ExpressionNode(TreeNode::ConstK);
-							eNode->lineNumber = $1->lineno;	// save the linenumber from 'NUM'
-							eNode->val = $1->number;
-							eNode->type = TreeNode::Int;	// Numbers are type int no need to process in semantics
-							$$ = (TreeNode *)eNode;
+						{	ConstExpNode *cNode = new ConstExpNode();
+							cNode->lineNumber = $1->lineno;	// save the linenumber from 'NUM'
+							cNode->val = $1->number;
+							cNode->type = TreeNode::Int;	// Numbers are type int no need to process in semantics
+							$$ = (TreeNode *)cNode;
 						}
 					| TRUE
-						{	ExpressionNode *eNode = new ExpressionNode(TreeNode::ConstK);
-							eNode->lineNumber = $1;			// save the linenumber from 'TRUE'
-							eNode->val = 1;					// value of true
-							eNode->type = TreeNode::Bool;							
-							$$ = (TreeNode *)eNode;
+						{	ConstExpNode *cNode = new ConstExpNode();
+							cNode->lineNumber = $1;			// save the linenumber from 'TRUE'
+							cNode->val = 1;					// value of true
+							cNode->type = TreeNode::Bool;							
+							$$ = (TreeNode *)cNode;
 						}
 					| FALSE 
-						{	ExpressionNode *eNode = new ExpressionNode(TreeNode::ConstK);
-							eNode->lineNumber = $1;			// save the linenumber from 'FALSE'
-							eNode->val = 0;					// value of false
-							eNode->type = TreeNode::Bool;							
-							$$ = (TreeNode *)eNode;	
+						{	ConstExpNode *cNode = new ConstExpNode();
+							cNode->lineNumber = $1;			// save the linenumber from 'FALSE'
+							cNode->val = 0;					// value of false
+							cNode->type = TreeNode::Bool;							
+							$$ = (TreeNode *)cNode;	
 						}
 					;
 					
 call				: ID '(' args ')'
-						{	ExpressionNode *eNode = new ExpressionNode(TreeNode::CallK);
-							eNode->name = $1->identifier;
-                            eNode->lineNumber = $1->lineno;	// save the linenumber from 'ID'
-							eNode->child[0] = $3;
-							$$ = (TreeNode *)eNode;
+						{	CallExpNode *cNode = new CallExpNode();
+							cNode->name = $1->identifier;
+                            cNode->lineNumber = $1->lineno;	// save the linenumber from 'ID'
+							cNode->child[0] = $3;
+							$$ = (TreeNode *)cNode;
 						}
 					| ID '(' error ')'			// ERROR handling
 						{	$$=NULL;
@@ -493,12 +493,12 @@ arg_list			: arg_list ',' expression
 %%
 
 TreeNode *newOpExpNode(char *op, TreeNode *child0, TreeNode *child1, long lineno) {
-	ExpressionNode *eNode = new ExpressionNode(TreeNode::OpK);
-	eNode->lineNumber = lineno;
-	eNode->child[0] = child0;
-	eNode->child[1] = child1;
-	eNode->op = copyString(op);
-	return (TreeNode *)eNode;
+	OpExpNode *oNode = new OpExpNode();
+	oNode->lineNumber = lineno;
+	oNode->child[0] = child0;
+	oNode->child[1] = child1;
+	oNode->op = copyString(op);
+	return (TreeNode *)oNode;
 }
 
 // Static function declaration passed to symtab constructor for printing declarations
