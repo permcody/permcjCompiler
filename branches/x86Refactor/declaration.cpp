@@ -1,6 +1,6 @@
-/*	$Author: permcj $
+/*	$Author$
 	$Date$
-	$Rev: 42 $
+	$Rev$
 */
 
 #include "globals.h"
