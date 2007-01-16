@@ -246,6 +246,10 @@ void ReturnStateNode::GenCode_x86(CodeEmitter &e, bool travSib) {
 	e.emit_x86Comment("RETURN");
 	if (child[0] != NULL)
 		child[0]->GenCode_x86(e, true);
+	// Fix up stack and return
+	e.emit_x86R2("mov", bp, sp, "");
+	e.emit_x86R1("pop", bp, "");
+	e.emit_x86("ret");
 
 	if (sibling != NULL) {
 		e.emit_x86Comment(NO_COMMENT);

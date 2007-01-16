@@ -47,7 +47,7 @@ public:
 	VarDeclNode() : DeclarationNode(VarK) {}
 
 	void virtual GenCode_x86(CodeEmitter &e, bool travSib);
-		void virtual ScopeAndType(ostream &out, int &numErrors);
+	void virtual ScopeAndType(ostream &out, int &numErrors);
 };
 
 class ParamDeclNode : public DeclarationNode {

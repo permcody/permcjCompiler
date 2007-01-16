@@ -19,7 +19,7 @@
 #define X86 1
 
 #ifdef X86
-#define IFRAMEOFFSET -4 // 0 = EBP, -1 = EBX, -2 = ESI, -3 = EDI
+#define IFRAMEOFFSET -3 // 0 = EBP, -1 = EBX, -2 = ESI, -3 = EDI (Offsets are adjusted prior to assignment)
 #else
 #define IFRAMEOFFSET -2 // 0 and -1 are for the previous frame address and return address respectively
 #endif

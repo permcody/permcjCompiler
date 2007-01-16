@@ -55,6 +55,7 @@ void DeclarationNode::PrintNode(ostream &out, const DeclarationNode *dPtr) {
 	}	
 }
 
+/*
 void DeclarationNode::ScopeAndType(ostream &out, int &numErrors) {
 	DeclarationNode *dPtr;
 	
@@ -121,6 +122,7 @@ void DeclarationNode::ScopeAndType(ostream &out, int &numErrors) {
 		sibling->ScopeAndType(out, numErrors);
 	return;
 }
+*/
 
 void FuncDeclNode::GenCode_x86(CodeEmitter &e, bool travSib) {
 	DeclarationNode *dPtr;
@@ -161,7 +163,7 @@ void FuncDeclNode::GenCode_x86(CodeEmitter &e, bool travSib) {
 			child[1]->GenCode_x86(e, true);
 		}
 		
-		e.emit_x86CR("sub", size*WORDSIZE, sp, "Adjust top of stack to destroy local variables");
+		//e.emit_x86CR("sub", size*WORDSIZE, sp, "Adjust top of stack to destroy local variables");
 
 		// Standard C Closing
 		e.emit_x86Comment("Add standard C closing in case there is no return statement");
@@ -170,6 +172,7 @@ void FuncDeclNode::GenCode_x86(CodeEmitter &e, bool travSib) {
 		e.emit_x86R1("popl", "esi", "");
 		e.emit_x86R1("popl", "ebx", "");
 		*/
+
 		e.emit_x86R2("mov", bp, sp, "");
 		e.emit_x86R1("pop", bp, "");
 		e.emit_x86("ret");
@@ -182,6 +185,7 @@ void FuncDeclNode::GenCode_x86(CodeEmitter &e, bool travSib) {
 	if (sibling != NULL)
 		sibling->GenCode_x86(e, true);
 }
+
 
 void FuncDeclNode::ScopeAndType(ostream &out, int &numErrors) {
 	DeclarationNode *dPtr;
@@ -211,7 +215,7 @@ void FuncDeclNode::ScopeAndType(ostream &out, int &numErrors) {
 		child[0]->ScopeAndType(out, numErrors);
 	if (child[1] != NULL)
 		child[1]->ScopeAndType(out, numErrors);
-	size = foff+1;	// save the size of the frame pointer
+	size = foff;	// save the size of the frame pointer
 	symtab->leave();
 	
 	// now traverse any sibling nodes
@@ -253,15 +257,11 @@ void VarDeclNode::ScopeAndType(ostream &out, int &numErrors){
 		goff -= size;
 		theScope = TreeNode::Global;
 	}
-#ifdef X86
-	offset = foff;
-	foff -= size;
-	theScope = TreeNode::Local;
-#else
-	offset = foff;
-	foff -= size;
-	theScope = TreeNode::Local;
-#endif
+	else {
+		foff -= size;
+		offset = foff;
+		theScope = TreeNode::Local;
+	}
 
 	// now traverse any sibling nodes
 	if (sibling != NULL)
@@ -297,19 +297,14 @@ void ParamDeclNode::ScopeAndType(ostream &out, int &numErrors) {
 	
 	if (symtab->depth() == 1) { // global scope
 		offset = goff;
-		goff -= size;
+		goff -= 1; //goff -= size; all parameters are fixed in size (1 unit)
 		theScope = TreeNode::Global;
 	}
-#ifdef X86
-	offset = poff;
-	poff += size;
-	theScope = TreeNode::Parameter;
-	
-#else
-	offset = foff;
-	foff -= size;
-	theScope = TreeNode::Parameter;	
-#endif
+	else {
+		offset = poff;
+		poff += 1; //poff += size; all parameters are fixed in size (1 unit)
+		theScope = TreeNode::Parameter;
+	}
 
 	// now traverse any sibling nodes
 	if (sibling != NULL)
