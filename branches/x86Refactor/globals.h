@@ -14,6 +14,18 @@
 #include <vector>
 #include "symtab.h"
 #include "emitcode.h"
+
+// Define this Value to turn on the x86 Code Generation
+#define X86 1
+
+#ifdef X86
+#define IFRAMEOFFSET -4 // 0 = EBP, -1 = EBX, -2 = ESI, -3 = EDI
+#else
+#define IFRAMEOFFSET -2 // 0 and -1 are for the previous frame address and return address respectively
+#endif
+
+#define PARAMOFFSET 2 // 0 = EBP, 1 = EIP
+
 using namespace std;
 
 struct FlexStruct {
@@ -78,26 +90,6 @@ private:
 	void GenIOFunctions(CodeEmitter &e) const;
 };
 
-class DeclarationNode : public TreeNode {
-public:
-	DeclKind subKind;
-	Types type;
-	string name;
-	bool isArray;
-	int size;
-	int offset;
-	ScopeTypes theScope;
-	//bool isGlobal;
-	Types returnType;	
 
-	DeclarationNode(DeclKind dKind) 
-		: TreeNode(DeclK), subKind(dKind), type(Undefined), size(0), isArray(false), 
-		  returnType(Undefined), offset(0), theScope(Global) {}
-	void virtual PrintTree(ostream &out, int spaces, int siblingNum) const;
-	void virtual PrintMemory(ostream &out) const;
-	static void PrintNode(ostream &out, const DeclarationNode *dPtr);
-	void virtual ScopeAndType(ostream &out, int &numErrors);
-	void virtual GenCode_x86(CodeEmitter &e, bool travSib);
-};
 
 #endif

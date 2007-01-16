@@ -7,6 +7,7 @@
 #include "globals.h"
 #include "expression.h"
 #include "statement.h"
+#include "declaration.h"
 #include "symtab.h"
 #include "compiler.h"
 
@@ -126,21 +127,21 @@ declaration			: var_declaration { $$ = $1; }
 					;
 					
 var_declaration		: type_specifier ID ';' 
-						{	DeclarationNode *dNode = new DeclarationNode(TreeNode::VarK);
-							dNode->type = (TreeNode::Types)$1;		// save the type
-							dNode->name = $2->identifier;			// save the ID
-							dNode->lineNumber = $2->lineno;			// save the lineNumber
-							dNode->size = 1;
-							$$ = (TreeNode *)dNode;
+						{	VarDeclNode *vNode = new VarDeclNode();
+							vNode->type = (TreeNode::Types)$1;		// save the type
+							vNode->name = $2->identifier;			// save the ID
+							vNode->lineNumber = $2->lineno;			// save the lineNumber
+							vNode->size = 1;
+							$$ = (TreeNode *)vNode;
 						}
 					| type_specifier ID '[' NUM ']' ';' 
-						{	DeclarationNode *dNode = new DeclarationNode(TreeNode::VarK);
-							dNode->type = (TreeNode::Types)$1;		// save the type
-							dNode->name = $2->identifier;			// save the ID
-							dNode->lineNumber = $2->lineno;			// save the lineNumber
-							dNode->isArray = true;
-							dNode->size = $4->number;				// save the array size
-							$$ = (TreeNode *)dNode;
+						{	VarDeclNode *vNode = new VarDeclNode();
+							vNode->type = (TreeNode::Types)$1;		// save the type
+							vNode->name = $2->identifier;			// save the ID
+							vNode->lineNumber = $2->lineno;			// save the lineNumber
+							vNode->isArray = true;
+							vNode->size = $4->number;				// save the array size
+							$$ = (TreeNode *)vNode;
 						}
 					| error ';'		// ERROR handling
 						{	$$=NULL; 
@@ -155,13 +156,13 @@ type_specifier		: BOOLEAN	{ $$ = TreeNode::Bool; }
 					;
 					
 fun_declaration		: type_specifier ID '(' params ')' compound_stmt 
-						{	DeclarationNode *dNode = new DeclarationNode(TreeNode::FuncK);
-							dNode->type = (TreeNode::Types)$1;		// save the type
-							dNode->name = $2->identifier;			// save the ID
-							dNode->lineNumber = $2->lineno;			// save the lineNumber
-							dNode->child[0] = $4;				// params are the first child of the function declaration
-							dNode->child[1] = $6;				// statements are the second child of the function declaration							
-							$$ = (TreeNode *)dNode;	
+						{	FuncDeclNode *fNode = new FuncDeclNode();
+							fNode->type = (TreeNode::Types)$1;		// save the type
+							fNode->name = $2->identifier;			// save the ID
+							fNode->lineNumber = $2->lineno;			// save the lineNumber
+							fNode->child[0] = $4;				// params are the first child of the function declaration
+							fNode->child[1] = $6;				// statements are the second child of the function declaration							
+							$$ = (TreeNode *)fNode;	
 						}
 					| error '(' params ')' compound_stmt  // ERROR handling
 						{	$$=NULL; 
@@ -193,21 +194,21 @@ param_list			: param_list ',' param
 					;
 
 param				: type_specifier ID 
-						{	DeclarationNode *dNode = new DeclarationNode(TreeNode::ParamK);
-							dNode->type = (TreeNode::Types)$1;
-							dNode->name = $2->identifier;
-							dNode->lineNumber = $2->lineno;			// save the lineNumber
-							dNode->size = 1;
-							$$ = (TreeNode *)dNode;
+						{	ParamDeclNode *pNode = new ParamDeclNode();
+							pNode->type = (TreeNode::Types)$1;
+							pNode->name = $2->identifier;
+							pNode->lineNumber = $2->lineno;			// save the lineNumber
+							pNode->size = 1;
+							$$ = (TreeNode *)pNode;
 						}
 					| type_specifier ID '[' ']' 
-						{	DeclarationNode *dNode = new DeclarationNode(TreeNode::ParamK);
-							dNode->type = (TreeNode::Types)$1;
-							dNode->name = $2->identifier;
-							dNode->lineNumber = $2->lineno;			// save the lineNumber
-							dNode->isArray = true;
-							dNode->size = 1;				// params are always size 1 - passed by address in c-
-							$$ = (TreeNode *)dNode;
+						{	ParamDeclNode *pNode = new ParamDeclNode();
+							pNode->type = (TreeNode::Types)$1;
+							pNode->name = $2->identifier;
+							pNode->lineNumber = $2->lineno;			// save the lineNumber
+							pNode->isArray = true;
+							pNode->size = 1;				// params are always size 1 - passed by address in c-
+							$$ = (TreeNode *)pNode;
 						}
 					;
 					

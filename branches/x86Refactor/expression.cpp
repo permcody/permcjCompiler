@@ -4,6 +4,7 @@
 */
 
 #include "expression.h"
+#include "declaration.h"
 
 void ExpressionNode::lookupTypes(const string &op, Types &lhs, Types &rhs, Types &returnType) {
 	// This function is essentially the lookup table for types for the various operators

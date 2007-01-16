@@ -6,6 +6,7 @@
 #include "globals.h"
 #include "statement.h"
 #include "expression.h"
+#include "declaration.h"
 
 void IfStateNode::GenCode_x86(CodeEmitter &e, bool travSib) {
 	ostringstream oss;
