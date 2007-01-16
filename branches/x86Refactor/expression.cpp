@@ -436,8 +436,8 @@ void IdExpNode::GenCode_x86(CodeEmitter &e, bool travSib) {
 		if (child[0] == NULL) {  // must be a parameter
 			if (this->dPtr->theScope == TreeNode::Parameter)
 				e.emit_x86MR("mov", this->dPtr->offset, (this->dPtr->theScope == TreeNode::Global)?cx:bp, ax, "1: load base address of array " + this->name);
-			else
-				e.emit_x86MR("lea", this->dPtr->offset, (this->dPtr->theScope == TreeNode::Global)?cx:bp, ax, "2: load base address of array " + this->name);
+			else // global variable used as a parameter
+				e.emit_x86LR("lea", this->dPtr->name, ax, "2: load base address of global variable");
 		}
 		else { 
 			child[0]->GenCode_x86(e, true);
