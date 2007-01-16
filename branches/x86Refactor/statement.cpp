@@ -1,6 +1,6 @@
-/*	$Author: permcj $
-	$Date: 2007-01-15 11:13:10 -0700 (Mon, 15 Jan 2007) $
-	$Rev: 42 $
+/*	$Author$
+	$Date$
+	$Rev$
 */
 
 #include "globals.h"
