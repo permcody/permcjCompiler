@@ -56,7 +56,7 @@ public:
 	void virtual GenCode_x86(CodeEmitter &e, bool travSib);
 	bool getIsArray() const;
 	TreeNode(NodeKind sKind);
-	//~TreeNode();
+	virtual ~TreeNode();
 
 	static SymTab *symtab;	// Our symbol Table Declaration
 	static Types funcReturnType; // global for function return type checking

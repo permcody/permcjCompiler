@@ -28,6 +28,14 @@ TreeNode::TreeNode(NodeKind sKind) : sibling(NULL), lineNumber(0), kind(sKind) {
 		child[i] = NULL;
 }
 
+TreeNode::~TreeNode() {
+	for (int i=0; i<MAXCHILDREN; i++)
+		if (child[i])
+			child[i]->~TreeNode();
+	
+	delete this;	
+}
+
 void TreeNode::GenCode_x86(CodeEmitter &e, bool travSib) {
 	if (sibling != NULL && travSib) 			
 		sibling->GenCode_x86(e, true);

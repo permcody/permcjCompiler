@@ -41,9 +41,6 @@ void ExpressionNode::lookupTypes(const string &op, Types &lhs, Types &rhs, Types
 }
 
 void ExpressionNode::OpAndAssign_SAndT(ostream &out, int &numErrors) {
-	DeclarationNode *dPtr, *paramPtr, *tempdPtr;
-	ExpressionNode *argPtr;
-	int argCounter;	
 	Types lhs_type, rhs_type, lhs_decl, rhs_decl, returnType;
 	bool isUnary, lhs_isArray, rhs_isArray, foundError;
 	
@@ -155,9 +152,6 @@ void ExpressionNode::OpAndAssign_SAndT(ostream &out, int &numErrors) {
 
 void AssignExpNode::GenCode_x86(CodeEmitter &e, bool travSib) {
 	DeclarationNode *dPtr;
-	ExpressionNode *argPtr;
-	int localToff, boolSkipLoc, currentLoc;
-	bool isUnary = true;
 		
 	// process RHS of assignment
 	if (child[1] != NULL)
@@ -229,9 +223,7 @@ void OpExpNode::PrintTree(ostream &out, int spaces, int siblingNum) const {
 }
 
 void OpExpNode::GenCode_x86(CodeEmitter &e, bool travSib) {
-	DeclarationNode *dPtr;
-	ExpressionNode *argPtr;
-	int localToff, boolSkipLoc, currentLoc;
+	int localToff;	
 	bool isUnary = true;
 	
 	// process left child
@@ -318,11 +310,7 @@ void OpExpNode::GenCode_x86(CodeEmitter &e, bool travSib) {
 
 
 void IdExpNode::GenCode_x86(CodeEmitter &e, bool travSib) {
-	DeclarationNode *dPtr;
-	ExpressionNode *argPtr;
-	int localToff, boolSkipLoc, currentLoc;
-	bool isUnary = true;			
-
+	
 	if (this->dPtr->isArray) {
 		// is this array indexed?
 		if (child[0] == NULL) {  // must be a parameter
@@ -362,9 +350,7 @@ void IdExpNode::PrintTree(ostream &out, int spaces, int siblingNum) const {
 }
 
 void IdExpNode::ScopeAndType(ostream &out, int &numErrors) {
-	DeclarationNode *dPtr, *paramPtr, *tempdPtr;
-	ExpressionNode *argPtr;
-	int argCounter;	
+	DeclarationNode *dPtr;
 	Types lhs_type, rhs_type, lhs_decl, rhs_decl, returnType;
 	bool isUnary, lhs_isArray, rhs_isArray, foundError;
 	
@@ -418,8 +404,7 @@ void IdExpNode::ScopeAndType(ostream &out, int &numErrors) {
 void CallExpNode::GenCode_x86(CodeEmitter &e, bool travSib) {
 	DeclarationNode *dPtr;
 	ExpressionNode *argPtr;
-	int localToff, boolSkipLoc, currentLoc;
-	bool isUnary = true;
+	int localToff;	
 	
 	// C calling convetions (slightly simplified)
 	// parameters are pushed on the stack in reverse order
@@ -490,7 +475,7 @@ void CallExpNode::PrintTree(ostream &out, int spaces, int siblingNum) const {
 }
 
 void CallExpNode::ScopeAndType(ostream &out, int &numErrors) {
-	DeclarationNode *dPtr, *paramPtr, *tempdPtr;
+	DeclarationNode *dPtr, *paramPtr;
 	ExpressionNode *argPtr;
 	int argCounter;	
 	Types lhs_type, rhs_type, lhs_decl, rhs_decl, returnType;

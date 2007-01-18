@@ -19,7 +19,7 @@ extern void PrintNode(void *dPtr);
 class Compiler {
 public:
 	Compiler() : pSynTree(false), pMem(false), tSymTab(false), pParseDebug(false),
-		numErrors(0), numWarnings(0), out(&cout)
+		out(&cout), numErrors(0), numWarnings(0)
 	{	
 		emitter = new CodeEmitter(&cout, true);
 	}
@@ -27,8 +27,7 @@ public:
 	Compiler(bool printSyntaxTree, bool printMemoryLayout,
 		bool traceSymbolTable, bool printParserDebug, ostream *outStream, ostream *objectFileStream)
 		: pSynTree(printSyntaxTree), pMem(printMemoryLayout), tSymTab(traceSymbolTable), 
-		pParseDebug(printParserDebug), out(outStream), numErrors(0), 
-		numWarnings(0) 
+		pParseDebug(printParserDebug), out(outStream), numErrors(0), numWarnings(0)
 	{
 		emitter = new CodeEmitter(objectFileStream, true);
 	}

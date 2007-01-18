@@ -22,8 +22,8 @@ public:
 	Types returnType;	
 
 	DeclarationNode(DeclKind dKind) 
-		: TreeNode(DeclK), subKind(dKind), type(Undefined), size(0), isArray(false), 
-		  returnType(Undefined), offset(0), theScope(Global) {}
+		: TreeNode(DeclK), subKind(dKind), type(Undefined), isArray(false), size(0),
+		  offset(0), theScope(Global), returnType(Undefined) {}
 	void virtual PrintTree(ostream &out, int spaces, int siblingNum) const;
 	void virtual PrintMemory(ostream &out) const;
 	static void PrintNode(ostream &out, const DeclarationNode *dPtr);

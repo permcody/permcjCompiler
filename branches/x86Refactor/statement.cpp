@@ -10,8 +10,8 @@
 
 void IfStateNode::GenCode_x86(CodeEmitter &e, bool travSib) {
 	ostringstream oss;
-	int currLabel = labelnum;
-	int skipLoc, currLoc;
+	//int currLabel = labelnum;
+	//int skipLoc, currLoc;
 		
 	e.emit_x86Comment("IF");
 	
@@ -64,10 +64,10 @@ void IfStateNode::PrintTree(ostream &out, int spaces, int siblingNum) const {
 }
 
 void IfStateNode::ScopeAndType(ostream &out, int &numErrors) {
-	Types tempType;
+	//Types tempType;
 	string tempName;
 	DeclarationNode *dPtr;
-	bool tempNewScope;
+	//bool tempNewScope;
 
 	//IfK and while kind use the same code
 	// check Expression Type
@@ -119,9 +119,9 @@ void CompStateNode::PrintTree(ostream &out, int spaces, int siblingNum) const {
 }
 
 void CompStateNode::ScopeAndType(ostream &out, int &numErrors) {
-	Types tempType;
+	//Types tempType;
 	string tempName;
-	DeclarationNode *dPtr;
+	//DeclarationNode *dPtr;
 	bool tempNewScope;
 
 	tempNewScope = newScope;
@@ -142,8 +142,8 @@ void CompStateNode::ScopeAndType(ostream &out, int &numErrors) {
 
 void WhileStateNode::GenCode_x86(CodeEmitter &e, bool travSib) {
 	ostringstream oss;
-	int currLabel = labelnum;
-	int skipLoc, currLoc;
+	//int currLabel = labelnum;
+	//int skipLoc, currLoc;
 	
 
 	oss << labelnum++;
@@ -182,10 +182,10 @@ void WhileStateNode::PrintTree(ostream &out, int spaces, int siblingNum) const {
 }
 
 void WhileStateNode::ScopeAndType(ostream &out, int &numErrors) {
-		Types tempType;
+	//	Types tempType;
 	string tempName;
 	DeclarationNode *dPtr;
-	bool tempNewScope;
+	//bool tempNewScope;
 
 	//IfK and while kind use the same code
 	// check Expression Type
@@ -221,8 +221,8 @@ void WhileStateNode::ScopeAndType(ostream &out, int &numErrors) {
 
 void ReturnStateNode::GenCode_x86(CodeEmitter &e, bool travSib) {
 	ostringstream oss;
-	int currLabel = labelnum;
-	int skipLoc, currLoc;
+	//int currLabel = labelnum;
+	//int skipLoc, currLoc;
 	
 	
 	e.emit_x86Comment("RETURN");
@@ -243,10 +243,10 @@ void ReturnStateNode::PrintTree(ostream &out, int spaces, int siblingNum) const 
 }
 
 void ReturnStateNode::ScopeAndType(ostream &out, int &numErrors) {
-	Types tempType;
+	//Types tempType;
 	string tempName;
 	DeclarationNode *dPtr;
-	bool tempNewScope;
+	//bool tempNewScope;
 
 	if (child[0] != NULL) {
 		child[0]->ScopeAndType(out, numErrors);	

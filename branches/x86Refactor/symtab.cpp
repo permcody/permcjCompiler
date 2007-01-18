@@ -6,12 +6,6 @@
 #include "symtab.h"
 int SymTab::initMaxTable_=100;
 
-void xPrint(void *p)
-{
-    printf("0x%08x", p);
-}
-
-
 // constructor
 SymTab::SymTab(void (* elemPrint)(void *))
 {
