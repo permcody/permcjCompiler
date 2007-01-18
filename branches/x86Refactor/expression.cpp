@@ -40,6 +40,119 @@ void ExpressionNode::lookupTypes(const string &op, Types &lhs, Types &rhs, Types
 	}	
 }
 
+void ExpressionNode::OpAndAssign_SAndT(ostream &out, int &numErrors) {
+	DeclarationNode *dPtr, *paramPtr, *tempdPtr;
+	ExpressionNode *argPtr;
+	int argCounter;	
+	Types lhs_type, rhs_type, lhs_decl, rhs_decl, returnType;
+	bool isUnary, lhs_isArray, rhs_isArray, foundError;
+	
+	lhs_type = rhs_type = lhs_decl = rhs_decl = returnType = Undefined;	// initialize types to undefined
+	lhs_isArray = rhs_isArray = foundError = false;						// initialize booleans to false
+	isUnary = true;
+
+	string nameToLookup;
+			
+	if (child[0] != NULL) {				
+		child[0]->ScopeAndType(out, numErrors);
+		lhs_type = ((ExpressionNode *)child[0])->type;			// grab lhs type
+		lhs_isArray = child[0]->getIsArray();					
+	}
+	if (child[1] != NULL) {
+		isUnary = false;
+		child[1]->ScopeAndType(out, numErrors);
+		rhs_type = ((ExpressionNode *)child[1])->type;			// grab lhs type
+		rhs_isArray = child[1]->getIsArray();								
+	}
+
+	lookupTypes(op, lhs_decl, rhs_decl, returnType);	// populate the last three variable from the function
+
+	//DEBUG 
+	/*if (lineNumber == 25) {
+		cerr << "op: " << op << "\nlhs_decl: " << PrintType(lhs_decl) << " lhs_type: " 
+			<< PrintType(lhs_type) << "\nrhs_decl: " << PrintType(rhs_decl)
+			<< " rhs_type: " << PrintType(rhs_type) << "\nlhs_isArray: " 
+			<< boolalpha << lhs_isArray << "\nrhs_isArray: " << rhs_isArray 
+			<< noboolalpha <<  endl;					
+	}*/
+	//DEBUG 
+
+	// unary ops
+	if (isUnary && lhs_type != Error) {
+		//check for arrays
+		if (lhs_isArray) {
+			++numErrors;
+			foundError = true;
+			// Unary operator array check error
+			PrintError(out, 16, lineNumber, op, "", "", 0, 0);
+		}
+		else if (lhs_type != lhs_decl) {	// do type check on unary op
+			++numErrors;
+			foundError = true;
+			// Unary operator type check error
+			PrintError(out, 17, lineNumber, op, PrintType(lhs_decl), PrintType(lhs_type), 0, 0);					
+		}
+	}
+	// binary ops
+	else if (!isUnary) {
+		// check for arrays
+		if (lhs_type != Error && rhs_type != Error && (lhs_isArray || rhs_isArray)) {					
+			++numErrors;
+			foundError = true;
+			// binary operator array check error
+			PrintError(out, 16, lineNumber, op, "", "", 0, 0);					
+		}
+		// check for binary ops that can process different types as long as they are the same
+		else if (lhs_type != Error && rhs_type != Error && lhs_decl == Undefined && rhs_decl == Undefined && lhs_type != rhs_type) {
+			++numErrors;
+			foundError = true;
+			// same type required check error
+			PrintError(out, 1, lineNumber, op, PrintType(lhs_type), PrintType(rhs_type), 0, 0);										
+		}					
+		// do type check for strict binary operators
+		/*else {
+			if (lhs_type != Error && lhs_decl != Undefined && lhs_decl != lhs_type) {
+				++numErrors;
+				foundError = true;
+				// binary lhs type check error
+				PrintError(out, 2, lineNumber, op, PrintType(lhs_decl), PrintType(lhs_type), 0, 0);
+			}
+			if (rhs_type != Error && rhs_decl != Undefined && rhs_decl != rhs_type) {
+				++numErrors;
+				foundError = true;
+				// binary rhs type check error
+				PrintError(out, 3, lineNumber, op, PrintType(rhs_decl), PrintType(rhs_type), 0, 0);						
+			}
+		}*/
+		else if (lhs_type != Error && rhs_type != Error) {
+			if (lhs_decl != Undefined && lhs_decl != lhs_type) {
+				++numErrors;
+				foundError = true;
+				// binary lhs type check error
+				PrintError(out, 2, lineNumber, op, PrintType(lhs_decl), PrintType(lhs_type), 0, 0);
+			}
+			if (rhs_decl != Undefined && rhs_decl != rhs_type) {
+				++numErrors;
+				foundError = true;
+				// binary rhs type check error
+				PrintError(out, 3, lineNumber, op, PrintType(rhs_decl), PrintType(rhs_type), 0, 0);						
+			}
+		}
+	}
+	// set the type for this node
+	if (foundError || lhs_type == Error || rhs_type == Error)  // propagate the error type to avoid cascading errors
+		this->type = Error;
+	else {
+		if (returnType == Undefined)
+			this->type = lhs_type;	
+			// if returnType is undefined return the lhs (used for ops that can process multiple types)
+		else	
+			this->type = returnType;
+	}	
+}
+
+
+
 void AssignExpNode::GenCode_x86(CodeEmitter &e, bool travSib) {
 	DeclarationNode *dPtr;
 	ExpressionNode *argPtr;
@@ -84,9 +197,7 @@ void AssignExpNode::GenCode_x86(CodeEmitter &e, bool travSib) {
 			e.emit_x86RM("mov", ax, dPtr->offset, bp, "store variable " + dPtr->name); 
 	}		
 	
-	if (sibling != NULL && travSib) {			
-		sibling->GenCode_x86(e, true);
-	}
+	TreeNode::GenCode_x86(e, true);
 }
 
 void AssignExpNode::PrintTree(ostream &out, int spaces, int siblingNum) const {
@@ -98,235 +209,17 @@ void AssignExpNode::PrintTree(ostream &out, int spaces, int siblingNum) const {
 void AssignExpNode::ScopeAndType(ostream &out, int &numErrors) {
 	op = "=";	// populate the op for assignments with "=" to make Op logic work properly
 		// intentionally drop through to OpK case...
-	DeclarationNode *dPtr, *paramPtr, *tempdPtr;
-	ExpressionNode *argPtr;
-	int argCounter;	
-	Types lhs_type, rhs_type, lhs_decl, rhs_decl, returnType;
-	bool isUnary, lhs_isArray, rhs_isArray, foundError;
 	
-	lhs_type = rhs_type = lhs_decl = rhs_decl = returnType = Undefined;	// initialize types to undefined
-	lhs_isArray = rhs_isArray = foundError = false;						// initialize booleans to false
-	isUnary = true;
+	ExpressionNode::OpAndAssign_SAndT(out, numErrors);
 
-	string nameToLookup;
-			
-	if (child[0] != NULL) {				
-		child[0]->ScopeAndType(out, numErrors);
-		lhs_type = ((ExpressionNode *)child[0])->type;			// grab lhs type
-		lhs_isArray = child[0]->getIsArray();					
-	}
-	if (child[1] != NULL) {
-		isUnary = false;
-		child[1]->ScopeAndType(out, numErrors);
-		rhs_type = ((ExpressionNode *)child[1])->type;			// grab lhs type
-		rhs_isArray = child[1]->getIsArray();								
-	}
-
-	lookupTypes(op, lhs_decl, rhs_decl, returnType);	// populate the last three variable from the function
-
-	//DEBUG 
-	/*if (lineNumber == 25) {
-		cerr << "op: " << op << "\nlhs_decl: " << PrintType(lhs_decl) << " lhs_type: " 
-			<< PrintType(lhs_type) << "\nrhs_decl: " << PrintType(rhs_decl)
-			<< " rhs_type: " << PrintType(rhs_type) << "\nlhs_isArray: " 
-			<< boolalpha << lhs_isArray << "\nrhs_isArray: " << rhs_isArray 
-			<< noboolalpha <<  endl;					
-	}*/
-	//DEBUG 
-
-	// unary ops
-	if (isUnary && lhs_type != Error) {
-		//check for arrays
-		if (lhs_isArray) {
-			++numErrors;
-			foundError = true;
-			// Unary operator array check error
-			PrintError(out, 16, lineNumber, op, "", "", 0, 0);
-		}
-		else if (lhs_type != lhs_decl) {	// do type check on unary op
-			++numErrors;
-			foundError = true;
-			// Unary operator type check error
-			PrintError(out, 17, lineNumber, op, PrintType(lhs_decl), PrintType(lhs_type), 0, 0);					
-		}
-	}
-	// binary ops
-	else if (!isUnary) {
-		// check for arrays
-		if (lhs_type != Error && rhs_type != Error && (lhs_isArray || rhs_isArray)) {					
-			++numErrors;
-			foundError = true;
-			// binary operator array check error
-			PrintError(out, 16, lineNumber, op, "", "", 0, 0);					
-		}
-		// check for binary ops that can process different types as long as they are the same
-		else if (lhs_type != Error && rhs_type != Error && lhs_decl == Undefined && rhs_decl == Undefined && lhs_type != rhs_type) {
-			++numErrors;
-			foundError = true;
-			// same type required check error
-			PrintError(out, 1, lineNumber, op, PrintType(lhs_type), PrintType(rhs_type), 0, 0);										
-		}					
-		// do type check for strict binary operators
-		/*else {
-			if (lhs_type != Error && lhs_decl != Undefined && lhs_decl != lhs_type) {
-				++numErrors;
-				foundError = true;
-				// binary lhs type check error
-				PrintError(out, 2, lineNumber, op, PrintType(lhs_decl), PrintType(lhs_type), 0, 0);
-			}
-			if (rhs_type != Error && rhs_decl != Undefined && rhs_decl != rhs_type) {
-				++numErrors;
-				foundError = true;
-				// binary rhs type check error
-				PrintError(out, 3, lineNumber, op, PrintType(rhs_decl), PrintType(rhs_type), 0, 0);						
-			}
-		}*/
-		else if (lhs_type != Error && rhs_type != Error) {
-			if (lhs_decl != Undefined && lhs_decl != lhs_type) {
-				++numErrors;
-				foundError = true;
-				// binary lhs type check error
-				PrintError(out, 2, lineNumber, op, PrintType(lhs_decl), PrintType(lhs_type), 0, 0);
-			}
-			if (rhs_decl != Undefined && rhs_decl != rhs_type) {
-				++numErrors;
-				foundError = true;
-				// binary rhs type check error
-				PrintError(out, 3, lineNumber, op, PrintType(rhs_decl), PrintType(rhs_type), 0, 0);						
-			}
-		}
-	}
-	// set the type for this node
-	if (foundError || lhs_type == Error || rhs_type == Error)  // propagate the error type to avoid cascading errors
-		this->type = Error;
-	else {
-		if (returnType == Undefined)
-			this->type = lhs_type;	
-			// if returnType is undefined return the lhs (used for ops that can process multiple types)
-		else	
-			this->type = returnType;
-	}
-
-	// now traverse any sibling nodes
-	if (sibling != NULL)
-		sibling->ScopeAndType(out, numErrors);
-	return;
+	TreeNode::ScopeAndType(out, numErrors);
 }
 
+
 void OpExpNode::ScopeAndType(ostream &out, int &numErrors) {	
-	DeclarationNode *dPtr, *paramPtr, *tempdPtr;
-	ExpressionNode *argPtr;
-	int argCounter;	
-	Types lhs_type, rhs_type, lhs_decl, rhs_decl, returnType;
-	bool isUnary, lhs_isArray, rhs_isArray, foundError;
-	
-	lhs_type = rhs_type = lhs_decl = rhs_decl = returnType = Undefined;	// initialize types to undefined
-	lhs_isArray = rhs_isArray = foundError = false;						// initialize booleans to false
-	isUnary = true;
+	ExpressionNode::OpAndAssign_SAndT(out, numErrors);
 
-	string nameToLookup;
-			
-	if (child[0] != NULL) {				
-		child[0]->ScopeAndType(out, numErrors);
-		lhs_type = ((ExpressionNode *)child[0])->type;			// grab lhs type
-		lhs_isArray = child[0]->getIsArray();					
-	}
-	if (child[1] != NULL) {
-		isUnary = false;
-		child[1]->ScopeAndType(out, numErrors);
-		rhs_type = ((ExpressionNode *)child[1])->type;			// grab lhs type
-		rhs_isArray = child[1]->getIsArray();								
-	}
-
-	lookupTypes(op, lhs_decl, rhs_decl, returnType);	// populate the last three variable from the function
-
-	//DEBUG 
-	/*if (lineNumber == 25) {
-		cerr << "op: " << op << "\nlhs_decl: " << PrintType(lhs_decl) << " lhs_type: " 
-			<< PrintType(lhs_type) << "\nrhs_decl: " << PrintType(rhs_decl)
-			<< " rhs_type: " << PrintType(rhs_type) << "\nlhs_isArray: " 
-			<< boolalpha << lhs_isArray << "\nrhs_isArray: " << rhs_isArray 
-			<< noboolalpha <<  endl;					
-	}*/
-	//DEBUG 
-
-	// unary ops
-	if (isUnary && lhs_type != Error) {
-		//check for arrays
-		if (lhs_isArray) {
-			++numErrors;
-			foundError = true;
-			// Unary operator array check error
-			PrintError(out, 16, lineNumber, op, "", "", 0, 0);
-		}
-		else if (lhs_type != lhs_decl) {	// do type check on unary op
-			++numErrors;
-			foundError = true;
-			// Unary operator type check error
-			PrintError(out, 17, lineNumber, op, PrintType(lhs_decl), PrintType(lhs_type), 0, 0);					
-		}
-	}
-	// binary ops
-	else if (!isUnary) {
-		// check for arrays
-		if (lhs_type != Error && rhs_type != Error && (lhs_isArray || rhs_isArray)) {					
-			++numErrors;
-			foundError = true;
-			// binary operator array check error
-			PrintError(out, 16, lineNumber, op, "", "", 0, 0);					
-		}
-		// check for binary ops that can process different types as long as they are the same
-		else if (lhs_type != Error && rhs_type != Error && lhs_decl == Undefined && rhs_decl == Undefined && lhs_type != rhs_type) {
-			++numErrors;
-			foundError = true;
-			// same type required check error
-			PrintError(out, 1, lineNumber, op, PrintType(lhs_type), PrintType(rhs_type), 0, 0);										
-		}					
-		// do type check for strict binary operators
-		/*else {
-			if (lhs_type != Error && lhs_decl != Undefined && lhs_decl != lhs_type) {
-				++numErrors;
-				foundError = true;
-				// binary lhs type check error
-				PrintError(out, 2, lineNumber, op, PrintType(lhs_decl), PrintType(lhs_type), 0, 0);
-			}
-			if (rhs_type != Error && rhs_decl != Undefined && rhs_decl != rhs_type) {
-				++numErrors;
-				foundError = true;
-				// binary rhs type check error
-				PrintError(out, 3, lineNumber, op, PrintType(rhs_decl), PrintType(rhs_type), 0, 0);						
-			}
-		}*/
-		else if (lhs_type != Error && rhs_type != Error) {
-			if (lhs_decl != Undefined && lhs_decl != lhs_type) {
-				++numErrors;
-				foundError = true;
-				// binary lhs type check error
-				PrintError(out, 2, lineNumber, op, PrintType(lhs_decl), PrintType(lhs_type), 0, 0);
-			}
-			if (rhs_decl != Undefined && rhs_decl != rhs_type) {
-				++numErrors;
-				foundError = true;
-				// binary rhs type check error
-				PrintError(out, 3, lineNumber, op, PrintType(rhs_decl), PrintType(rhs_type), 0, 0);						
-			}
-		}
-	}
-	// set the type for this node
-	if (foundError || lhs_type == Error || rhs_type == Error)  // propagate the error type to avoid cascading errors
-		this->type = Error;
-	else {
-		if (returnType == Undefined)
-			this->type = lhs_type;	
-			// if returnType is undefined return the lhs (used for ops that can process multiple types)
-		else	
-			this->type = returnType;
-	}
-
-	// now traverse any sibling nodes
-	if (sibling != NULL)
-		sibling->ScopeAndType(out, numErrors);
-	return;
+	TreeNode::ScopeAndType(out, numErrors);
 }
 
 void OpExpNode::PrintTree(ostream &out, int spaces, int siblingNum) const {
@@ -420,10 +313,9 @@ void OpExpNode::GenCode_x86(CodeEmitter &e, bool travSib) {
 						
 	}
 	
-	if (sibling != NULL && travSib) {			
-		sibling->GenCode_x86(e, true);
-	}
+	TreeNode::GenCode_x86(e, true);
 }
+
 
 void IdExpNode::GenCode_x86(CodeEmitter &e, bool travSib) {
 	DeclarationNode *dPtr;
@@ -460,9 +352,7 @@ void IdExpNode::GenCode_x86(CodeEmitter &e, bool travSib) {
 			e.emit_x86MR("mov", this->dPtr->offset, bp, ax, "load variable " + name);
 	}
 	
-	if (sibling != NULL && travSib) {			
-		sibling->GenCode_x86(e, true);
-	}
+	TreeNode::GenCode_x86(e, true);
 }
 
 void IdExpNode::PrintTree(ostream &out, int spaces, int siblingNum) const {
@@ -521,11 +411,9 @@ void IdExpNode::ScopeAndType(ostream &out, int &numErrors) {
 		
 	}
 	
-	// now traverse any sibling nodes
-	if (sibling != NULL)
-		sibling->ScopeAndType(out, numErrors);
-	return;
+	TreeNode::ScopeAndType(out, numErrors);
 }
+
 
 void CallExpNode::GenCode_x86(CodeEmitter &e, bool travSib) {
 	DeclarationNode *dPtr;
@@ -592,9 +480,7 @@ void CallExpNode::GenCode_x86(CodeEmitter &e, bool travSib) {
 	e.emit_x86CR("add", WORDSIZE*paramCount, sp, "clean up the stack frame");
 
 	
-	if (sibling != NULL && travSib) {			
-		sibling->GenCode_x86(e, true);
-	}
+	TreeNode::GenCode_x86(e, true);
 }
 
 void CallExpNode::PrintTree(ostream &out, int spaces, int siblingNum) const {
@@ -669,19 +555,15 @@ void CallExpNode::ScopeAndType(ostream &out, int &numErrors) {
 		}
 	}
 			
-	// now traverse any sibling nodes
-	if (sibling != NULL)
-		sibling->ScopeAndType(out, numErrors);
-	return;
+	TreeNode::ScopeAndType(out, numErrors);
 }
+
 
 void ConstExpNode::GenCode_x86(CodeEmitter &e, bool travSib) {
 
 	e.emit_x86CR("mov", val, ax, "load constant");
 	
-	if (sibling != NULL && travSib) {			
-		sibling->GenCode_x86(e, true);
-	}	
+	TreeNode::GenCode_x86(e, true);	
 }
 
 void ConstExpNode::PrintTree(ostream &out, int spaces, int siblingNum) const {
@@ -692,5 +574,3 @@ void ConstExpNode::PrintTree(ostream &out, int spaces, int siblingNum) const {
 		out << "Const: " << val << " [line: " << lineNumber << "]\n";
 	TreeNode::PrintTree(out, spaces, siblingNum);
 }
-
-void ConstExpNode::ScopeAndType(ostream &out, int &numErrors) { return; }

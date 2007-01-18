@@ -15,8 +15,8 @@ public:
 	
 	StatementNode(StmtKind sKind) : TreeNode(StmtK), subKind(sKind) {}
 	void virtual PrintTree(ostream &out, int spaces, int siblingNum) const = 0;
-	void virtual ScopeAndType(ostream &out, int &numErrors) = 0;
-	void virtual GenCode_x86(CodeEmitter &e, bool travSib) = 0;
+	//void virtual ScopeAndType(ostream &out, int &numErrors) = 0;
+	//void virtual GenCode_x86(CodeEmitter &e, bool travSib);
 };
 
 /********************************************************************************************************

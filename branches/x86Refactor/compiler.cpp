@@ -5,29 +5,16 @@
 
 #include "compiler.h"
 
-/*void Compiler::SetCompileOptions(bool printSyntaxTree, bool printMemoryLayout,
-								 bool traceSymbolTable, bool printParserDebug, string objectFile) {
-	pSynTree = printSyntaxTree;
-	pMem = printMemoryLayout;
-	tSymTab = traceSymbolTable;
-    pParseDebug = printParserDebug;
-	objFile = objectFile;
-}*/
-
 void Compiler::Compile() {
 	
 	// ********************* LEXER (Flex) AND PARSER (Bison) **************
 	// run the parser (parser calls the lexer internally)
-	/*Compiler compiler;
-	compiler.Parse();
-	compiler.syntaxTree = savedTree;*/
 	yyparse();
 	syntaxTree = savedTree;
 	// ********************* LEXER (Flex) AND PARSER (Bison) **************
 	
 	// ********************* Lack of Linker Section ***********************
 	// need to "Frankenstein" the input/output functions into the tree here
-	//savedTree = savedTree->AddIOFunctions();
 	syntaxTree = syntaxTree->AddIOFunctions();
 	// ********************* Lack of Linker Section ***********************
 

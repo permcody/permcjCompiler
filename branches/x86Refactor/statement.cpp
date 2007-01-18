@@ -54,11 +54,7 @@ void IfStateNode::GenCode_x86(CodeEmitter &e, bool travSib) {
 	//}
 	e.emit_x86Label("IF_" + oss.str() + "_D");
 	
-
-	if (sibling != NULL) {
-		e.emit_x86Comment(NO_COMMENT);
-		sibling->GenCode_x86(e, true);
-	}
+	TreeNode::GenCode_x86(e, travSib);
 }
 
 void IfStateNode::PrintTree(ostream &out, int spaces, int siblingNum) const {
@@ -101,12 +97,9 @@ void IfStateNode::ScopeAndType(ostream &out, int &numErrors) {
 	if (child[2] != NULL)
 		child[2]->ScopeAndType(out, numErrors);
 			
-
-	// now traverse any sibling nodes
-	if (sibling != NULL)
-		sibling->ScopeAndType(out, numErrors);
-	return;
+	TreeNode::ScopeAndType(out, numErrors);	
 }
+
 
 void CompStateNode::GenCode_x86(CodeEmitter &e, bool travSib) {
 			
@@ -116,10 +109,7 @@ void CompStateNode::GenCode_x86(CodeEmitter &e, bool travSib) {
 	e.emit_x86Comment("END SCOPE");
 	
 
-	if (sibling != NULL) {
-		e.emit_x86Comment(NO_COMMENT);
-		sibling->GenCode_x86(e, true);
-	}
+	TreeNode::GenCode_x86(e, travSib);
 }
 
 void CompStateNode::PrintTree(ostream &out, int spaces, int siblingNum) const {
@@ -146,11 +136,9 @@ void CompStateNode::ScopeAndType(ostream &out, int &numErrors) {
 	if (tempNewScope)		// don't test the global variable here...
 		symtab->leave();
 	
-	// now traverse any sibling nodes
-	if (sibling != NULL)
-		sibling->ScopeAndType(out, numErrors);
-	return;
+	TreeNode::ScopeAndType(out, numErrors);	
 }
+
 
 void WhileStateNode::GenCode_x86(CodeEmitter &e, bool travSib) {
 	ostringstream oss;
@@ -184,10 +172,7 @@ void WhileStateNode::GenCode_x86(CodeEmitter &e, bool travSib) {
 	e.emit_x86Label("WHILE_" + oss.str() + "_E");
 		
 
-	if (sibling != NULL) {
-		e.emit_x86Comment(NO_COMMENT);
-		sibling->GenCode_x86(e, true);
-	}
+	TreeNode::GenCode_x86(e, travSib);
 }
 
 void WhileStateNode::PrintTree(ostream &out, int spaces, int siblingNum) const {
@@ -229,13 +214,10 @@ void WhileStateNode::ScopeAndType(ostream &out, int &numErrors) {
 		child[1]->ScopeAndType(out, numErrors);
 	if (child[2] != NULL)
 		child[2]->ScopeAndType(out, numErrors);
-			
 
-	// now traverse any sibling nodes
-	if (sibling != NULL)
-		sibling->ScopeAndType(out, numErrors);
-	return;
+	TreeNode::ScopeAndType(out, numErrors);
 }
+
 
 void ReturnStateNode::GenCode_x86(CodeEmitter &e, bool travSib) {
 	ostringstream oss;
@@ -251,10 +233,7 @@ void ReturnStateNode::GenCode_x86(CodeEmitter &e, bool travSib) {
 	e.emit_x86R1("pop", bp, "");
 	e.emit_x86("ret");
 
-	if (sibling != NULL) {
-		e.emit_x86Comment(NO_COMMENT);
-		sibling->GenCode_x86(e, true);
-	}
+	TreeNode::GenCode_x86(e, travSib);
 }
 
 void ReturnStateNode::PrintTree(ostream &out, int spaces, int siblingNum) const {
@@ -294,8 +273,6 @@ void ReturnStateNode::ScopeAndType(ostream &out, int &numErrors) {
 		PrintError(out, 8, lineNumber, PrintType(funcReturnType), "", "", 0, 0);				
 	}
 		
-	// now traverse any sibling nodes
-	if (sibling != NULL)
-		sibling->ScopeAndType(out, numErrors);
-	return;
+	
+	TreeNode::ScopeAndType(out, numErrors);	
 }

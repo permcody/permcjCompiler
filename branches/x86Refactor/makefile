@@ -5,8 +5,8 @@
 BIN  = c-
 TARNAME = cpermann
 CC   = g++
-CCFLAGS = -DCPLUSPLUS -g  # for use with C++ if file ext is .cc
-CFLAGS = -DCPLUSPLUS -g  # for use with C++ if file ext is .c
+CCFLAGS = -DCPLUSPLUS -g -Wall  # for use with C++ if file ext is .cc
+CFLAGS = -DCPLUSPLUS -g -Wall # for use with C++ if file ext is .c
 
 HDRS = globals.h symtab.h emitcode.h compiler.h
 SRCS = $(BIN).y.cpp globals.cpp symtab.cpp emitcode.cpp compiler.cpp $(BIN).l.cpp expression.cpp statement.cpp declaration.cpp

@@ -29,11 +29,15 @@ TreeNode::TreeNode(NodeKind sKind) : sibling(NULL), lineNumber(0), kind(sKind) {
 }
 
 void TreeNode::GenCode_x86(CodeEmitter &e, bool travSib) {
-	for (short i=0; i<MAXCHILDREN; i++)
-		if (child[i] != NULL)
-			child[i]->GenCode_x86(e, true);
-	if (sibling != NULL)
+	if (sibling != NULL && travSib) 			
 		sibling->GenCode_x86(e, true);
+}
+
+void TreeNode::ScopeAndType(ostream &out, int &numErrors) {
+	// traverse any sibling nodes
+	if (sibling != NULL)
+		sibling->ScopeAndType(out, numErrors);
+	return;
 }
 
 void TreeNode::CodeGeneration_x86(CodeEmitter &e) {

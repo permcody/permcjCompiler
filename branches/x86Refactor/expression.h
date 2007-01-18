@@ -21,9 +21,10 @@ public:
 	ExpressionNode(ExprKind eKind) 
 		: TreeNode(ExprK), subKind(eKind), type(Undefined), val(0), dPtr(NULL) {}
 	void virtual PrintTree(ostream &out, int spaces, int siblingNum) const = 0;
-	void virtual ScopeAndType(ostream &out, int &numErrors) = 0;
-	void virtual GenCode_x86(CodeEmitter &e, bool travSib) = 0;
 	void lookupTypes(const string &op, Types &lhs, Types &rhs, Types &returnType);	
+
+protected:
+	void OpAndAssign_SAndT(ostream &out, int &numErrors);
 };
 
 /********************************************************************************************************
@@ -72,7 +73,6 @@ public:
 
 	void virtual GenCode_x86(CodeEmitter &e, bool travSib);
 	void virtual PrintTree(ostream &out, int spaces, int siblingNum) const;
-	void virtual ScopeAndType(ostream &out, int &numErrors);
 };
 
 #endif

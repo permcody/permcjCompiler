@@ -55,74 +55,6 @@ void DeclarationNode::PrintNode(ostream &out, const DeclarationNode *dPtr) {
 	}	
 }
 
-/*
-void DeclarationNode::ScopeAndType(ostream &out, int &numErrors) {
-	DeclarationNode *dPtr;
-	
-	// for declaration nodes we need to insert them into the symbol table
-	// we only care about conflicts of symbols at a local level
-	dPtr = (DeclarationNode *)symtab->lookupLocal(name.c_str());
-	if (dPtr != NULL) { // this symbol already exists in the symbol table
-		++numErrors;
-		// symbol already defined error
-		PrintError(out, 14, lineNumber, dPtr->name, "", "", dPtr->lineNumber, 0);		
-	}
-	else if (subKind != FuncK && type == Void) {
-		++numErrors;
-		// Params and Variables cannot be type void
-		PrintError(out, 19, lineNumber, name, "", "", 0, 0);
-	}
-	else
-		symtab->insert(name.c_str(), this);	// insert the declartation if no errors
-	
-	if (subKind == FuncK) {	// Function Declarations
-		funcReturnType = type;	// store the function return type in a global		
-		symtab->enter(name.c_str());
-		newScope = false;	// don't start a new scope for the function body (Compound stmt)
-		foff = IFRAMEOFFSET;	 // reset the frame offset for this new function
-		poff = PARAMOFFSET; // reset the param offset for this new function
-		if (child[0] != NULL)
-			child[0]->ScopeAndType(out, numErrors);
-		if (child[1] != NULL)
-			child[1]->ScopeAndType(out, numErrors);
-		size = foff+1;	// save the size of the frame pointer
-		symtab->leave();
-	}	
-	else { // params and variables
-		if (symtab->depth() == 1) { // global scope
-			offset = goff;
-			goff -= size;
-			theScope = TreeNode::Global;
-		}
-#ifdef X86
-		else if (subKind == ParamK) {
-			offset = poff;
-			poff += size;
-			theScope = TreeNode::Parameter;
-		}
-		else { // variable
-			offset = foff;
-			foff -= size;
-			theScope = TreeNode::Local;
-		}
-#else
-		else {
-			offset = foff;
-			foff -= size;
-			if (subKind == ParamK)
-				theScope = TreeNode::Parameter;
-			else
-				theScope = TreeNode::Local;
-		}
-#endif
-	}
-
-	// now traverse any sibling nodes
-	if (sibling != NULL)
-		sibling->ScopeAndType(out, numErrors);
-	return;
-}
-*/
 
 void FuncDeclNode::GenCode_x86(CodeEmitter &e, bool travSib) {
 	DeclarationNode *dPtr;
@@ -182,10 +114,8 @@ void FuncDeclNode::GenCode_x86(CodeEmitter &e, bool travSib) {
 		e.emitEndFunction();
 	}
 
-	if (sibling != NULL)
-		sibling->GenCode_x86(e, true);
+	TreeNode::GenCode_x86(e, true);	
 }
-
 
 void FuncDeclNode::ScopeAndType(ostream &out, int &numErrors) {
 	DeclarationNode *dPtr;
@@ -218,11 +148,9 @@ void FuncDeclNode::ScopeAndType(ostream &out, int &numErrors) {
 	size = foff;	// save the size of the frame pointer
 	symtab->leave();
 	
-	// now traverse any sibling nodes
-	if (sibling != NULL)
-		sibling->ScopeAndType(out, numErrors);
-	return;
+	TreeNode::ScopeAndType(out, numErrors);	
 }
+
 
 void VarDeclNode::GenCode_x86(CodeEmitter &e, bool travSib) {
 	DeclarationNode *dPtr;
@@ -232,9 +160,7 @@ void VarDeclNode::GenCode_x86(CodeEmitter &e, bool travSib) {
 	if (dPtr->theScope == TreeNode::Global)		
 		globals_emitvec.push_back(dPtr);		
 	
-	
-	if (sibling != NULL)
-		sibling->GenCode_x86(e, true);
+	TreeNode::GenCode_x86(e, true);
 }
 
 void VarDeclNode::ScopeAndType(ostream &out, int &numErrors){
@@ -263,11 +189,9 @@ void VarDeclNode::ScopeAndType(ostream &out, int &numErrors){
 		theScope = TreeNode::Local;
 	}
 
-	// now traverse any sibling nodes
-	if (sibling != NULL)
-		sibling->ScopeAndType(out, numErrors);
-	return;
+	TreeNode::ScopeAndType(out, numErrors);
 }
+
 
 void ParamDeclNode::GenCode_x86(CodeEmitter &e, bool travSib) {
 	DeclarationNode *dPtr;
@@ -277,8 +201,7 @@ void ParamDeclNode::GenCode_x86(CodeEmitter &e, bool travSib) {
 	if (dPtr->theScope == TreeNode::Global)		
 		globals_emitvec.push_back(dPtr);		
 
-	if (sibling != NULL)
-		sibling->GenCode_x86(e, true);
+	TreeNode::GenCode_x86(e, true);
 }
 
 void ParamDeclNode::ScopeAndType(ostream &out, int &numErrors) {
@@ -306,8 +229,5 @@ void ParamDeclNode::ScopeAndType(ostream &out, int &numErrors) {
 		theScope = TreeNode::Parameter;
 	}
 
-	// now traverse any sibling nodes
-	if (sibling != NULL)
-		sibling->ScopeAndType(out, numErrors);
-	return;
+	TreeNode::ScopeAndType(out, numErrors);
 }

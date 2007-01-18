@@ -52,8 +52,8 @@ public:
 	void PrintMem() const { this->PrintMem(cout); }	
 	void PrintMem(ostream &out) const;
 	void CodeGeneration_x86(CodeEmitter &e);
-	void virtual ScopeAndType(ostream &out, int &numErrors) = 0; // pure virtual function
-	void virtual GenCode_x86(CodeEmitter &e, bool travSib) = 0;
+	void virtual ScopeAndType(ostream &out, int &numErrors);
+	void virtual GenCode_x86(CodeEmitter &e, bool travSib);
 	bool getIsArray() const;
 	TreeNode(NodeKind sKind);
 	//~TreeNode();
