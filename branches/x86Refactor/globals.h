@@ -15,15 +15,7 @@
 #include "symtab.h"
 #include "emitcode.h"
 
-// Define this Value to turn on the x86 Code Generation
-#define X86 1
-
-#ifdef X86
 #define IFRAMEOFFSET -3 // 0 = EBP, -1 = EBX, -2 = ESI, -3 = EDI (Offsets are adjusted prior to assignment)
-#else
-#define IFRAMEOFFSET -2 // 0 and -1 are for the previous frame address and return address respectively
-#endif
-
 #define PARAMOFFSET 2 // 0 = EBP, 1 = EIP
 
 using namespace std;
@@ -84,10 +76,6 @@ protected:
 	string PrintType(Types t) const;
 	void PrintError(ostream &out, int errorNum, int lineno, 
 		  const string &s1, const string &s2, const string &s3, int n1, int n2) const;
-
-private:
-	void GenProlog(int &jumpMain, CodeEmitter &e) const;
-	void GenIOFunctions(CodeEmitter &e) const;
 };
 
 

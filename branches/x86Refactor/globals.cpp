@@ -85,64 +85,9 @@ void TreeNode::CodeGeneration_x86(CodeEmitter &e) {
 	e.emitEndFunction();	
 }
 
-void TreeNode::GenProlog(int &jumpMain, CodeEmitter &e) const {
-	
-	e.emitComment("Begin Prolog code");
-	e.emitRM("LD", 0, 0, 0, "load global poiniter with end of memory");
-	e.emitRM("LDA", 1, goff, 0, "load fp");
-	e.emitRM("ST", 1, 0, 1, "store old fp");
-	e.emitRM("LDA", 3, 1, 7, "return address in ac");
-	jumpMain = e.emitSkip(1);	// save this address into the static variable for later
-	e.emitRO("HALT", 0, 0, 0, "DONE!");
-	e.emitComment("End Prolog code");
-}
-
-void TreeNode::GenIOFunctions(CodeEmitter &e) const {
-	e.emitComment("Being Generating IO Functions");
-	
-	e.emitComment("Begin function input");
-	e.emitRM("ST", 3, -1, 1, "store return address");
-	e.emitRO("IN", 2, 2, 2, "input integer");
-	e.emitRM("LD", 3, -1, 1, "load return address");
-	e.emitRM("LD", 1, 0, 1, "adjust fp");
-	e.emitRM("LDA", 7, 0, 3, "jump to return address");
-	e.emitComment("End function input");
-
-	e.emitComment("Begin function output");
-	e.emitRM("ST", 3, -1, 1, "store return address");
-	e.emitRM("LD", 3, -2, 1, "load parameter");
-	e.emitRO("OUT", 3, 3, 3, "output integer");
-	e.emitRM("LDC", 2, 0, 2, "set return to 0");
-	e.emitRM("LD", 3, -1, 1, "load return address");
-	e.emitRM("LD", 1, 0, 1, "adjust fp");
-	e.emitRM("LDA", 7, 0, 3, "jump to return address");
-	e.emitComment("End function output");
-
-	e.emitComment("Begin function inputb");
-	e.emitRM("ST", 3, -1, 1, "store return address");
-	e.emitRO("INB", 2, 2, 2, "input boolean");
-	e.emitRM("LD", 3, -1, 1, "load return address");
-	e.emitRM("LD", 1, 0, 1, "adjust fp");
-	e.emitRM("LDA", 7, 0, 3, "jump to return address");
-	e.emitComment("End function inputb");
-
-	e.emitComment("Begin function outputb");
-	e.emitRM("ST", 3, -1, 1, "store return address");
-	e.emitRM("LD", 3, -2, 1, "load parameter");
-	e.emitRO("OUTB", 3, 3, 3, "output boolean");
-	e.emitRM("LDC", 2, 0, 2, "set return to 0");
-	e.emitRM("LD", 3, -1, 1, "load return address");
-	e.emitRM("LD", 1, 0, 1, "adjust fp");
-	e.emitRM("LDA", 7, 0, 3, "jump to return address");
-	e.emitComment("End function outputb");
-
-	e.emitComment("End Generating IO Functions");
-}
-
 TreeNode *TreeNode::AddIOFunctions() {
 	DeclarationNode *tPtr, *dNode;
 
-#ifdef X86
 	// Add Declaration for void output(int)
 	dNode = new FuncDeclNode();
 	dNode->type = Void;
@@ -201,60 +146,6 @@ TreeNode *TreeNode::AddIOFunctions() {
 	dNode->offset = -1;  //unused
 	dNode->sibling = (TreeNode *)tPtr;
 	tPtr = dNode;
-
-#else
-
-	// Add Declaration for "void outputb(bool)"
-	dNode = new FuncDeclNode();
-	dNode->type = Void;		
-	dNode->name = "outputb";
-	dNode->lineNumber = -1;
-	dNode->offset = 23;
-	dNode->sibling = this;
-	tPtr = dNode;
-	// boolean parameter
-	dNode = new ParamDeclNode();
-	dNode->type = Bool;
-	dNode->name = "*dummy*";
-    dNode->lineNumber = -1;
-	dNode->size = 1;
-	tPtr->child[0] = (TreeNode *)dNode;
-
-	// Add Declaration for "bool inputb(void)"
-	dNode = new FuncDeclNode();
-	dNode->type = Bool;		
-	dNode->name = "inputb";
-	dNode->lineNumber = -1;
-	dNode->offset = 18;
-	dNode->sibling = (TreeNode *)tPtr;
-	tPtr = dNode;
-
-	// Add Declaration for "void output(int)"
-	dNode = new FuncDeclNode();
-	dNode->type = Void;		
-	dNode->name = "output";
-	dNode->lineNumber = -1;
-	dNode->offset = 11;
-	dNode->sibling = (TreeNode *)tPtr;
-	tPtr = dNode;
-	// integer parameter
-	dNode = new ParamDeclNode();
-	dNode->type = Int;
-	dNode->name = "*dummy*";
-    dNode->lineNumber = -1;
-	dNode->size = 1;
-	tPtr->child[0] = (TreeNode *)dNode;
-
-	// Add Declaration for "int input(void)"
-	dNode = new FuncDeclNode();
-	dNode->type = Int;		
-	dNode->name = "input";
-	dNode->lineNumber = -1;
-	dNode->offset = 6;
-	dNode->sibling = (TreeNode *)tPtr;
-	tPtr = dNode;
-	
-#endif
 		
 	return (TreeNode *)tPtr;	
 }
