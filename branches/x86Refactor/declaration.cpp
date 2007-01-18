@@ -68,6 +68,8 @@ void FuncDeclNode::GenCode_x86(CodeEmitter &e, bool travSib) {
 			
 		tempComment = "Function " + name + " returns " + PrintType(type);
 		e.emit_x86Comment(tempComment.c_str());
+		tempComment = ".globl " + name;
+		e.emit_x86Directive(tempComment.c_str());
 		tempComment = "\t.type	" + name + " @function";
 		e.emit_x86Directive(tempComment.c_str());
 		e.emit_x86Label(name);
@@ -96,7 +98,7 @@ void FuncDeclNode::GenCode_x86(CodeEmitter &e, bool travSib) {
 
 		// Function Body
 		if (child[1] != NULL) {
-			child[1]->GenCode_x86(e, true);
+			child[1]->GenCode_x86(e, travSib);
 		}
 		
 		//e.emit_x86CR("sub", size*WORDSIZE, sp, "Adjust top of stack to destroy local variables");

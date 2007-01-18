@@ -148,7 +148,10 @@ void ExpressionNode::OpAndAssign_SAndT(ostream &out, int &numErrors) {
 	}	
 }
 
-
+void ExpressionNode::GenCode_x86(CodeEmitter &e, bool travSib) {
+	if (sibling != NULL && travSib)
+		sibling->GenCode_x86(e, true);
+}
 
 void AssignExpNode::GenCode_x86(CodeEmitter &e, bool travSib) {
 	DeclarationNode *dPtr;
@@ -157,7 +160,7 @@ void AssignExpNode::GenCode_x86(CodeEmitter &e, bool travSib) {
 	
 	// process RHS of assignment
 	if (child[1] != NULL)
-		child[1]->GenCode_x86(e, true);
+		child[1]->GenCode_x86(e, travSib);
 
 	// variable will be in the left child
 	dPtr = ((ExpressionNode *)this->child[0])->dPtr;
@@ -169,7 +172,7 @@ void AssignExpNode::GenCode_x86(CodeEmitter &e, bool travSib) {
 		e.emit_x86R1("push", ax, "Store RHS of assignment");			
 
 		if (this->child[0]->child[0] != NULL)
-			this->child[0]->child[0]->GenCode_x86(e, true); 
+			this->child[0]->child[0]->GenCode_x86(e, travSib); 
 			// array index will be in ac
 		e.emit_x86R1("pop", dx, "Load RHS value into dx");
 		// value will be in ac2 
@@ -193,7 +196,7 @@ void AssignExpNode::GenCode_x86(CodeEmitter &e, bool travSib) {
 			e.emit_x86RM("mov", ax, dPtr->offset, bp, "store variable " + dPtr->name); 
 	}		
 	
-	TreeNode::GenCode_x86(e, true);
+	ExpressionNode::GenCode_x86(e, travSib);
 }
 
 void AssignExpNode::PrintTree(ostream &out, int spaces, int siblingNum) const {
@@ -232,7 +235,7 @@ void OpExpNode::GenCode_x86(CodeEmitter &e, bool travSib) {
 
 	// process left child
 	if (child[0] != NULL)
-		child[0]->GenCode_x86(e, true);
+		child[0]->GenCode_x86(e, travSib);
 
 	if (child[1] != NULL) {
 		isUnary = false;
@@ -242,7 +245,7 @@ void OpExpNode::GenCode_x86(CodeEmitter &e, bool travSib) {
 		e.emit_x86R1("push", ax, "save left side");
 						
 		// process right child
-		child[1]->GenCode_x86(e, true);
+		child[1]->GenCode_x86(e, travSib);
 
 		// load left back into the accumulator
 		toff = localToff;
@@ -309,7 +312,7 @@ void OpExpNode::GenCode_x86(CodeEmitter &e, bool travSib) {
 						
 	}
 	
-	TreeNode::GenCode_x86(e, true);
+	ExpressionNode::GenCode_x86(e, travSib);
 }
 
 
@@ -326,7 +329,7 @@ void IdExpNode::GenCode_x86(CodeEmitter &e, bool travSib) {
 				e.emit_x86LR("lea", this->dPtr->name, ax, "2: load base address of global variable");
 		}
 		else { 
-			child[0]->GenCode_x86(e, true);
+			child[0]->GenCode_x86(e, travSib);
 			// index will be in ac
 			if (this->dPtr->theScope == TreeNode::Parameter)
 				e.emit_x86MR("mov", this->dPtr->offset, (this->dPtr->theScope == TreeNode::Global)?cx:bp, cx, "3: load base address of array " + this->name);
@@ -346,7 +349,7 @@ void IdExpNode::GenCode_x86(CodeEmitter &e, bool travSib) {
 			e.emit_x86MR("mov", this->dPtr->offset, bp, ax, "load variable " + name);
 	}
 	
-	TreeNode::GenCode_x86(e, true);
+	ExpressionNode::GenCode_x86(e, travSib);
 }
 
 void IdExpNode::PrintTree(ostream &out, int spaces, int siblingNum) const {
@@ -472,7 +475,7 @@ void CallExpNode::GenCode_x86(CodeEmitter &e, bool travSib) {
 	e.emit_x86CR("add", WORDSIZE*paramCount, sp, "clean up the stack frame");
 
 	
-	TreeNode::GenCode_x86(e, true);
+	ExpressionNode::GenCode_x86(e, travSib);
 }
 
 void CallExpNode::PrintTree(ostream &out, int spaces, int siblingNum) const {
@@ -557,7 +560,7 @@ void ConstExpNode::GenCode_x86(CodeEmitter &e, bool travSib) {
 
 	e.emit_x86CR("mov", val, ax, "load constant");
 	
-	TreeNode::GenCode_x86(e, true);	
+	ExpressionNode::GenCode_x86(e, travSib);	
 }
 
 void ConstExpNode::PrintTree(ostream &out, int spaces, int siblingNum) const {

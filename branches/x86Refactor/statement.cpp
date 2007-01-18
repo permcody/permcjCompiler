@@ -105,10 +105,10 @@ void CompStateNode::GenCode_x86(CodeEmitter &e, bool travSib) {
 	
 	e.emit_x86Comment("BEGIN SCOPE");
 	if (child[1] != NULL)
-		child[1]->GenCode_x86(e, true);
+		child[1]->GenCode_x86(e, travSib);
 	e.emit_x86Comment("END SCOPE");
 	
-	TreeNode::GenCode_x86(e, travSib);
+	TreeNode::GenCode_x86(e, true);
 }
 
 void CompStateNode::PrintTree(ostream &out, int spaces, int siblingNum) const {
@@ -150,7 +150,7 @@ void WhileStateNode::GenCode_x86(CodeEmitter &e, bool travSib) {
 	
 	// Test Condition
 	if (child[0] != NULL)
-		child[0]->GenCode_x86(e, true);
+		child[0]->GenCode_x86(e, travSib);
 	e.emit_x86CR("cmp", 0, ax, "while condition check");
 	e.emit_x86J("je", "WHILE_" + oss.str() + "_E", "break out of loop if false");
 	
@@ -159,7 +159,7 @@ void WhileStateNode::GenCode_x86(CodeEmitter &e, bool travSib) {
 	e.emit_x86Comment("WHILE BODY");
 	// While Body
 	if (child[1] != NULL)
-		child[1]->GenCode_x86(e, true);
+		child[1]->GenCode_x86(e, travSib);
 	e.emit_x86J("jmp", "WHILE_" + oss.str() + "_B", "return to the top of the while loop");
 				
 	// Save current location to jump when While cond. is false
@@ -170,7 +170,7 @@ void WhileStateNode::GenCode_x86(CodeEmitter &e, bool travSib) {
 	e.emit_x86Label("WHILE_" + oss.str() + "_E");
 		
 
-	TreeNode::GenCode_x86(e, travSib);
+	TreeNode::GenCode_x86(e, true);
 }
 
 void WhileStateNode::PrintTree(ostream &out, int spaces, int siblingNum) const {
@@ -224,13 +224,13 @@ void ReturnStateNode::GenCode_x86(CodeEmitter &e, bool travSib) {
 	
 	e.emit_x86Comment("RETURN");
 	if (child[0] != NULL)
-		child[0]->GenCode_x86(e, true);
+		child[0]->GenCode_x86(e, travSib);
 	// Fix up stack and return
 	e.emit_x86R2("mov", bp, sp, "");
 	e.emit_x86R1("pop", bp, "");
 	e.emit_x86("ret");
 
-	TreeNode::GenCode_x86(e, travSib);
+	TreeNode::GenCode_x86(e, true);
 }
 
 void ReturnStateNode::PrintTree(ostream &out, int spaces, int siblingNum) const {

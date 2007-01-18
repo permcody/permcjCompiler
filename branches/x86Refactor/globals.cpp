@@ -60,11 +60,9 @@ void TreeNode::CodeGeneration_x86(char *sourceFileName, CodeEmitter &e) {
 	// Generate a basic GNU Assembler file
 	ostringstream oss;
 	oss << ".file 1 \"" << sourceFileName << "\"";
-
 	e.emit_x86Directive(oss.str());
 
 	e.emit_x86Directive(".text");
-	e.emit_x86Directive(".globl main");
 	e.emitEndFunction();
 
 	GenCode_x86(e, true);
