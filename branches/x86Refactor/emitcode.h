@@ -94,6 +94,8 @@ public:
 	void emitRestore(void);
 		
 	void emitEndFunction();
+	void emitDebugLoc(const int linenum);
+
 	void emit_x86Comment(const string &c);
 	void emit_x86(const string &op);
 	void emit_x86R1(const string &op, const string &reg, const string &c);

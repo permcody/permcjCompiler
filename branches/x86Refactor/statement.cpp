@@ -10,8 +10,8 @@
 
 void IfStateNode::GenCode_x86(CodeEmitter &e, bool travSib) {
 	ostringstream oss;
-	//int currLabel = labelnum;
-	//int skipLoc, currLoc;
+	
+	TreeNode::CodeGen_DebugLoc(e);
 		
 	e.emit_x86Comment("IF");
 	
@@ -102,13 +102,12 @@ void IfStateNode::ScopeAndType(ostream &out, int &numErrors) {
 
 
 void CompStateNode::GenCode_x86(CodeEmitter &e, bool travSib) {
-			
+	
 	e.emit_x86Comment("BEGIN SCOPE");
 	if (child[1] != NULL)
 		child[1]->GenCode_x86(e, true);
 	e.emit_x86Comment("END SCOPE");
 	
-
 	TreeNode::GenCode_x86(e, travSib);
 }
 
@@ -142,10 +141,9 @@ void CompStateNode::ScopeAndType(ostream &out, int &numErrors) {
 
 void WhileStateNode::GenCode_x86(CodeEmitter &e, bool travSib) {
 	ostringstream oss;
-	//int currLabel = labelnum;
-	//int skipLoc, currLoc;
 	
-
+	TreeNode::CodeGen_DebugLoc(e);
+	
 	oss << labelnum++;
 	e.emit_x86Label("WHILE_" + oss.str() + "_B");
 	//currLoc = e.emitSkip(0);
@@ -221,9 +219,8 @@ void WhileStateNode::ScopeAndType(ostream &out, int &numErrors) {
 
 void ReturnStateNode::GenCode_x86(CodeEmitter &e, bool travSib) {
 	ostringstream oss;
-	//int currLabel = labelnum;
-	//int skipLoc, currLoc;
 	
+	TreeNode::CodeGen_DebugLoc(e);	
 	
 	e.emit_x86Comment("RETURN");
 	if (child[0] != NULL)

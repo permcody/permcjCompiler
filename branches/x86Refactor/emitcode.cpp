@@ -52,7 +52,13 @@ void CodeEmitter::emitComment(const string c)
     if (traceCode) *code << "* " << c << '\n';
 }
 
-
+void CodeEmitter::emitDebugLoc(const int linenum) {
+	ostringstream oss;
+	
+	oss		<< "\t"
+			<< ".loc " << 1 << " " << linenum << " " << 0 << "\n";			
+	codeContainer.push_back(oss.str());	
+}
 
 // emitRO emits a register-only TM instruction
 // op = the opcode

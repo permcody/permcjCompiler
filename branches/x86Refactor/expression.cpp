@@ -152,7 +152,9 @@ void ExpressionNode::OpAndAssign_SAndT(ostream &out, int &numErrors) {
 
 void AssignExpNode::GenCode_x86(CodeEmitter &e, bool travSib) {
 	DeclarationNode *dPtr;
-		
+	
+	TreeNode::CodeGen_DebugLoc(e);
+	
 	// process RHS of assignment
 	if (child[1] != NULL)
 		child[1]->GenCode_x86(e, true);
@@ -226,6 +228,8 @@ void OpExpNode::GenCode_x86(CodeEmitter &e, bool travSib) {
 	int localToff;	
 	bool isUnary = true;
 	
+	TreeNode::CodeGen_DebugLoc(e);
+
 	// process left child
 	if (child[0] != NULL)
 		child[0]->GenCode_x86(e, true);
@@ -310,7 +314,9 @@ void OpExpNode::GenCode_x86(CodeEmitter &e, bool travSib) {
 
 
 void IdExpNode::GenCode_x86(CodeEmitter &e, bool travSib) {
-	
+
+	TreeNode::CodeGen_DebugLoc(e);
+
 	if (this->dPtr->isArray) {
 		// is this array indexed?
 		if (child[0] == NULL) {  // must be a parameter
@@ -406,6 +412,7 @@ void CallExpNode::GenCode_x86(CodeEmitter &e, bool travSib) {
 	ExpressionNode *argPtr;
 	int localToff;	
 	
+	TreeNode::CodeGen_DebugLoc(e);
 	// C calling convetions (slightly simplified)
 	// parameters are pushed on the stack in reverse order
 	// parameters are removed from the stack after the call is complete
@@ -545,6 +552,8 @@ void CallExpNode::ScopeAndType(ostream &out, int &numErrors) {
 
 
 void ConstExpNode::GenCode_x86(CodeEmitter &e, bool travSib) {
+	
+	TreeNode::CodeGen_DebugLoc(e);
 
 	e.emit_x86CR("mov", val, ax, "load constant");
 	

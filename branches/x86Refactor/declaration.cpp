@@ -68,12 +68,16 @@ void FuncDeclNode::GenCode_x86(CodeEmitter &e, bool travSib) {
 			
 		tempComment = "Function " + name + " returns " + PrintType(type);
 		e.emit_x86Comment(tempComment.c_str());
+		tempComment = "\t.type	" + name + " @function";
+		e.emit_x86Directive(tempComment.c_str());
 		e.emit_x86Label(name);
 		
+		TreeNode::CodeGen_DebugLoc(e);
 		// Standard C Opening
 		e.emit_x86Comment("Standard C Opening");
 		e.emit_x86R1("push", bp, "");
 		e.emit_x86R2("mov", sp, bp, "");
+		
 		/* The following registers are unused for now - we will leave space on the stack and save them on demand 
 		e.emit_x86R1("pushl", "ebx", "");
 		e.emit_x86R1("pushl", "esi", "");
@@ -108,6 +112,7 @@ void FuncDeclNode::GenCode_x86(CodeEmitter &e, bool travSib) {
 		e.emit_x86R2("mov", bp, sp, "");
 		e.emit_x86R1("pop", bp, "");
 		e.emit_x86("ret");
+		e.emit_x86Directive("\t.size " + name + ", .-" + name);
 		e.emit_x86Comment(("End Function " + name).c_str());		
 		
 		// Signal the code emitter that we are at the end of the funtion

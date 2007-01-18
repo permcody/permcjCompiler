@@ -510,6 +510,7 @@ void PrintNode(void *dPtr) { DeclarationNode::PrintNode(cout, (DeclarationNode *
 int main(int argc, char *argv[]) {
 		
 	char *progname;
+	char *sourceFile;
 	extern FILE *yyin;
 	bool inFileOpen = false;
 	bool outFileOpen = false;
@@ -557,10 +558,11 @@ int main(int argc, char *argv[]) {
 			}
 
 			/* open infile for reading */
-			yyin = fopen(argv[optind], "r");
+			sourceFile = argv[optind];
+			yyin = fopen(sourceFile, "r");
 			if (yyin == NULL) /* open failed */
 			{
-				cerr << progname << ": cannot open " << argv[optind] << endl;
+				cerr << progname << ": cannot open " << sourceFile << endl;
 				exit(1);
 			} 
 			
@@ -574,7 +576,7 @@ int main(int argc, char *argv[]) {
 		objFileStream = &cout;
 
 	// Create the C- Compiler and compile
-	compiler = new Compiler(printSyntaxTree, printMemoryLayout,
+	compiler = new Compiler(sourceFile, printSyntaxTree, printMemoryLayout,
 		symbolTableTracing, true, &cout, objFileStream);
 	compiler->Compile();
 

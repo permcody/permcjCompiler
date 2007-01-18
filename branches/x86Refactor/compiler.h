@@ -24,10 +24,10 @@ public:
 		emitter = new CodeEmitter(&cout, true);
 	}
 
-	Compiler(bool printSyntaxTree, bool printMemoryLayout,
+	Compiler(char *sourceFile, bool printSyntaxTree, bool printMemoryLayout,
 		bool traceSymbolTable, bool printParserDebug, ostream *outStream, ostream *objectFileStream)
 		: pSynTree(printSyntaxTree), pMem(printMemoryLayout), tSymTab(traceSymbolTable), 
-		pParseDebug(printParserDebug), out(outStream), numErrors(0), numWarnings(0)
+		pParseDebug(printParserDebug), out(outStream), sourceFileName(sourceFile), numErrors(0), numWarnings(0)
 	{
 		emitter = new CodeEmitter(objectFileStream, true);
 	}
@@ -49,6 +49,7 @@ private:
 	bool pParseDebug;
 	ostream *out;
 	CodeEmitter *emitter;
+	char *sourceFileName;
 	//SymTab symtab;
 
 	int numErrors;

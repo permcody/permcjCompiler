@@ -51,7 +51,8 @@ public:
 	void PrintTree(ostream &out)const { this->PrintTree(out, 0, 0); }
 	void PrintMem() const { this->PrintMem(cout); }	
 	void PrintMem(ostream &out) const;
-	void CodeGeneration_x86(CodeEmitter &e);
+	void CodeGeneration_x86(char *sourceFileName, CodeEmitter &e);
+	void CodeGen_DebugLoc(CodeEmitter &e);
 	void virtual ScopeAndType(ostream &out, int &numErrors);
 	void virtual GenCode_x86(CodeEmitter &e, bool travSib);
 	bool getIsArray() const;
@@ -68,6 +69,7 @@ public:
 	static int poff;	// param offset
 	static int labelnum;  // global label numbers (x86 only)
 	static vector<TreeNode *> globals_emitvec; // global variable holder (x86 only)
+	static int lastDebugLoc;
 	
 protected:
 	void virtual PrintTree(ostream &out, int spaces, int siblingNum) const = 0;
@@ -77,7 +79,5 @@ protected:
 	void PrintError(ostream &out, int errorNum, int lineno, 
 		  const string &s1, const string &s2, const string &s3, int n1, int n2) const;
 };
-
-
 
 #endif

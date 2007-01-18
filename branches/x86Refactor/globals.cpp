@@ -14,6 +14,7 @@
 TreeNode::Types TreeNode::funcReturnType = TreeNode::Undefined; // global for function return type checking
 bool TreeNode::newScope = false;
 SymTab *TreeNode::symtab = NULL;
+int TreeNode::lastDebugLoc = -1;
 int TreeNode::goff = 0;
 int TreeNode::foff = IFRAMEOFFSET;
 int TreeNode::poff = PARAMOFFSET; // used by X86 only (parameters are up from the frame pointer (bp)
@@ -41,6 +42,13 @@ void TreeNode::GenCode_x86(CodeEmitter &e, bool travSib) {
 		sibling->GenCode_x86(e, true);
 }
 
+void TreeNode::CodeGen_DebugLoc(CodeEmitter &e) { 
+	if (lineNumber != lastDebugLoc) {
+		e.emitDebugLoc(lineNumber);
+		lastDebugLoc = lineNumber;
+	}
+}
+
 void TreeNode::ScopeAndType(ostream &out, int &numErrors) {
 	// traverse any sibling nodes
 	if (sibling != NULL)
@@ -48,8 +56,12 @@ void TreeNode::ScopeAndType(ostream &out, int &numErrors) {
 	return;
 }
 
-void TreeNode::CodeGeneration_x86(CodeEmitter &e) {
+void TreeNode::CodeGeneration_x86(char *sourceFileName, CodeEmitter &e) {
 	// Generate a basic GNU Assembler file
+	ostringstream oss;
+	oss << ".file 1 \"" << sourceFileName << "\"";
+
+	e.emit_x86Directive(oss.str());
 
 	e.emit_x86Directive(".text");
 	e.emit_x86Directive(".globl main");

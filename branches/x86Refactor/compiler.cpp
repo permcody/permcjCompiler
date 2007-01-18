@@ -38,7 +38,7 @@ void Compiler::Compile() {
 	
 	// ********************** CODE GENERATION *****************************
 	if (!numErrors) {
-		syntaxTree->CodeGeneration_x86(*emitter);
+		syntaxTree->CodeGeneration_x86(sourceFileName, *emitter);
 	}
 	// ********************** CODE GENERATION *****************************
 
