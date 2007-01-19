@@ -1,0 +1,27 @@
+// C-F06
+void main(void)
+{
+        outputb(1<2);
+        outputb(2<2);
+        outputb(3<2);
+
+        outputb(1==2);
+        outputb(2==2);
+        outputb(3==2);
+
+        outputb(1>2);
+        outputb(2>2);
+        outputb(3>2);
+
+        outputb(1<=2);
+        outputb(2<=2);
+        outputb(3<=2);
+
+        outputb(1>=2);
+        outputb(2>=2);
+        outputb(3>=2);
+
+        outputb(1!=2);
+        outputb(2!=2);
+        outputb(3!=2);
+}

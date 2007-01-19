@@ -1,0 +1,61 @@
+// C-F06
+//
+// Test all the basic elements of C- 2006 compile
+// This doesn't actually execute many of them
+//
+int gromet;
+
+void wallace(int wrong, int trousers)
+{
+   bool close; bool shave;
+   
+   close;
+   close = shave;
+   wrong = trousers % (666/wrong);
+   gromet = wrong * trousers - gromet + -42;
+   gromet = gromet + 27182818;
+   gromet = gromet - 31415927;
+   close = wrong < trousers && trousers <= gromet;
+   shave = wrong > trousers && trousers >= gromet;
+   {
+      int a; int grand; int day; int out;
+      a = grand = day - out;
+   }
+   close = -1*2+3<4*5&&6+7>-3;
+   shave = true||((-(1*(2+3)))<(4*5)&&((6+7)>(-3)));
+   if (shave != close) shave = ! close;
+   if (!(shave == close) || !close) shave = true;
+   else close = false;
+   while (shave) {
+       int were; int rabbit;
+       int sheep[10];
+
+       sheep[2] = 1618;
+       if (sheep[2]<496) break;
+       wallace(gromet, were-rabbit);
+   }
+   return;
+}       
+
+int Wendolene(int wool, bool shawn, int yarn[], bool preston[])
+{
+	return wool + yarn[0];
+}
+
+
+bool ramsBottom(void)
+{
+    int chicken[2];
+    bool run[3];
+    int wallace[2]; int gromet[3];
+
+    42 * Wendolene(1+2+3, true||false&&true, chicken, run);
+
+    return wallace[1]>=-gromet[2]*3;
+}
+
+void main(void)
+{
+    outputb(ramsBottom());
+    outnl();
+}

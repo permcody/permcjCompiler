@@ -1,0 +1,12 @@
+// C-F06
+void main(void)
+{
+    output(666);
+    outputb(true);
+    outnl();
+    input();
+    inputb();
+
+    return;
+}
+
