@@ -167,8 +167,7 @@ void AssignExpNode::GenCode_x86(CodeEmitter &e, bool travSib) {
 
 	// find out if this is an array or not
 	if (dPtr->isArray) {
-		// save RHS side
-		//localToff = toff;
+		// save RHS side		
 		e.emit_x86R1("push", ax, "Store RHS of assignment");			
 
 		if (this->child[0]->child[0] != NULL)
@@ -186,7 +185,7 @@ void AssignExpNode::GenCode_x86(CodeEmitter &e, bool travSib) {
 		}
 		// array base will be in ac1
 		e.emit_x86RM2("mov", dx, cx, ax, "index off of the base and store the value");
-		//toff = localToff;
+		e.emit_x86R2("mov", dx, ax, "load saved value back into accumulator");
 	}
 	else {
 		// retrieve variable offset and scope to emit instruction
@@ -324,20 +323,21 @@ void IdExpNode::GenCode_x86(CodeEmitter &e, bool travSib) {
 		// is this array indexed?
 		if (child[0] == NULL) {  // must be a parameter
 			if (this->dPtr->theScope == TreeNode::Parameter)
-				e.emit_x86MR("mov", this->dPtr->offset, (this->dPtr->theScope == TreeNode::Global)?cx:bp, ax, "1: load base address of array " + this->name);
+				e.emit_x86MR("mov", this->dPtr->offset, bp, ax, "1: load base address from stack of array " + this->name);
+			else if (this->dPtr->theScope == TreeNode::Local)
+				e.emit_x86MR("lea", this->dPtr->offset, bp, ax, "2: load base address of array " + this->name);
 			else // global variable used as a parameter
-				e.emit_x86LR("lea", this->dPtr->name, ax, "2: load base address of global variable");
+				e.emit_x86LR("lea", this->dPtr->name, ax, "3: load base address of global variable");
 		}
 		else { 
 			child[0]->GenCode_x86(e, travSib);
 			// index will be in ac
 			if (this->dPtr->theScope == TreeNode::Parameter)
-				e.emit_x86MR("mov", this->dPtr->offset, (this->dPtr->theScope == TreeNode::Global)?cx:bp, cx, "3: load base address of array " + this->name);
+				e.emit_x86MR("mov", this->dPtr->offset, bp, cx, "4: load base address of array " + this->name);
+			else if (this->dPtr->theScope == TreeNode::Local) 
+				e.emit_x86MR("lea", this->dPtr->offset, bp, cx, "5: load base address of array " + this->name);				
 			else
-				if (this->dPtr->theScope == TreeNode::Global) 
-					e.emit_x86LR("lea", this->dPtr->name, cx, "load base address of global variable");
-				else
-					e.emit_x86MR("lea", this->dPtr->offset, bp, cx, "load base address of array " + this->name);
+				e.emit_x86LR("lea", this->dPtr->name, cx, "6: load base address of global variable");				
 			
 			e.emit_x86M2R("mov", cx, ax, ax, "index off of the base and load the value");					
 		}

@@ -589,4 +589,6 @@ int main(int argc, char *argv[]) {
 		((ofstream *)objFileStream)->close();
 		delete objFileStream;
 	}
+
+	return compiler->GetErrors();
 }

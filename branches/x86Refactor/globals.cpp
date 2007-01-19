@@ -70,7 +70,7 @@ void TreeNode::CodeGeneration_x86(char *sourceFileName, CodeEmitter &e) {
 	// Setup a format string for the output function (printf) 
 	e.emit_x86Directive(".data");
 	e.emit_x86Label("printfInt");
-	e.emit_x86Directive("\t.string \"\%d\\n\"\n");
+	e.emit_x86Directive("\t.string \"\%d \"\n");
 	
 	// Setup a format string for the outnl function (printf)
 	e.emit_x86Label("printfnl");
