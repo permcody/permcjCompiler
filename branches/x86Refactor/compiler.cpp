@@ -29,10 +29,15 @@ void Compiler::Compile() {
 		if (tSymTab) TreeNode::symtab->debug(DEBUG_TABLE);
 		// run the semantic analyzer
 		syntaxTree->ScopeAndType(*out, numErrors);		
+
+		// Check for definition of main function for linker
+		if (!TreeNode::symtab->lookup("main")) {
+			numErrors++;
+			syntaxTree->PrintError(*out, 24, -1, "", "", "", 0, 0);
+		}	
 	}
 	// ********************* SEMANTIC ANALYZER ****************************
 	
-
 	// print the Memory layout if command line option '-m' is set
 	if (pMem) syntaxTree->PrintMem(cout);
 	

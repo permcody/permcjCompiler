@@ -543,11 +543,20 @@ void CallExpNode::ScopeAndType(ostream &out, int &numErrors) {
 			++argCounter;	// increment argument counter
 		}
 		// check to make sure that both lists are finished - no more params to process
-		if (paramPtr != NULL || argPtr != NULL) {
+		if (paramPtr != NULL) {
+			++numErrors; // too few parameters passed
+			PrintError(out, 22, lineNumber, dPtr->name, "", "", 0, dPtr->lineNumber);
+		}
+		else if (argPtr != NULL) {
+			++numErrors; // too many parameters passed
+			PrintError(out, 23, lineNumber, dPtr->name, "", "", 0, dPtr->lineNumber);
+		}
+		/* (paramPtr != NULL || argPtr != NULL) {
 			++numErrors; // one list was shorter then the other
 			// Wrong number of params error
 			PrintError(out, 18, lineNumber, dPtr->name, "", "", 0, dPtr->lineNumber);					
 		}
+		*/
 	}
 			
 	TreeNode::ScopeAndType(out, numErrors);

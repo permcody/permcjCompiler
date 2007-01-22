@@ -57,6 +57,8 @@ public:
 	void virtual GenCode_x86(CodeEmitter &e, bool travSib);
 	bool getIsArray() const;
 	TreeNode(NodeKind sKind);
+	void PrintError(ostream &out, int errorNum, int lineno, 
+		  const string &s1, const string &s2, const string &s3, int n1, int n2) const;
 	virtual ~TreeNode();
 
 	static SymTab *symtab;	// Our symbol Table Declaration
@@ -75,9 +77,7 @@ protected:
 	void virtual PrintTree(ostream &out, int spaces, int siblingNum) const = 0;
 	void virtual PrintMemory(ostream &out) const;
     void PrintSpaces(ostream &out, int numSpaces) const;
-	string PrintType(Types t) const;
-	void PrintError(ostream &out, int errorNum, int lineno, 
-		  const string &s1, const string &s2, const string &s3, int n1, int n2) const;
+	string PrintType(Types t) const;	
 };
 
 #endif

@@ -580,7 +580,8 @@ int main(int argc, char *argv[]) {
 		symbolTableTracing, true, &cout, objFileStream);
 	compiler->Compile();
 
-	cout << "Number of errors: " << compiler->GetErrors() << "\nNumber of warnings: " << compiler->GetWarnings() << endl;
+	cout << "Number of warnings: " << compiler->GetWarnings() 
+		<< "\nNumber of errors: " << compiler->GetErrors() << endl;
 	
 	// close the open input file if necessary
 	if (inFileOpen) fclose(yyin);

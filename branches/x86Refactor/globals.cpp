@@ -233,7 +233,11 @@ string TreeNode::PrintType(Types t) const {
 void TreeNode::PrintError(ostream &out, int errorNum, int lineno, 
 		const string &s1=NULL, const string &s2=NULL, const string &s3=NULL, int n1=0, int n2=0) const
 {
-	out << "ERROR lineno(" << lineno << "): ";
+	if (lineno == -1) 
+		out << "ERROR (LINKER): ";
+	else
+		out << "ERROR lineno(" << lineno << "): ";
+
 	switch (errorNum) {
 		case 1:
 			out << s1 << " requires things of the same type but lhs is " << s2 << " and rhs is " << s3;
@@ -287,7 +291,7 @@ void TreeNode::PrintError(ostream &out, int errorNum, int lineno,
 			out << "Unary " << s1 << " requires things of type " << s2 << " but was given type " << s3;
 			break;
 		case 18:
-			out << "Wrong number of parameters for function " << s1 << " defined on line " << n1;
+			out << "Wrong number of parameters for function " << s1 << " defined on line " << n2;
 			break;
 		case 19:
 			out << s1 << " cannot be of type void";
@@ -298,6 +302,14 @@ void TreeNode::PrintError(ostream &out, int errorNum, int lineno,
 		case 21:
 			out << "Cannot use function " << s1 << " as a simple variable";
 			break;
+		case 22:
+			out << "Too few parameters passed for function " << s1 << " defined on line " << n2;
+			break;
+		case 23:
+			out << "too many parameters passed for function " << s1 << " defined on line " << n2;
+			break;
+		case 24:
+			out << "Procedure main is not defined";
 	}
 	out << '.' << endl;
 }
