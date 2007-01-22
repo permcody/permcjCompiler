@@ -3,17 +3,17 @@
 use strict;
 use warnings;
 
-my $compiler_bin = "/home/permcj/c-/compiler/c-";
+my $compiler_bin = "../compiler/c-";
 my $verbose = "> /dev/null 2>&1";
 
 #if ($#ARGV == 2 && $ARGV[1] eq "-v") {
 #	$verbose = "";
 #}
 
-my $counter = 0;
+my $total = 0;
+my $failed = 0;
 foreach my $sourceFile (<*.c->) {
-	#if ($counter++ >= 10) { last; }
-
+	$total++;
 	chomp $sourceFile;
 	my ($baseName) = $sourceFile =~ /^(.*)\.c-$/;
 
@@ -29,6 +29,7 @@ foreach my $sourceFile (<*.c->) {
 		my $output = `diff $baseName.out $baseName.testout > $baseName.diff`;	
 		if ($output) {
 			print "Failed";
+			$failed++;
 		}
 		else {
 			print "Success";
@@ -48,6 +49,7 @@ foreach my $sourceFile (<*.c->) {
 		my $output = `diff $baseName.out $baseName.testout > $baseName.diff`;
 		if ($output) {
 			print "Failed";
+			$failed++;
 		}
 		else {
 			print "Success";
@@ -75,10 +77,12 @@ foreach my $sourceFile (<*.c->) {
 	my $output = `diff $baseName.test $baseName.testout`;
 	if ($output) {
 		print "Failed";
+		$failed++;
 		next;
 	}
 	print "Success";
-
 }
 
-print "\n";
+print "\n\nTests passed: ", $total-$failed, 
+		"\nTests failed: ", $failed,
+		"\nTotal: ", $total, "\n";
