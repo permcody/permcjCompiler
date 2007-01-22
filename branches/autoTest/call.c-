@@ -75,12 +75,12 @@ void caller(int x, int y[])
 }
 
 
-void swap(int x[], int z1, int z2)
+void swap(int x[], int za, int zb)
 {
     int tmp;
-    tmp = x[z1];
-    x[z1] = x[z2];
-    x[z2] = tmp;
+    tmp = x[za];
+    x[za] = x[zb];
+    x[zb] = tmp;
 }
 
 

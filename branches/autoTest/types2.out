@@ -1,94 +1,94 @@
-ERROR(4): Symbol 'i' is not defined.
-ERROR(4): Symbol 'i' is not defined.
-ERROR(5): Symbol 'i' is not defined.
-ERROR(5): Symbol 'b' is not defined.
-ERROR(6): Symbol 'b' is not defined.
-ERROR(6): Symbol 'i' is not defined.
-ERROR(7): Symbol 'b' is not defined.
-ERROR(7): Symbol 'b' is not defined.
-ERROR(9): Symbol 'i' is not defined.
-ERROR(9): Symbol 'i' is not defined.
-ERROR(10): Symbol 'i' is not defined.
-ERROR(10): Symbol 'b' is not defined.
-ERROR(11): Symbol 'b' is not defined.
-ERROR(11): Symbol 'i' is not defined.
-ERROR(12): Symbol 'b' is not defined.
-ERROR(12): Symbol 'b' is not defined.
-ERROR(14): Symbol 'i' is not defined.
-ERROR(14): Symbol 'i' is not defined.
-ERROR(15): Symbol 'i' is not defined.
-ERROR(15): Symbol 'b' is not defined.
-ERROR(16): Symbol 'b' is not defined.
-ERROR(16): Symbol 'i' is not defined.
-ERROR(17): Symbol 'b' is not defined.
-ERROR(17): Symbol 'b' is not defined.
-ERROR(19): Symbol 'i' is not defined.
-ERROR(19): Symbol 'i' is not defined.
-ERROR(20): Symbol 'i' is not defined.
-ERROR(20): Symbol 'b' is not defined.
-ERROR(21): Symbol 'b' is not defined.
-ERROR(21): Symbol 'i' is not defined.
-ERROR(22): Symbol 'b' is not defined.
-ERROR(22): Symbol 'b' is not defined.
-ERROR(24): Symbol 'i' is not defined.
-ERROR(24): Symbol 'i' is not defined.
-ERROR(25): Symbol 'i' is not defined.
-ERROR(25): Symbol 'b' is not defined.
-ERROR(26): Symbol 'b' is not defined.
-ERROR(26): Symbol 'i' is not defined.
-ERROR(27): Symbol 'b' is not defined.
-ERROR(27): Symbol 'b' is not defined.
-ERROR(29): Symbol 'b' is not defined.
-ERROR(29): Symbol 'i' is not defined.
-ERROR(29): Symbol 'i' is not defined.
-ERROR(30): Symbol 'i' is not defined.
-ERROR(30): Symbol 'b' is not defined.
-ERROR(30): Symbol 'i' is not defined.
-ERROR(31): Symbol 'i' is not defined.
-ERROR(31): Symbol 'i' is not defined.
-ERROR(31): Symbol 'b' is not defined.
-ERROR(33): Symbol 'i' is not defined.
-ERROR(33): Symbol 'b' is not defined.
-ERROR(33): Symbol 'b' is not defined.
-ERROR(34): Symbol 'b' is not defined.
-ERROR(34): Symbol 'i' is not defined.
-ERROR(34): Symbol 'b' is not defined.
-ERROR(35): Symbol 'b' is not defined.
-ERROR(35): Symbol 'b' is not defined.
-ERROR(35): Symbol 'i' is not defined.
-ERROR(37): Symbol 'b' is not defined.
-ERROR(38): Symbol 'i' is not defined.
-ERROR(40): Symbol 'b' is not defined.
-ERROR(41): Symbol 'i' is not defined.
-ERROR(43): Symbol 'i' is not defined.
-ERROR(43): Symbol 'i' is not defined.
-ERROR(43): Symbol 'i' is not defined.
-ERROR(43): Symbol 'i' is not defined.
-ERROR(44): Symbol 'b' is not defined.
-ERROR(44): Symbol 'i' is not defined.
-ERROR(44): Symbol 'i' is not defined.
-ERROR(44): Symbol 'i' is not defined.
-ERROR(45): Symbol 'i' is not defined.
-ERROR(45): Symbol 'b' is not defined.
-ERROR(45): Symbol 'i' is not defined.
-ERROR(45): Symbol 'i' is not defined.
-ERROR(46): Symbol 'i' is not defined.
-ERROR(46): Symbol 'i' is not defined.
-ERROR(46): Symbol 'b' is not defined.
-ERROR(46): Symbol 'i' is not defined.
-ERROR(47): Symbol 'b' is not defined.
-ERROR(47): Symbol 'i' is not defined.
-ERROR(47): Symbol 'i' is not defined.
-ERROR(47): Symbol 'b' is not defined.
-ERROR(48): Symbol 'b' is not defined.
-ERROR(48): Symbol 'b' is not defined.
-ERROR(48): Symbol 'b' is not defined.
-ERROR(48): Symbol 'b' is not defined.
-ERROR(50): Symbol 'i' is not defined.
-ERROR(50): Symbol 'i' is not defined.
-ERROR(50): Symbol 'i' is not defined.
-ERROR(51): Symbol 'b' is not defined.
-ERROR(51): Symbol 'i' is not defined.
-ERROR(51): Symbol 'i' is not defined.
+ERROR lineno(4): Symbol i is not defined.
+ERROR lineno(4): Symbol i is not defined.
+ERROR lineno(5): Symbol i is not defined.
+ERROR lineno(5): Symbol b is not defined.
+ERROR lineno(6): Symbol b is not defined.
+ERROR lineno(6): Symbol i is not defined.
+ERROR lineno(7): Symbol b is not defined.
+ERROR lineno(7): Symbol b is not defined.
+ERROR lineno(9): Symbol i is not defined.
+ERROR lineno(9): Symbol i is not defined.
+ERROR lineno(10): Symbol i is not defined.
+ERROR lineno(10): Symbol b is not defined.
+ERROR lineno(11): Symbol b is not defined.
+ERROR lineno(11): Symbol i is not defined.
+ERROR lineno(12): Symbol b is not defined.
+ERROR lineno(12): Symbol b is not defined.
+ERROR lineno(14): Symbol i is not defined.
+ERROR lineno(14): Symbol i is not defined.
+ERROR lineno(15): Symbol i is not defined.
+ERROR lineno(15): Symbol b is not defined.
+ERROR lineno(16): Symbol b is not defined.
+ERROR lineno(16): Symbol i is not defined.
+ERROR lineno(17): Symbol b is not defined.
+ERROR lineno(17): Symbol b is not defined.
+ERROR lineno(19): Symbol i is not defined.
+ERROR lineno(19): Symbol i is not defined.
+ERROR lineno(20): Symbol i is not defined.
+ERROR lineno(20): Symbol b is not defined.
+ERROR lineno(21): Symbol b is not defined.
+ERROR lineno(21): Symbol i is not defined.
+ERROR lineno(22): Symbol b is not defined.
+ERROR lineno(22): Symbol b is not defined.
+ERROR lineno(24): Symbol i is not defined.
+ERROR lineno(24): Symbol i is not defined.
+ERROR lineno(25): Symbol i is not defined.
+ERROR lineno(25): Symbol b is not defined.
+ERROR lineno(26): Symbol b is not defined.
+ERROR lineno(26): Symbol i is not defined.
+ERROR lineno(27): Symbol b is not defined.
+ERROR lineno(27): Symbol b is not defined.
+ERROR lineno(29): Symbol b is not defined.
+ERROR lineno(29): Symbol i is not defined.
+ERROR lineno(29): Symbol i is not defined.
+ERROR lineno(30): Symbol i is not defined.
+ERROR lineno(30): Symbol b is not defined.
+ERROR lineno(30): Symbol i is not defined.
+ERROR lineno(31): Symbol i is not defined.
+ERROR lineno(31): Symbol i is not defined.
+ERROR lineno(31): Symbol b is not defined.
+ERROR lineno(33): Symbol i is not defined.
+ERROR lineno(33): Symbol b is not defined.
+ERROR lineno(33): Symbol b is not defined.
+ERROR lineno(34): Symbol b is not defined.
+ERROR lineno(34): Symbol i is not defined.
+ERROR lineno(34): Symbol b is not defined.
+ERROR lineno(35): Symbol b is not defined.
+ERROR lineno(35): Symbol b is not defined.
+ERROR lineno(35): Symbol i is not defined.
+ERROR lineno(37): Symbol b is not defined.
+ERROR lineno(38): Symbol i is not defined.
+ERROR lineno(40): Symbol b is not defined.
+ERROR lineno(41): Symbol i is not defined.
+ERROR lineno(43): Symbol i is not defined.
+ERROR lineno(43): Symbol i is not defined.
+ERROR lineno(43): Symbol i is not defined.
+ERROR lineno(43): Symbol i is not defined.
+ERROR lineno(44): Symbol b is not defined.
+ERROR lineno(44): Symbol i is not defined.
+ERROR lineno(44): Symbol i is not defined.
+ERROR lineno(44): Symbol i is not defined.
+ERROR lineno(45): Symbol i is not defined.
+ERROR lineno(45): Symbol b is not defined.
+ERROR lineno(45): Symbol i is not defined.
+ERROR lineno(45): Symbol i is not defined.
+ERROR lineno(46): Symbol i is not defined.
+ERROR lineno(46): Symbol i is not defined.
+ERROR lineno(46): Symbol b is not defined.
+ERROR lineno(46): Symbol i is not defined.
+ERROR lineno(47): Symbol b is not defined.
+ERROR lineno(47): Symbol i is not defined.
+ERROR lineno(47): Symbol i is not defined.
+ERROR lineno(47): Symbol b is not defined.
+ERROR lineno(48): Symbol b is not defined.
+ERROR lineno(48): Symbol b is not defined.
+ERROR lineno(48): Symbol b is not defined.
+ERROR lineno(48): Symbol b is not defined.
+ERROR lineno(50): Symbol i is not defined.
+ERROR lineno(50): Symbol i is not defined.
+ERROR lineno(50): Symbol i is not defined.
+ERROR lineno(51): Symbol b is not defined.
+ERROR lineno(51): Symbol i is not defined.
+ERROR lineno(51): Symbol i is not defined.
 Number of warnings: 0
 Number of errors: 92

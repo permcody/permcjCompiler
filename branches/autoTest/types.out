@@ -1,57 +1,57 @@
-ERROR(10): '+' requires things of type int but rhs is of type bool.
-ERROR(11): '+' requires things of type int but lhs is of type bool.
-ERROR(12): '+' requires things of type int but lhs is of type bool.
-ERROR(12): '+' requires things of type int but rhs is of type bool.
-ERROR(14): '&&' requires things of type bool but lhs is of type int.
-ERROR(14): '&&' requires things of type bool but rhs is of type int.
-ERROR(15): '&&' requires things of type bool but lhs is of type int.
-ERROR(16): '&&' requires things of type bool but rhs is of type int.
-ERROR(20): '=' requires things of the same type but lhs is int and rhs is bool.
-ERROR(21): '=' requires things of the same type but lhs is bool and rhs is int.
-ERROR(25): '==' requires things of the same type but lhs is int and rhs is bool.
-ERROR(26): '==' requires things of the same type but lhs is bool and rhs is int.
-ERROR(30): '!=' requires things of the same type but lhs is int and rhs is bool.
-ERROR(31): '!=' requires things of the same type but lhs is bool and rhs is int.
-ERROR(34): The operation '+' does not work with arrays.
-ERROR(35): The operation '+' does not work with arrays.
-ERROR(36): The operation '+' does not work with arrays.
-ERROR(37): The operation '+' does not work with arrays.
-ERROR(39): The operation '&&' does not work with arrays.
-ERROR(40): The operation '&&' does not work with arrays.
-ERROR(41): The operation '&&' does not work with arrays.
-ERROR(42): The operation '&&' does not work with arrays.
-ERROR(44): The operation '=' does not work with arrays.
-ERROR(45): The operation '=' does not work with arrays.
-ERROR(46): The operation '=' does not work with arrays.
-ERROR(47): The operation '=' does not work with arrays.
-ERROR(49): The operation '==' does not work with arrays.
-ERROR(50): The operation '==' does not work with arrays.
-ERROR(51): The operation '==' does not work with arrays.
-ERROR(52): The operation '==' does not work with arrays.
-ERROR(54): '+' requires things of type int but lhs is of type bool.
-ERROR(55): '+' requires things of type int but rhs is of type bool.
-ERROR(56): '+' requires things of type int but rhs is of type bool.
-ERROR(58): '||' requires things of type bool but lhs is of type int.
-ERROR(59): '||' requires things of type bool but rhs is of type int.
-ERROR(60): '||' requires things of type bool but rhs is of type int.
-ERROR(63): Unary '!' requires things of type bool but was given type int.
-ERROR(64): The operation '!' does not work with arrays.
-ERROR(65): The operation '!' does not work with arrays.
-ERROR(67): Unary '-' requires things of type int but was given type bool.
-ERROR(69): The operation '-' does not work with arrays.
-ERROR(70): The operation '-' does not work with arrays.
-ERROR(73): '>' requires things of type int but lhs is of type bool.
-ERROR(74): '>' requires things of type int but rhs is of type bool.
-ERROR(75): '>' requires things of type int but lhs is of type bool.
-ERROR(76): '>' requires things of type int but lhs is of type bool.
-ERROR(76): '>' requires things of type int but rhs is of type bool.
-ERROR(80): Expecting boolean test condition in if statement.
-ERROR(83): Cannot use array as test condition in if statement.
-ERROR(86): Expecting boolean test condition in if statement.
-ERROR(86): Cannot use array as test condition in if statement.
-ERROR(92): Expecting boolean test condition in while statement.
-ERROR(93): Cannot use array as test condition in while statement.
-ERROR(94): Expecting boolean test condition in while statement.
-ERROR(94): Cannot use array as test condition in while statement.
+ERROR lineno(10): + requires things of type int but rhs is of type bool.
+ERROR lineno(11): + requires things of type int but lhs is of type bool.
+ERROR lineno(12): + requires things of type int but lhs is of type bool.
+ERROR lineno(12): + requires things of type int but rhs is of type bool.
+ERROR lineno(14): && requires things of type bool but lhs is of type int.
+ERROR lineno(14): && requires things of type bool but rhs is of type int.
+ERROR lineno(15): && requires things of type bool but lhs is of type int.
+ERROR lineno(16): && requires things of type bool but rhs is of type int.
+ERROR lineno(20): = requires things of the same type but lhs is int and rhs is bool.
+ERROR lineno(21): = requires things of the same type but lhs is bool and rhs is int.
+ERROR lineno(25): == requires things of the same type but lhs is int and rhs is bool.
+ERROR lineno(26): == requires things of the same type but lhs is bool and rhs is int.
+ERROR lineno(30): != requires things of the same type but lhs is int and rhs is bool.
+ERROR lineno(31): != requires things of the same type but lhs is bool and rhs is int.
+ERROR lineno(34): The operation + does not work with arrays.
+ERROR lineno(35): The operation + does not work with arrays.
+ERROR lineno(36): The operation + does not work with arrays.
+ERROR lineno(37): The operation + does not work with arrays.
+ERROR lineno(39): The operation && does not work with arrays.
+ERROR lineno(40): The operation && does not work with arrays.
+ERROR lineno(41): The operation && does not work with arrays.
+ERROR lineno(42): The operation && does not work with arrays.
+ERROR lineno(44): The operation = does not work with arrays.
+ERROR lineno(45): The operation = does not work with arrays.
+ERROR lineno(46): The operation = does not work with arrays.
+ERROR lineno(47): The operation = does not work with arrays.
+ERROR lineno(49): The operation == does not work with arrays.
+ERROR lineno(50): The operation == does not work with arrays.
+ERROR lineno(51): The operation == does not work with arrays.
+ERROR lineno(52): The operation == does not work with arrays.
+ERROR lineno(54): + requires things of type int but lhs is of type bool.
+ERROR lineno(55): + requires things of type int but rhs is of type bool.
+ERROR lineno(56): + requires things of type int but rhs is of type bool.
+ERROR lineno(58): || requires things of type bool but lhs is of type int.
+ERROR lineno(59): || requires things of type bool but rhs is of type int.
+ERROR lineno(60): || requires things of type bool but rhs is of type int.
+ERROR lineno(63): Unary ! requires things of type bool but was given type int.
+ERROR lineno(64): The operation ! does not work with arrays.
+ERROR lineno(65): The operation ! does not work with arrays.
+ERROR lineno(67): Unary - requires things of type int but was given type bool.
+ERROR lineno(69): The operation - does not work with arrays.
+ERROR lineno(70): The operation - does not work with arrays.
+ERROR lineno(73): > requires things of type int but lhs is of type bool.
+ERROR lineno(74): > requires things of type int but rhs is of type bool.
+ERROR lineno(75): > requires things of type int but lhs is of type bool.
+ERROR lineno(76): > requires things of type int but lhs is of type bool.
+ERROR lineno(76): > requires things of type int but rhs is of type bool.
+ERROR lineno(80): Expecting boolean test condition.
+ERROR lineno(83): Cannot use array as test condition.
+ERROR lineno(86): Expecting boolean test condition.
+ERROR lineno(86): Cannot use array as test condition.
+ERROR lineno(92): Expecting boolean test condition.
+ERROR lineno(93): Cannot use array as test condition.
+ERROR lineno(94): Expecting boolean test condition.
+ERROR lineno(94): Cannot use array as test condition.
 Number of warnings: 0
 Number of errors: 55
