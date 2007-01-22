@@ -4,7 +4,8 @@ int gx; int gy;
 void main(void)
 {
     int x; int y;
-     
+	x=y=gx=gy=0;     
+
     x = x + 111;
     output(x);
     y = y + 222;

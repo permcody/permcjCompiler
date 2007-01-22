@@ -5,6 +5,8 @@ void main(void)
 {
     int x[8]; int y[7];
      
+	x[5]=y[4]=gx[5]=gy[4]=0;
+
     x[5] = x[5] + 111;
     output(x[5]);
     y[4] = y[4] + 222;
