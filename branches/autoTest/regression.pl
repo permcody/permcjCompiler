@@ -26,7 +26,7 @@ foreach my $sourceFile (<*.c->) {
 
 		# If the compiler gets warnings - do a difference with the output file to see if these errors are expected
 		print "\nCompilation Correctness...", " "x16;		
-		my $output = `diff $baseName.out $baseName.testout > $baseName.diff`;	
+		my $output = `diff $baseName.out $baseName.testout | tee $baseName.diff`;	
 		if ($output) {
 			print "Failed";
 			$failed++;
@@ -46,7 +46,7 @@ foreach my $sourceFile (<*.c->) {
 
 		# If the assembler or linker gets warnings - do a difference with the output file to see fi these errors are expected
 		print "\nAssembling/Linking Correctness...", " "x9;
-		my $output = `diff $baseName.out $baseName.testout > $baseName.diff`;
+		my $output = `diff $baseName.out $baseName.testout | tee $baseName.diff`;
 		if ($output) {
 			print "Failed";
 			$failed++;
