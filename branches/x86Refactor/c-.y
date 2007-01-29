@@ -65,7 +65,7 @@ string & copyString(char *source)
 	FlexStruct *fPtr;
 }
 
-%token <lineno> IF RETURN WHILE TRUE FALSE BOOLEAN INT VOID '{' '='
+%token <lineno> IF RETURN BREAK WHILE TRUE FALSE BOOLEAN INT VOID '{' '='
 %token <fPtr> ID NUM
 
 %left <lineno> '<' '>' LEQ GEQ EQ NEQ
@@ -93,6 +93,7 @@ string & copyString(char *source)
 				unmatched
 				others
 				return_stmt
+				break_stmt
 				expression
 				var
 				simple_expression
@@ -259,6 +260,7 @@ statement			: matched { $$ = $1; }
 others				: expression_stmt { $$ = $1; }
 					| compound_stmt { $$ = $1; }					
 					| return_stmt { $$ = $1; }
+					| break_stmt { $$ = $1; }
 					;
 					
 expression_stmt		: expression ';' { $$ = $1; }
@@ -365,7 +367,14 @@ return_stmt			: RETURN ';'
 							yyerrok;
 						}
 					;
-					
+
+break_stmt			: BREAK ';'
+						{	BreakStateNode *bNode = new BreakStateNode();
+							bNode->lineNumber = $1;
+							$$ = (TreeNode *)bNode;
+						}
+					;					
+
 expression			: var '=' expression
 						{	AssignExpNode *aNode = new AssignExpNode();
 							aNode->lineNumber = $2;			// save the linenumber from '='

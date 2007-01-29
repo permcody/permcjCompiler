@@ -59,4 +59,13 @@ public:
 	void virtual ScopeAndType(ostream &out, int &numErrors);
 };
 
+class BreakStateNode : public StatementNode {
+public:
+	BreakStateNode() : StatementNode(BreakK) {}
+
+	void virtual GenCode_x86(CodeEmitter &e, bool travSib);
+	void virtual PrintTree(ostream &out, int spaces, int siblingNum) const;
+	void virtual ScopeAndType(ostream &out, int &numErrors);
+};
+
 #endif

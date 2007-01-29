@@ -36,6 +36,7 @@ if					{ SaveToken(true); return IF; }
 else				{ SaveToken(true); return ELSE; }
 while				{ SaveToken(true); return WHILE; }
 return				{ SaveToken(true); return RETURN; }
+break				{ SaveToken(true); return BREAK; }
 true				{ SaveToken(true); return TRUE; }
 false				{ SaveToken(true); return FALSE; }
 bool				{ SaveToken(true); return BOOLEAN; }

@@ -21,6 +21,7 @@ int TreeNode::poff = PARAMOFFSET; // used by X86 only (parameters are up from th
 int TreeNode::toff = 0;
 int TreeNode::jumpMain = -1;
 int TreeNode::labelnum = 0;
+int TreeNode::whilenum = 0;
 vector<TreeNode *> TreeNode::globals_emitvec;
 // ********************** static initialization ********************************
 

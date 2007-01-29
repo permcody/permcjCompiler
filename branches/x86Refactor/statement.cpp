@@ -141,10 +141,14 @@ void CompStateNode::ScopeAndType(ostream &out, int &numErrors) {
 
 void WhileStateNode::GenCode_x86(CodeEmitter &e, bool travSib) {
 	ostringstream oss;
+	int savedWhileNum;
 	
 	TreeNode::CodeGen_DebugLoc(e);
 	
-	oss << labelnum++;
+	savedWhileNum = whilenum;
+	whilenum = labelnum++;
+			
+	oss << whilenum;
 	e.emit_x86Label("WHILE_" + oss.str() + "_B");
 	//currLoc = e.emitSkip(0);
 	
@@ -168,7 +172,8 @@ void WhileStateNode::GenCode_x86(CodeEmitter &e, bool travSib) {
 	//e.emitRMAbs("JLT", ac, currLoc, "break out of loop if false");
 	//e.emitRestore();
 	e.emit_x86Label("WHILE_" + oss.str() + "_E");
-		
+
+	whilenum = savedWhileNum;		
 
 	TreeNode::GenCode_x86(e, true);
 }
@@ -272,4 +277,24 @@ void ReturnStateNode::ScopeAndType(ostream &out, int &numErrors) {
 		
 	
 	TreeNode::ScopeAndType(out, numErrors);	
+}
+
+void BreakStateNode::GenCode_x86(CodeEmitter &e, bool travSib) {
+	ostringstream oss;
+	
+	oss << whilenum;
+
+	TreeNode::CodeGen_DebugLoc(e);
+	
+	// simply jump to the end of the enclosing loop
+	e.emit_x86J("jmp", "WHILE_" + oss.str() + "_E", "break statement; break out of inner loop");		
+}
+
+void BreakStateNode::PrintTree(ostream &out, int spaces, int siblingNum) const {
+	PrintSpaces(out, spaces);
+	out << "Break" << " [line: " << lineNumber << "]\n";
+	TreeNode::PrintTree(out, spaces, siblingNum);
+}
+
+void BreakStateNode::ScopeAndType(ostream &out, int &numErrors) {
 }
