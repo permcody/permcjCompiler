@@ -68,9 +68,11 @@ string & copyString(char *source)
 %token <lineno> IF RETURN BREAK WHILE TRUE FALSE BOOLEAN INT VOID '{' '='
 %token <fPtr> ID NUM
 
+%left <lineno> OR
+%left <lineno> AND
 %left <lineno> '<' '>' LEQ GEQ EQ NEQ
-%left <lineno> '+' '-' OR
-%left <lineno> '*' '/' '%' AND
+%left <lineno> '+' '-'
+%left <lineno> '*' '/' '%'
 %left <lineno> '!' UMINUS
 
 %nonassoc LOWER_THAN_ELSE
