@@ -91,9 +91,8 @@ string & copyString(char *source)
 				statement_list
 				statement
 				expression_stmt
-				matched
-				unmatched
-				others
+				if_stmt
+				while_stmt				
 				return_stmt
 				break_stmt
 				expression
@@ -255,11 +254,9 @@ statement_list		: statement_list statement
 					|	{ $$ = NULL; }
 					;
 
-statement			: matched { $$ = $1; }
-					| unmatched { $$ = $1; }
-					;
-
-others				: expression_stmt { $$ = $1; }
+statement			: expression_stmt { $$ = $1; }
+					| if_stmt { $$ = $1; }
+					| while_stmt { $$ = $1; }
 					| compound_stmt { $$ = $1; }					
 					| return_stmt { $$ = $1; }
 					| break_stmt { $$ = $1; }
@@ -274,7 +271,7 @@ expression_stmt		: expression ';' { $$ = $1; }
 						}
 					;
 					
-matched				: IF '(' expression ')' matched ELSE matched
+if_stmt				: IF '(' expression ')' statement ELSE statement
 						{	IfStateNode *iNode = new IfStateNode();
 							iNode->lineNumber = $1;			// save the linenumber from 'IF'
 							iNode->child[0] = $3;
@@ -282,45 +279,21 @@ matched				: IF '(' expression ')' matched ELSE matched
 							iNode->child[2] = $7;
 							$$ = (TreeNode *)iNode;
 						}
-					| IF '(' error ')' matched ELSE matched	// ERROR handling
+					| IF '(' error ')' statement ELSE statement	// ERROR handling
 						{	$$=NULL;
 							//cout << "**ERROR matched IF 1\n";							
 							yyerrok;
 						}
-					| IF '(' expression ')' error ELSE matched	// ERROR handling
+					| IF '(' expression ')' error ELSE statement	// ERROR handling
 						{	$$=NULL;
 							//cout << "**ERROR matched IF 2\n";							
 							yyerrok;
 						}
-					| WHILE '(' expression ')' matched
-						{	WhileStateNode *wNode = new WhileStateNode();
-							wNode->lineNumber = $1;			// save the linenumber from 'WHILE'
-							wNode->child[0] = $3;
-							wNode->child[1] = $5;
-							$$ = (TreeNode *)wNode;
-						}
-					| WHILE '(' error ')' matched			// ERROR handling
-                        {	$$=NULL;
-							//StatementNode *sNode = (StatementNode *)$5;
-							//cout << "**ERROR matched WHILE 1\n";
-							yyerrok;
-						}	
-					| others					
-					;
-					
-unmatched			: IF '(' expression ')' statement
+					| IF '(' expression ')' statement
 						{	IfStateNode *iNode = new IfStateNode();
 							iNode->lineNumber = $1;			// save the linenumber from 'IF'
 							iNode->child[0] = $3;
 							iNode->child[1] = $5;						
-							$$ = (TreeNode *)iNode;
-						}
-					| IF '(' expression ')' matched ELSE unmatched
-						{	IfStateNode *iNode = new IfStateNode();
-							iNode->lineNumber = $1;			// save the linenumber from 'IF'
-							iNode->child[0] = $3;
-							iNode->child[1] = $5;
-							iNode->child[2] = $7;
 							$$ = (TreeNode *)iNode;
 						}
 					| IF '(' error ')' statement					// ERROR handling
@@ -328,29 +301,23 @@ unmatched			: IF '(' expression ')' statement
 							//cout << "**ERROR unmatched IF 1\n"; 
 							yyerrok;
 						}
-					| IF '(' error ')' matched ELSE unmatched		// ERROR handling
-						{	$$=NULL;
-							//cout << "**ERROR unmatched IF 2\n";						
-							yyerrok;
-						}
-					| IF '(' expression ')' error ELSE unmatched	// ERROR handling
-						{	$$=NULL;
-							//cout << "**ERROR unmatched IF 3\n";							
-							yyerrok;
-						}
-					| WHILE '(' expression ')' unmatched
+					;
+
+
+while_stmt			: WHILE '(' expression ')' statement
 						{	WhileStateNode *wNode = new WhileStateNode();
 							wNode->lineNumber = $1;			// save the linenumber from 'WHILE'
 							wNode->child[0] = $3;
 							wNode->child[1] = $5;
 							$$ = (TreeNode *)wNode;
 						}
-					| WHILE '(' error ')' unmatched					// ERROR handling
+					| WHILE '(' error ')' statement			// ERROR handling
                         {	$$=NULL;
-							//cout << "**ERROR unmatched WHILE 1\n";
+							//StatementNode *sNode = (StatementNode *)$5;
+							//cout << "**ERROR matched WHILE 1\n";
 							yyerrok;
-						}
-					;  
+						}						
+					;
 					
 return_stmt			: RETURN ';' 
 						{	ReturnStateNode *rNode = new ReturnStateNode();
