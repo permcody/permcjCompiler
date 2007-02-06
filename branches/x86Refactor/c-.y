@@ -266,11 +266,12 @@ statement			: expression_stmt { $$ = $1; }
 					
 expression_stmt		: expression ';' { $$ = $1; }
 					| ';' { $$ = NULL; }
-					| error ';'			// ERROR handling
+/*					| error ';'			// ERROR handling
 						{	$$=NULL;
 							//cout << "**ERROR expression_stmt\n";
 							yyerrok;
 						}
+*/
 					;
 					
 if_stmt				: IF '(' expression ')' statement ELSE statement
@@ -285,12 +286,7 @@ if_stmt				: IF '(' expression ')' statement ELSE statement
 						{	$$=NULL;
 							//cout << "**ERROR matched IF 1\n";							
 							yyerrok;
-						}
-					| IF '(' expression ')' error ELSE statement	// ERROR handling
-						{	$$=NULL;
-							//cout << "**ERROR matched IF 2\n";							
-							yyerrok;
-						}
+						}					
 					| IF '(' expression ')' statement
 						{	IfStateNode *iNode = new IfStateNode();
 							iNode->lineNumber = $1;			// save the linenumber from 'IF'
@@ -329,6 +325,10 @@ for_stmt			: FOR '(' expression ';' expression ';' expression ')' statement
 							fNode->child[2] = $7;
 							fNode->child[3] = $9;
 							$$ = (TreeNode *)fNode;
+						}
+					| FOR '(' error ')' statement
+						{ 	$$=NULL;
+							yyerrok;
 						}
 					;
 					
