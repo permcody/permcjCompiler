@@ -50,6 +50,15 @@ public:
 	void virtual ScopeAndType(ostream &out, int &numErrors);
 };
 
+class ForStateNode : public StatementNode {
+public:
+	ForStateNode() : StatementNode(ForK) {}
+
+	void virtual GenCode_x86(CodeEmitter &e, bool travSib);
+	void virtual PrintTree(ostream &out, int spaces, int siblingNum) const;
+	void virtual ScopeAndType(ostream &out, int &numErrors);
+};
+
 class ReturnStateNode : public StatementNode {
 public:
 	ReturnStateNode() : StatementNode(ReturnK) {}

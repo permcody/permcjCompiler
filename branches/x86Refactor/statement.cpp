@@ -215,12 +215,62 @@ void WhileStateNode::ScopeAndType(ostream &out, int &numErrors) {
 	// Do Scope and Type Checking on the remainder
 	if (child[1] != NULL)
 		child[1]->ScopeAndType(out, numErrors);
-	if (child[2] != NULL)
-		child[2]->ScopeAndType(out, numErrors);
 
 	TreeNode::ScopeAndType(out, numErrors);
 }
 
+void ForStateNode::GenCode_x86(CodeEmitter &e, bool travSib) {
+	ostringstream oss;
+	int savedForNum;
+	
+	TreeNode::CodeGen_DebugLoc(e);
+	
+	savedForNum = fornum;
+	fornum = labelnum++;
+			
+	oss << fornum;
+	e.emit_x86Comment("FOR STATEMENT START");
+	// The first child is executed only once before the loop
+	if (child[0] != NULL)
+		child[0]->GenCode_x86(e, travSib);
+
+	// Now we start the loop (with the test condition)
+	e.emit_x86Label("FOR_" + oss.str() + "_B");
+		
+	// Test Condition
+	if (child[1] != NULL)
+		child[1]->GenCode_x86(e, travSib);
+	e.emit_x86CR("cmp", 0, ax, "for condition check");
+	e.emit_x86J("je", "FOR_" + oss.str() + "_E", "break out of loop if false");
+		
+	e.emit_x86Comment("FOR BODY");
+	// For Body
+	if (child[3] != NULL)
+		child[3]->GenCode_x86(e, travSib);
+
+	// execute the last expression before looping
+	if (child[2] != NULL)
+		child[2]->GenCode_x86(e, travSib);
+	e.emit_x86J("jmp", "FOR_" + oss.str() + "_B", "return to the top of the for loop");
+				
+	e.emit_x86Label("FOR_" + oss.str() + "_E");
+
+	fornum = savedForNum;		
+
+	TreeNode::GenCode_x86(e, true);
+}
+
+void ForStateNode::PrintTree(ostream &out, int spaces, int siblingNum) const {
+	PrintSpaces(out, spaces);
+    out << "For" << " [line: " << lineNumber << "]\n";
+	TreeNode::PrintTree(out, spaces, siblingNum);
+}
+
+void ForStateNode::ScopeAndType(ostream &out, int &numErrors) {
+	for (int i=0; i<MAXCHILDREN; i++)
+		if (child[i] != NULL)
+			child[i]->ScopeAndType(out, numErrors);		
+}
 
 void ReturnStateNode::GenCode_x86(CodeEmitter &e, bool travSib) {
 	ostringstream oss;

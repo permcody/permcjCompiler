@@ -34,12 +34,12 @@ class DeclarationNode;
 class TreeNode {
 public:	
 	enum NodeKind {StmtK, ExprK, DeclK};
-	enum StmtKind {IfK, CompK, WhileK, ReturnK, BreakK};
+	enum StmtKind {IfK, CompK, WhileK, ForK, ReturnK, BreakK};
 	enum ExprKind {OpK, AssignK, ConstK, IdK, SimpK, CallK};
 	enum DeclKind {FuncK, VarK, ParamK};
 	enum Types {Undefined, Int, Void, Bool, Error};
 	enum ScopeTypes {Global, Local, Parameter};
-	enum {MAXCHILDREN=3};
+	enum {MAXCHILDREN=4};
 
 	TreeNode *child[MAXCHILDREN];
 	TreeNode *sibling;
@@ -71,6 +71,7 @@ public:
 	static int poff;	// param offset
 	static int labelnum;  // global label numbers (x86 only)
 	static int whilenum;  // current while label number (x86 only)
+	static int fornum;	  // current for label number (x86 only)
 	static vector<TreeNode *> globals_emitvec; // global variable holder (x86 only)
 	static int lastDebugLoc;
 	

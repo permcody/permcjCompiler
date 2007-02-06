@@ -35,6 +35,7 @@ NUM	[0-9]+
 if					{ SaveToken(true); return IF; }
 else				{ SaveToken(true); return ELSE; }
 while				{ SaveToken(true); return WHILE; }
+for					{ SaveToken(true); return FOR; }
 return				{ SaveToken(true); return RETURN; }
 break				{ SaveToken(true); return BREAK; }
 true				{ SaveToken(true); return TRUE; }

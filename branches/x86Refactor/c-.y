@@ -65,7 +65,7 @@ string & copyString(char *source)
 	FlexStruct *fPtr;
 }
 
-%token <lineno> IF RETURN BREAK WHILE TRUE FALSE BOOLEAN INT VOID '{' '='
+%token <lineno> IF RETURN BREAK WHILE FOR TRUE FALSE BOOLEAN INT VOID '{' '='
 %token <fPtr> ID NUM
 
 %left <lineno> OR
@@ -92,7 +92,8 @@ string & copyString(char *source)
 				statement
 				expression_stmt
 				if_stmt
-				while_stmt				
+				while_stmt	
+				for_stmt
 				return_stmt
 				break_stmt
 				expression
@@ -260,6 +261,7 @@ statement			: expression_stmt { $$ = $1; }
 					| compound_stmt { $$ = $1; }					
 					| return_stmt { $$ = $1; }
 					| break_stmt { $$ = $1; }
+					| for_stmt { $$ = $1; }
 					;
 					
 expression_stmt		: expression ';' { $$ = $1; }
@@ -317,6 +319,17 @@ while_stmt			: WHILE '(' expression ')' statement
 							//cout << "**ERROR matched WHILE 1\n";
 							yyerrok;
 						}						
+					;
+
+for_stmt			: FOR '(' expression ';' expression ';' expression ')' statement
+						{	ForStateNode *fNode = new ForStateNode();
+							fNode->lineNumber = $1;			// save the linenumber from 'FOR'
+							fNode->child[0] = $3;
+							fNode->child[1] = $5;
+							fNode->child[2] = $7;
+							fNode->child[3] = $9;
+							$$ = (TreeNode *)fNode;
+						}
 					;
 					
 return_stmt			: RETURN ';' 
