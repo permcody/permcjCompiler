@@ -21,17 +21,17 @@ void IfStateNode::GenCode_x86(CodeEmitter &e, bool travSib) {
 		child[0]->GenCode_x86(e, true);
 				
 	e.emit_x86CR("cmp", 0, ax, "if condition check");
-	e.emit_x86J("je", "IF_" + oss.str() + "_E", "jump past the then part");
+	e.emit_x86J("je", ".IF_" + oss.str() + "_E", "jump past the then part");
 	//skipLoc = e.emitSkip(1);
 
 	//e.emitComment("THEN");
 	// Then part
 	if (child[1] != NULL) {
 		child[1]->GenCode_x86(e, true);
-		e.emit_x86J("jmp", "IF_" + oss.str() + "_D", "jump to the end of the if statement (done)");
+		e.emit_x86J("jmp", ".IF_" + oss.str() + "_D", "jump to the end of the if statement (done)");
 	}			
 	// Else part
-	e.emit_x86Label("IF_" + oss.str() + "_E");
+	e.emit_x86Label(".IF_" + oss.str() + "_E");
 	if (child[2] != NULL) {
 		
 		//currLoc = e.emitSkip(1);
@@ -52,7 +52,7 @@ void IfStateNode::GenCode_x86(CodeEmitter &e, bool travSib) {
 	//	e.emitRMAbs("JLT", ac, currLoc, "jump past then if false");
 	//	e.emitRestore();			
 	//}
-	e.emit_x86Label("IF_" + oss.str() + "_D");
+	e.emit_x86Label(".IF_" + oss.str() + "_D");
 	
 	TreeNode::GenCode_x86(e, travSib);
 }
@@ -149,14 +149,14 @@ void WhileStateNode::GenCode_x86(CodeEmitter &e, bool travSib) {
 	whilenum = labelnum++;
 			
 	oss << whilenum;
-	e.emit_x86Label("WHILE_" + oss.str() + "_B");
+	e.emit_x86Label(".WHILE_" + oss.str() + "_B");
 	//currLoc = e.emitSkip(0);
 	
 	// Test Condition
 	if (child[0] != NULL)
 		child[0]->GenCode_x86(e, travSib);
 	e.emit_x86CR("cmp", 0, ax, "while condition check");
-	e.emit_x86J("je", "WHILE_" + oss.str() + "_E", "break out of loop if false");
+	e.emit_x86J("je", ".WHILE_" + oss.str() + "_E", "break out of loop if false");
 	
 	//skipLoc = e.emitSkip(1);
 
@@ -164,14 +164,14 @@ void WhileStateNode::GenCode_x86(CodeEmitter &e, bool travSib) {
 	// While Body
 	if (child[1] != NULL)
 		child[1]->GenCode_x86(e, travSib);
-	e.emit_x86J("jmp", "WHILE_" + oss.str() + "_B", "return to the top of the while loop");
+	e.emit_x86J("jmp", ".WHILE_" + oss.str() + "_B", "return to the top of the while loop");
 				
 	// Save current location to jump when While cond. is false
 	//currLoc = e.emitSkip(0);
 	//e.emitBackup(skipLoc);
 	//e.emitRMAbs("JLT", ac, currLoc, "break out of loop if false");
 	//e.emitRestore();
-	e.emit_x86Label("WHILE_" + oss.str() + "_E");
+	e.emit_x86Label(".WHILE_" + oss.str() + "_E");
 
 	whilenum = savedWhileNum;		
 
@@ -235,13 +235,13 @@ void ForStateNode::GenCode_x86(CodeEmitter &e, bool travSib) {
 		child[0]->GenCode_x86(e, travSib);
 
 	// Now we start the loop (with the test condition)
-	e.emit_x86Label("FOR_" + oss.str() + "_B");
+	e.emit_x86Label(".FOR_" + oss.str() + "_B");
 		
 	// Test Condition
 	if (child[1] != NULL)
 		child[1]->GenCode_x86(e, travSib);
 	e.emit_x86CR("cmp", 0, ax, "for condition check");
-	e.emit_x86J("je", "FOR_" + oss.str() + "_E", "break out of loop if false");
+	e.emit_x86J("je", ".FOR_" + oss.str() + "_E", "break out of loop if false");
 		
 	e.emit_x86Comment("FOR BODY");
 	// For Body
@@ -251,9 +251,9 @@ void ForStateNode::GenCode_x86(CodeEmitter &e, bool travSib) {
 	// execute the last expression before looping
 	if (child[2] != NULL)
 		child[2]->GenCode_x86(e, travSib);
-	e.emit_x86J("jmp", "FOR_" + oss.str() + "_B", "return to the top of the for loop");
+	e.emit_x86J("jmp", ".FOR_" + oss.str() + "_B", "return to the top of the for loop");
 				
-	e.emit_x86Label("FOR_" + oss.str() + "_E");
+	e.emit_x86Label(".FOR_" + oss.str() + "_E");
 
 	fornum = savedForNum;		
 
@@ -337,7 +337,7 @@ void BreakStateNode::GenCode_x86(CodeEmitter &e, bool travSib) {
 	TreeNode::CodeGen_DebugLoc(e);
 	
 	// simply jump to the end of the enclosing loop
-	e.emit_x86J("jmp", "WHILE_" + oss.str() + "_E", "break statement; break out of inner loop");		
+	e.emit_x86J("jmp", ".WHILE_" + oss.str() + "_E", "break statement; break out of inner loop");		
 }
 
 void BreakStateNode::PrintTree(ostream &out, int spaces, int siblingNum) const {
